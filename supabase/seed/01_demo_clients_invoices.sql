@@ -22,7 +22,8 @@
 --   You can still sign in with that account after the seed.
 --
 -- Tune volume: change v_client_count and v_months below.
--- Safe to re-run only after wipe (document numbers / account numbers must stay unique).
+-- Re-run safe: removes previous *@demo-trade.example clients (and their
+-- invoices) before inserting, so account_number / document_number do not collide.
 -- =============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -57,6 +58,7 @@ DECLARE
   v_doc_no          text;
   v_order_no        text;
   v_account         text;
+  v_acct_base       int;
   v_subtotal        numeric;
   v_vat_total       numeric;
   v_total           numeric;
@@ -88,6 +90,7 @@ DECLARE
   v_seq_map         jsonb := '{}'::jsonb;
   v_seq_key         text;
   v_order_seq       int := 100000;
+  v_demo_client_ids uuid[];
   v_first_names     text[] := ARRAY[
     'James','Sarah','Michael','Emma','David','Olivia','Thomas','Sophie',
     'Daniel','Chloe','Andrew','Lucy','Chris','Hannah','Mark','Emily',
@@ -135,6 +138,50 @@ DECLARE
   ];
 BEGIN
   v_start := (date_trunc('month', CURRENT_DATE) - make_interval(months => v_months))::date;
+
+  -- ------------------------------------------------------------------
+  -- Remove previous demo trade clients so re-runs do not collide on
+  -- account_number / document_number / email.
+  -- Only touches emails ending in @demo-trade.example (seed pattern).
+  -- ------------------------------------------------------------------
+  SELECT COALESCE(array_agg(id), ARRAY[]::uuid[])
+    INTO v_demo_client_ids
+    FROM public.clients
+   WHERE email ILIKE '%@demo-trade.example';
+
+  IF cardinality(v_demo_client_ids) > 0 THEN
+    -- Detach quote_requests that point at demo invoices
+    UPDATE public.quote_requests qr
+       SET created_invoice_id = NULL
+     WHERE created_invoice_id IN (
+       SELECT id FROM public.invoices WHERE client_id = ANY (v_demo_client_ids)
+     );
+
+    DELETE FROM public.invoices
+     WHERE client_id = ANY (v_demo_client_ids);
+
+    -- Portal auth users linked to these clients
+    DELETE FROM auth.users
+     WHERE id IN (
+       SELECT p.id FROM public.profiles p
+        WHERE p.client_id = ANY (v_demo_client_ids)
+           OR p.email ILIKE '%@demo-trade.example'
+     );
+
+    DELETE FROM public.clients
+     WHERE id = ANY (v_demo_client_ids);
+
+    RAISE NOTICE 'Removed % previous demo clients before reseed', cardinality(v_demo_client_ids);
+  END IF;
+
+  -- Account numbers: avoid clashing with any remaining real clients
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(account_number, '[^0-9]', '', 'g'), '')::bigint), 2000000)
+    INTO v_acct_base
+    FROM public.clients
+   WHERE account_number ~ '^[0-9]+$';
+  IF v_acct_base < 2000000 THEN
+    v_acct_base := 2000000;
+  END IF;
 
   -- ------------------------------------------------------------------
   -- Resolve or create demo admin (for clients/invoices.created_by)
@@ -301,7 +348,7 @@ BEGIN
     v_town := v_towns[1 + ((v_i - 1) % array_length(v_towns, 1))];
     v_county := v_counties[1 + ((v_i - 1) % array_length(v_counties, 1))];
     v_pc_prefix := v_postcodes[1 + ((v_i - 1) % array_length(v_postcodes, 1))];
-    v_account := lpad((1000000 + v_i)::text, 7, '0');
+    v_account := (v_acct_base + v_i)::text;
     v_terms := CASE WHEN v_tier = 'hot' THEN 30 WHEN v_tier = 'steady' THEN 30 ELSE 14 END;
     v_client_id := gen_random_uuid();
 
