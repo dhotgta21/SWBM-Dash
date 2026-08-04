@@ -63,7 +63,30 @@ Only set this when intentionally wiping/seeding a **demo** database.
 
 ## 3. Seed the demo database
 
-From the project root (with env loaded):
+### Option A – SQL Editor (easiest on Supabase)
+
+Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` succeeds and you have registered the first admin):
+
+| Order | File | Purpose |
+|-------|------|---------|
+| 0 (optional) | `supabase/seed/00_wipe_demo_clients_invoices.sql` | Clear old demo clients/invoices |
+| 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
+| 2 (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
+
+**Important:** `01_demo_clients_invoices.sql` needs at least one **admin** profile. Create it first via `/register` on the empty project.
+
+To change volume, edit at the top of the `DO $$` block in file 01:
+
+```sql
+v_client_count int := 50;  -- try 20 first if the editor times out
+v_months       int := 24;
+```
+
+If the SQL Editor times out, lower `v_client_count` to `20` and re-run after wipe.
+
+### Option B – Node scripts (same data, needs Postgres URL)
+
+From the project root (with `.env.local` loaded):
 
 ```bash
 # Optional: clear existing clients + invoices first
@@ -79,12 +102,12 @@ DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 20 --months 1
 DEMO_SEED_CONFIRM=yes npm run seed:demo:verticals
 ```
 
-The history seeder:
+Both options:
 
-- Requires an existing **admin** user (`profiles.role = 'admin'`)
-- Sets `company_settings.company_name` to **Demo Builder Merchant** when `DEMO_MODE` / `NEXT_PUBLIC_DEMO_MODE` is true
-- Inserts clients, invoices, quotations, line items, payments
-- Syncs document number sequences
+- Require an existing **admin** user (`profiles.role = 'admin'`)
+- Insert clients, invoices, quotations, line items, payments
+- Sync document number sequences  
+- SQL option also sets company name to **Demo Builder Merchant**
 
 ## 4. Switch industry for a meeting
 
