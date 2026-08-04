@@ -64,6 +64,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { toOpeningHoursSpecification } from '@/lib/opening-hours'
 import { isDemoMode, getDefaultSiteUrl } from '@/lib/demo/brand'
 import { getActiveVerticalPack } from '@/lib/demo/verticals'
+import { CATEGORY_META } from '@/components/landing/category-meta'
 
 // Force-dynamic rendering so the per-request CSP nonce injected by
 // proxy.ts is applied to Next.js framework scripts and the JSON-LD
@@ -163,12 +164,23 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
   let data: { category: string | null; is_active: boolean }[] | null = null
   let error: { message: string } | null = null
   try {
-    const result = await supabase
+    // Prefer soft-delete filter when the column exists. Some demo DBs were
+    // set up from a partial schema without products.deleted_at; fall back.
+    let result = await supabase
       .from('products')
       .select('category, is_active')
       .is('deleted_at', null)
       .eq('is_active', true)
       .not('category', 'is', null)
+
+    if (result.error && /deleted_at/i.test(result.error.message || '')) {
+      result = await supabase
+        .from('products')
+        .select('category, is_active')
+        .eq('is_active', true)
+        .not('category', 'is', null)
+    }
+
     data = result.data as { category: string | null; is_active: boolean }[] | null
     error = result.error
   } catch (err) {
@@ -181,7 +193,11 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
 
   if (error) {
     console.error('loadCategories: database error', error)
-    return { categories: [], error: `Unable to load categories: ${error.message}` }
+    // Soft message: still allow UI fallback categories below
+    return {
+      categories: [],
+      error: `Unable to load categories: ${error.message}. Run supabase/seed/02_construction_products.sql and ensure products are readable by anon.`,
+    }
   }
   if (!data) return { categories: [] }
 
@@ -271,7 +287,9 @@ export default async function HomePage() {
       ? vertical.faqs.map((f) => ({ q: f.question, a: f.answer }))
       : DEFAULT_FAQS
 
-  const orderedCategories =
+  // Build landing grid rows. Prefer DB counts; if empty (no products yet),
+  // still show marketing categories so the homepage is not blank in demos.
+  let orderedCategories: CategoryRow[] =
     demo && vertical.categories.length > 0
       ? [
           ...vertical.categories
@@ -280,6 +298,19 @@ export default async function HomePage() {
           ...categories.filter((c) => !vertical.categories.includes(c.name)),
         ]
       : categories
+
+  if (orderedCategories.length === 0) {
+    const focus =
+      demo && vertical.categories.length > 0
+        ? vertical.categories
+        : CATEGORY_META.map((m) => m.name)
+    orderedCategories = focus
+      .filter((name) => CATEGORY_META.some((m) => m.name === name))
+      .map((name) => ({
+        name,
+        productCount: categories.find((c) => c.name === name)?.productCount ?? 0,
+      }))
+  }
 
   const homepagePhone =
     getChannelForContext(company.phones, 'homepage')?.value ||

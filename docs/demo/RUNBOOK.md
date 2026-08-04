@@ -77,7 +77,8 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 0 (optional) | `supabase/seed/00_wipe_demo_clients_invoices.sql` | Clear old demo clients/invoices |
 | 0a **(if payments fail)** | `supabase/seed/00a_add_picking_columns.sql` | Adds `picking_status` columns missing from partial schema |
 | 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
-| 2 (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
+| 2 **(for landing grid)** | `supabase/seed/02_construction_products.sql` | Construction products + public product read (categories on homepage) |
+| 2b (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
 | 3 | `supabase/seed/03_demo_client_portal_accounts.sql` | Portal login for **every** client |
 | 4 | `supabase/seed/04_demo_company_brand.sql` | Force company name + logo wordmark to **Demo Builder Merchant** |
 | 5 | `supabase/seed/05_demo_admin.sql` | Staff admin `dhotgta@gmail.com` / `A1b2c3d4@` |
