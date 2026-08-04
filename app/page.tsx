@@ -525,7 +525,7 @@ export default async function HomePage() {
                     id="categories-heading"
                     className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl"
                   >
-                    {categories.length} categories. One yard.
+                    {orderedCategories.length} categories. One yard.
                   </h2>
                   <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                     From bulk aggregates by the tonne to the small bag of
