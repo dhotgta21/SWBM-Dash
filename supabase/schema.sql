@@ -196,7 +196,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_client_id_unique
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.company_settings (
   id integer PRIMARY KEY DEFAULT 1,
-  company_name text NOT NULL DEFAULT 'Star Hawk Builders Merchant',
+  company_name text NOT NULL DEFAULT 'Demo Builder Merchant',
   address_line_1 text,
   address_line_2 text,
   town text,
@@ -2386,7 +2386,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 -- Single company_settings / company_bank_details rows so settings UI and the
 -- invoice PDF template always have data to load. Idempotent.
 INSERT INTO public.company_settings (id, company_name)
-VALUES (1, 'Star Hawk Builders Merchant')
+VALUES (1, 'Demo Builder Merchant')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.company_bank_details (id)

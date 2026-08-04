@@ -540,8 +540,8 @@ export function SettingsForm({ company, bankDetails, canEdit = true }: SettingsF
               <Input
                 id="email_from_name"
                 name="email_from_name"
-                defaultValue={company?.email_from_name || company?.company_name || 'Star Hawk Builders Merchant'}
-                placeholder="Star Hawk Builders Merchant"
+                defaultValue={company?.email_from_name || company?.company_name || 'Demo Builder Merchant'}
+                placeholder="Demo Builder Merchant"
               />
               <p className="text-xs text-gray-500">Display name clients see in their inbox.</p>
             </div>

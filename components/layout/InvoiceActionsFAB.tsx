@@ -364,7 +364,7 @@ export function InvoiceActionsFAB({ role, permissions, isAdmin }: InvoiceActions
         >
           <Image
             src="/logo-square.webp"
-            alt="Star Hawk Builders Merchant — invoice actions"
+            alt="Demo Builder Merchant — invoice actions"
             width={48}
             height={48}
             priority

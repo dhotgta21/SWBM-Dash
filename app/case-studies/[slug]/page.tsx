@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.title,
     description: post.description,
-    authors: [{ name: 'Star Hawk Builders Merchant' }],
+    authors: [{ name: 'Demo Builder Merchant' }],
     keywords: [...post.tags],
     alternates: { canonical: url },
     openGraph: {
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: post.description,
       publishedTime: post.date,
       modifiedTime: post.date,
-      authors: ['Star Hawk Builders Merchant'],
+      authors: ['Demo Builder Merchant'],
       tags: [...post.tags],
       images: [
         {

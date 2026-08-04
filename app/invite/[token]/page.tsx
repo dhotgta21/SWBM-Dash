@@ -101,7 +101,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle>Invite can&apos;t be used</CardTitle>
-                <CardDescription>Please ask your contact at Star Hawk to send a new invite.</CardDescription>
+                <CardDescription>Please ask your contact at Demo Builder Merchant to send a new invite.</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
@@ -137,7 +137,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle>Invite could not be processed</CardTitle>
-                <CardDescription>Please request a new invite from your contact at Star Hawk.</CardDescription>
+                <CardDescription>Please request a new invite from your contact at Demo Builder Merchant.</CardDescription>
               </div>
             </CardHeader>
             <CardContent>

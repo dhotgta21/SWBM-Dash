@@ -14,27 +14,27 @@ import { loadPublicCompanyChrome } from '@/lib/public-company'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'How Star Hawk Builders Merchant collects, uses and protects your personal data when you use our website or open a trade account.',
+    'How Demo Builder Merchant collects, uses and protects your personal data when you use our website or open a trade account.',
   alternates: { canonical: `${SITE_URL}/privacy` },
   openGraph: {
-    title: 'Privacy Policy | Star Hawk Builders Merchant',
+    title: 'Privacy Policy | Demo Builder Merchant',
     description:
-      'How Star Hawk Builders Merchant collects, uses and protects your personal data.',
+      'How Demo Builder Merchant collects, uses and protects your personal data.',
     url: `${SITE_URL}/privacy`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Privacy Policy | Star Hawk Builders Merchant',
+    title: 'Privacy Policy | Demo Builder Merchant',
     description:
-      'How Star Hawk Builders Merchant collects, uses and protects your personal data.',
+      'How Demo Builder Merchant collects, uses and protects your personal data.',
   },
 }
 
 const SECTIONS = [
   {
     title: 'Who we are',
-    body: 'Star Hawk Builders Merchant is a UK builders merchant. References to "we", "us" or "our" mean Star Hawk Builders Merchant Ltd. Contact details appear at the bottom of this page.',
+    body: 'Demo Builder Merchant is a UK builders merchant. References to "we", "us" or "our" mean Demo Builder Merchant Contact details appear at the bottom of this page.',
   },
   {
     title: 'What information we collect',

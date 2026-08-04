@@ -42,7 +42,7 @@ export interface GuideFrontmatter {
   readonly difficulty: 'beginner' | 'intermediate' | 'advanced'
   /** Trade price for the average project, e.g. "from £30 per m²". */
   readonly cost: string
-  /** Author / brand. Defaults to "Star Hawk Builders Merchant". */
+  /** Author / brand. Defaults to "Demo Builder Merchant". */
   readonly author?: string
   /** FAQ items rendered as accordion + FAQPage JSON-LD. */
   readonly faqs: readonly FaqItem[]
@@ -110,7 +110,7 @@ function readAll(): GuidePost[] {
 
         posts.push({
           ...(fm as GuideFrontmatter),
-          author: fm.author?.trim() || 'Star Hawk Builders Merchant',
+          author: fm.author?.trim() || 'Demo Builder Merchant',
           body: content,
         })
       } catch (err) {

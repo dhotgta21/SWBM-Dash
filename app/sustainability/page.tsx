@@ -72,7 +72,7 @@ export default function SustainabilityPage() {
         '@type': 'Service',
         name: s.name,
         description: s.description,
-        provider: { '@type': 'Organization', name: 'Star Hawk Builders Merchant' },
+        provider: { '@type': 'Organization', name: 'Demo Builder Merchant' },
         areaServed: 'GB',
       },
     })),

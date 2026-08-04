@@ -9,9 +9,9 @@ import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm'
 import { getTurnstileSiteKey } from '@/lib/turnstile'
 
 export const metadata: Metadata = {
-  title: { absolute: `Reset your password | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Star Hawk Builders Merchant'}` },
+  title: { absolute: `Reset your password | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Demo Builder Merchant'}` },
   description:
-    'Enter your email and we will send you a secure link to reset your Star Hawk account password.',
+    'Enter your email and we will send you a secure link to reset your Demo Builder Merchant account password.',
   robots: { index: false, follow: true },
 }
 

@@ -88,7 +88,7 @@ export function MobileInvoiceSummary({ invoice, company, bankDetails, logoSrc, m
     ? buildCompanyAddress(company)
     : buildDeliveryAddressLines(invoice)
   const companyAddressLines = buildCompanyAddress(company)
-  const companyName = company?.company_name || 'Star Hawk Builders Merchant'
+  const companyName = company?.company_name || 'Demo Builder Merchant'
 
   const items = (invoice.invoice_items || [])
     .slice()

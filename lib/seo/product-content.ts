@@ -331,7 +331,7 @@ export function getProductFallbackDescription(product: {
   const category = product.category ?? 'building materials'
   const brandClause = product.brand ? ` from ${product.brand}` : ''
   return (
-    `${product.name}${brandClause} is a ${category.toLowerCase()} product supplied by Star Hawk Builders Merchant ` +
+    `${product.name}${brandClause} is a ${category.toLowerCase()} product supplied by Demo Builder Merchant ` +
     `for trade and DIY customers across the South East. Priced by the ${product.unit.toLowerCase()}, ` +
     `it is available for same-day or next-day delivery from our own fleet. ` +
     `Contact the trade counter for a competitive quote, stock check or delivery slot.`

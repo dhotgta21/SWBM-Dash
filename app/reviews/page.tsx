@@ -12,7 +12,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 export const metadata: Metadata = {
   title: { absolute: 'Customer Reviews | Same-Day Delivery' },
   description:
-    'Verified builder reviews of Star Hawk Builders Merchant. Same-day delivery, trade pricing, helpful counter staff and a 50-mile own-fleet network.',
+    'Verified builder reviews of Demo Builder Merchant. Same-day delivery, trade pricing, helpful counter staff and a 50-mile own-fleet network.',
   keywords: [
     'builders merchant reviews',
     'customer reviews',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Customer Reviews | Same-Day Delivery',
     description:
-      'Verified builder reviews of Star Hawk Builders Merchant. Same-day delivery, trade pricing, helpful counter staff.',
+      'Verified builder reviews of Demo Builder Merchant. Same-day delivery, trade pricing, helpful counter staff.',
     type: 'website',
     url: canonical('reviews'),
     images: [`${process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') || 'https://www.starhawkbm.com'}/opengraph-image`],
@@ -99,7 +99,7 @@ export default function ReviewsPage() {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: 'Customer Reviews',
-    description: 'Reviews and testimonials for Star Hawk Builders Merchant.',
+    description: 'Reviews and testimonials for Demo Builder Merchant.',
     url: canonical('reviews'),
   }
 

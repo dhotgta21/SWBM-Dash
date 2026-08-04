@@ -54,7 +54,7 @@ export function InlineProductDetail({ product }: InlineProductDetailProps) {
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
-              alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Star Hawk Builders Merchant`}
+              alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Demo Builder Merchant`}
               title={product.name}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"

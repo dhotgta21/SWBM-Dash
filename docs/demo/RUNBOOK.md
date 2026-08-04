@@ -31,7 +31,10 @@ Copy `.env.example` → `.env.local` (local) or Vercel env (hosted).
 - `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_SITE_URL` (demo domain)
 - Postgres URL for scripts: `POSTGRES_URL_NON_POOLING` (or `POSTGRES_URL`)
 
-**Demo mode**
+**Demo mode / brand**
+
+Demo Builder Merchant is the **default** brand for this package (logo files + name).  
+You do not need `NEXT_PUBLIC_DEMO_MODE=true` for the name/logo, but keep it set for clarity:
 
 ```env
 NEXT_PUBLIC_DEMO_MODE=true
@@ -39,6 +42,8 @@ DEMO_MODE=true
 NEXT_PUBLIC_DEMO_VERTICAL=construction
 DEMO_VERTICAL=construction
 ```
+
+Also run `04_demo_company_brand.sql` so the **database** `company_settings` row is not still “Star Hawk…” (dashboard/invoices load the name from DB).
 
 Valid verticals: `construction` | `plumbing` | `electrical` | `windows` | `tile`
 
@@ -73,6 +78,7 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
 | 2 (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
 | 3 | `supabase/seed/03_demo_client_portal_accounts.sql` | Portal login for **every** client |
+| 4 | `supabase/seed/04_demo_company_brand.sql` | Force company name + logo wordmark to **Demo Builder Merchant** |
 
 **Important:** `01_demo_clients_invoices.sql` needs at least one **admin** profile. Create it first via `/register` on the empty project.
 

@@ -54,7 +54,7 @@ export async function generateMetadata({
   const isPaginated = currentPage > 1
   const title = isPaginated
     ? `Building Advice & Guides | Page ${currentPage}`
-    : 'Building Advice & Guides | Star Hawk Blog'
+    : 'Building Advice & Guides | Demo Builder Merchant Blog'
 
   return {
     title: { absolute: title },
@@ -79,32 +79,32 @@ export async function generateMetadata({
           follow: true,
           googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
         },
-    authors: [{ name: 'Star Hawk Builders Merchant', url: SITE_URL }],
+    authors: [{ name: 'Demo Builder Merchant', url: SITE_URL }],
     category: 'construction',
     openGraph: {
       title: isPaginated
-        ? `Building Advice & Guides | Page ${currentPage} | Star Hawk Blog`
-        : 'Building Advice & Guides | Star Hawk Blog',
+        ? `Building Advice & Guides | Page ${currentPage} | Demo Builder Merchant Blog`
+        : 'Building Advice & Guides | Demo Builder Merchant Blog',
       description:
         'Practical building advice for homeowners and trade customers across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
       url: `${SITE_URL}/blog`,
       type: 'website',
-      siteName: 'Star Hawk Builders Merchant',
+      siteName: 'Demo Builder Merchant',
       locale: 'en_GB',
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: 'Star Hawk Builders Merchant building advice and guides',
+          alt: 'Demo Builder Merchant building advice and guides',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title: isPaginated
-        ? `Building Advice & Guides | Page ${currentPage} | Star Hawk Blog`
-        : 'Building Advice & Guides | Star Hawk Blog',
+        ? `Building Advice & Guides | Page ${currentPage} | Demo Builder Merchant Blog`
+        : 'Building Advice & Guides | Demo Builder Merchant Blog',
       description:
         'Practical building advice for homeowners and trade customers across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
       images: [ogImage],
@@ -136,12 +136,12 @@ export default async function BlogIndex({
     '@id': `${SITE_URL}/blog#collection`,
     name: 'Building advice and guides',
     description:
-      'Practical building advice for first-time homeowners, self-builders and trade customers from Star Hawk Builders Merchant.',
+      'Practical building advice for first-time homeowners, self-builders and trade customers from Demo Builder Merchant.',
     url: `${SITE_URL}/blog`,
     isPartOf: {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
-      name: 'Star Hawk Builders Merchant',
+      name: 'Demo Builder Merchant',
       url: SITE_URL,
     },
     // Structured data covers the full set so search engines see the
@@ -188,7 +188,7 @@ export default async function BlogIndex({
             heading legible. */}
         <Image
           src="/hero-4-4kgen.webp"
-          alt="Practical building advice and guides from Star Hawk Builders Merchant"
+          alt="Practical building advice and guides from Demo Builder Merchant"
           fill
           sizes="100vw"
           priority

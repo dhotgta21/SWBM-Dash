@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ? [
             {
               url: resolveAbsoluteUrl(seo.siteUrl, product.imageUrl)!,
-              alt: `${product.name}${product.category ? ` — ${product.category}` : ''} at Star Hawk Builders Merchant`,
+              alt: `${product.name}${product.category ? ` — ${product.category}` : ''} at Demo Builder Merchant`,
             },
           ]
         : [],
@@ -371,7 +371,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
-              alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Star Hawk Builders Merchant`}
+              alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Demo Builder Merchant`}
               title={product.name}
               fill
               priority

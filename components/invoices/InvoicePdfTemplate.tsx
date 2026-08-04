@@ -1530,7 +1530,7 @@ export function InvoicePdfPage({
             </Text>
           ) : null}
           <Text style={[styles.stampSignature, { color: stamp.color }]}>
-            {company?.company_name || 'Star Hawk Builders Merchant Ltd.'}
+            {company?.company_name || 'Demo Builder Merchant'}
           </Text>
           {/* Ink-imperfection overlay. ~30 small white dots scattered
               across the stamp at deterministic pseudo-random positions
@@ -1558,7 +1558,7 @@ export function InvoicePdfPage({
           appear on every page of a multi-page invoice. */}
       <View style={styles.footer} fixed>
         <Text style={styles.footerLineMain}>
-          {(company?.company_name || 'Star Hawk Builders Merchant Ltd.') +
+          {(company?.company_name || 'Demo Builder Merchant') +
             '   Company Registration Number ' +
             (company?.company_registration_number || '\u2014') +
             '   VAT Reg No. ' +
@@ -1578,7 +1578,7 @@ export function InvoicePdfPage({
               company?.postcode
             )
             const parts = [
-              company?.company_name || 'Star Hawk Builders Merchant Ltd.',
+              company?.company_name || 'Demo Builder Merchant',
               l1,
               l2,
             ].filter(Boolean)

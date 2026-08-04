@@ -89,9 +89,9 @@ export default function ToolsPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Tools & Calculators | Star Hawk Builders Merchant',
+    name: 'Tools & Calculators | Demo Builder Merchant',
     description:
-      'Free building material calculators and unit converters from Star Hawk Builders Merchant.',
+      'Free building material calculators and unit converters from Demo Builder Merchant.',
     url: canonical('tools'),
     hasPart: TOOLS.map((tool) => ({
       '@type': 'WebPage',

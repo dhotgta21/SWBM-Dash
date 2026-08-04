@@ -86,7 +86,7 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
   const kind: ConfirmationKind = rawKind === 'order' ? 'order' : 'quote'
   const isOrder = kind === 'order'
 
-  let companyName = 'Star Hawk Builders Merchant'
+  let companyName = 'Demo Builder Merchant'
   let companyEmail: string | null = null
   let companyPhone: string | null = null
 

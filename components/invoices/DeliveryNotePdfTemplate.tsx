@@ -964,7 +964,7 @@ export function DeliveryNotePdfPage({
 
       {/* ─── 7. Footer ─────────────────────────────────────────────── */}
       <Text style={styles.footer} fixed>
-        {(company?.company_name || 'Star Hawk Builders Merchant Ltd.') +
+        {(company?.company_name || 'Demo Builder Merchant') +
           '   Company Registration Number ' +
           (company?.company_registration_number || '\u2014') +
           '   VAT Reg No. ' +

@@ -128,7 +128,7 @@ export function DeliveryNoteDocument({ invoice, company, logoSrc, className, ope
     items.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
   )
 
-  const companyName = company?.company_name || (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Star Hawk Builders Merchant')
+  const companyName = company?.company_name || (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Demo Builder Merchant')
 
   // Header contact info
   const invoicePhones = filterChannelsByContext(company?.phones ?? [], 'invoice')

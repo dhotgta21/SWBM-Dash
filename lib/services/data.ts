@@ -38,7 +38,7 @@ export interface ServicePage {
 export const SERVICES: ServicePage[] = [
   {
     slug: 'brick-matching',
-    title: 'Brick Matching Service | Star Hawk Builders Merchant',
+    title: 'Brick Matching Service | Demo Builder Merchant',
     shortTitle: 'Brick matching',
     icon: 'layers',
     heading: 'Brick matching that keeps your build consistent.',
@@ -116,7 +116,7 @@ export const SERVICES: ServicePage[] = [
   },
   {
     slug: 'estimating',
-    title: 'Take-Off & Estimating Service | Star Hawk Builders Merchant',
+    title: 'Take-Off & Estimating Service | Demo Builder Merchant',
     shortTitle: 'Take-off & estimating',
     icon: 'clipboard-list',
     heading: 'Accurate material estimates from your plans.',
@@ -199,7 +199,7 @@ export const SERVICES: ServicePage[] = [
   },
   {
     slug: 'site-delivery',
-    title: 'Site Delivery Service | Star Hawk Builders Merchant',
+    title: 'Site Delivery Service | Demo Builder Merchant',
     shortTitle: 'Site delivery',
     icon: 'truck',
     heading: 'Reliable site delivery across the South East.',
@@ -282,14 +282,14 @@ export const SERVICES: ServicePage[] = [
   },
   {
     slug: 'credit-accounts',
-    title: 'Trade Credit Accounts | Star Hawk Builders Merchant',
+    title: 'Trade Credit Accounts | Demo Builder Merchant',
     shortTitle: 'Trade credit accounts',
     icon: 'credit-card',
     heading: 'Open a trade credit account today.',
     description:
       'Flexible trade credit for builders, developers and contractors. Apply online and get preferential pricing, dedicated support and monthly invoicing.',
     intro:
-      'A Star Hawk trade credit account gives you flexible payment terms, preferential pricing and a dedicated account manager who understands your workflow. We support sole traders, limited companies and larger development firms with tailored credit limits and straightforward monthly statements.',
+      'A Demo Builder Merchant trade credit account gives you flexible payment terms, preferential pricing and a dedicated account manager who understands your workflow. We support sole traders, limited companies and larger development firms with tailored credit limits and straightforward monthly statements.',
     features: [
       '30-day monthly terms for qualifying trade customers',
       'Preferential trade pricing on bulk and repeat orders',

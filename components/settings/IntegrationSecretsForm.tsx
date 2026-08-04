@@ -253,7 +253,7 @@ function ResendSection({ secrets }: { secrets: IntegrationSecrets }) {
                 autoComplete="off"
                 spellCheck={false}
                 defaultValue={secrets.resend.fromAddress ?? ''}
-                placeholder="Star Hawk Builders Merchant <noreply@yourdomain.com>"
+                placeholder="Demo Builder Merchant <noreply@yourdomain.com>"
                 maxLength={256}
               />
               <ProviderLink href="https://resend.com/domains">

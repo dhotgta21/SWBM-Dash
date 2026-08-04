@@ -104,7 +104,7 @@ export default async function ServicesIndexPage() {
   const servicesJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Trade services from Star Hawk Builders Merchant',
+    name: 'Trade services from Demo Builder Merchant',
     description: 'Four specialist trade services for builders and developers.',
     url: canonical('services'),
     itemListElement: SERVICES.map((s, i) => ({
@@ -114,7 +114,7 @@ export default async function ServicesIndexPage() {
         '@type': 'Service',
         name: s.title,
         description: s.description,
-        provider: { '@type': 'Organization', name: 'Star Hawk Builders Merchant' },
+        provider: { '@type': 'Organization', name: 'Demo Builder Merchant' },
         areaServed: 'GB',
         url: canonical(`services/${s.slug}`),
       },

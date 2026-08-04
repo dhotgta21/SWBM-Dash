@@ -88,7 +88,7 @@ export function AdminLoginForm({ turnstileSiteKey, pendingMfa = null }: AdminLog
         <div className="space-y-1.5">
           <CardTitle>Staff sign in</CardTitle>
           <CardDescription>
-            Operator portal for the Star Hawk team.
+            Operator portal for the Demo Builder Merchant team.
           </CardDescription>
         </div>
       </CardHeader>

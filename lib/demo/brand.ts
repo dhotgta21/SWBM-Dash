@@ -17,12 +17,21 @@ export const DEMO_LEGAL_NAME = 'Demo Builder Merchant'
 
 export const PRODUCTION_SITE_URL = 'https://www.starhawkbm.com'
 
-/** True when this deployment is running as the sales demo. */
+/**
+ * True when this deployment is running as the sales demo.
+ * Defaults to ON for this package (Demo Builder Merchant showcase).
+ * Set NEXT_PUBLIC_DEMO_MODE=false (or DEMO_MODE=false) only if you need
+ * the legacy Star Hawk production brand strings back.
+ */
 export function isDemoMode(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
-    process.env.DEMO_MODE === 'true'
-  )
+  if (
+    process.env.NEXT_PUBLIC_DEMO_MODE === 'false' ||
+    process.env.DEMO_MODE === 'false'
+  ) {
+    return false
+  }
+  // Explicit true, or default-on for this demo packaging
+  return true
 }
 
 /** Fallback company / trading name when DB row is missing. */
@@ -90,4 +99,17 @@ export function getDemoVertical(): string {
     process.env.DEMO_VERTICAL ||
     'construction'
   return raw.trim().toLowerCase() || 'construction'
+}
+
+/** Default logo path (shipped mark in /public). */
+export function getDefaultLogoPath(): string {
+  return '/Logo.webp'
+}
+
+/** Wordmark lines for HTML brand lockups (navbar / dashboard). */
+export function getWordmarkLines(): { title: string; subtitle: string } {
+  if (isDemoMode()) {
+    return { title: 'DEMO BUILDER', subtitle: 'MERCHANT' }
+  }
+  return { title: 'STAR HAWK', subtitle: 'BUILDERS MERCHANT LTD.' }
 }

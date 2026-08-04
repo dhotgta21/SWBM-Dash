@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Invoice | Star Hawk Builders Merchant',
+  title: 'Invoice | Demo Builder Merchant',
   robots: { index: false, follow: false }, // share links should never be indexed
 }
 

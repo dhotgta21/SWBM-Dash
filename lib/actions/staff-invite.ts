@@ -165,7 +165,7 @@ export async function inviteStaffUser(formData: FormData) {
     // company record so the footer has a real address / phone / email /
     // reg numbers — operators notice when an email says "you can call us"
     // but the number is missing.
-    let companyName = 'Star Hawk Builders Merchant'
+    let companyName = 'Demo Builder Merchant'
     let emailFromName: string | null = null
     let logoUrl: string | null = null
     let company: Parameters<typeof renderStaffInviteEmailHtml>[0]['company'] = {

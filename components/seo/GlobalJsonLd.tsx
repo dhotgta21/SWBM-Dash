@@ -17,7 +17,7 @@ export async function GlobalJsonLd() {
   ])
 
   const siteUrl = seo?.siteUrl ?? SITE_URL
-  const siteName = seo?.siteName ?? 'Star Hawk Builders Merchant'
+  const siteName = seo?.siteName ?? 'Demo Builder Merchant'
   const phone = company ? getPrimaryChannelValue(company.phones) : null
   const email = company ? getPrimaryChannelValue(company.emails) : null
 

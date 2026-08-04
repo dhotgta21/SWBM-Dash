@@ -49,7 +49,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: 'Dave R.',
     role: 'Bricklayer, Reading',
     rating: 5,
-    text: 'Been using Star Hawk for six months. Bricks are always clean, well-stacked and the load sizes are spot on.',
+    text: 'Been using Demo Builder Merchant for six months. Bricks are always clean, well-stacked and the load sizes are spot on.',
     date: '2026-05-28',
   },
   {

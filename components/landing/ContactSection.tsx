@@ -78,7 +78,7 @@ export function ContactSection({ phones, emails, addressLines }: ContactSectionP
 
               <div className="overflow-hidden rounded-lg border border-border bg-white">
                 <iframe
-                  title="Star Hawk Builders Merchant location"
+                  title="Demo Builder Merchant location"
                   src={mapSrc}
                   width="100%"
                   height="220"

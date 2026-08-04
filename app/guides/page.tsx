@@ -40,9 +40,9 @@ const PREVIEW_COUNT = 3
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Building Resources Hub | Guides, Advice & Case Studies | Star Hawk' },
+  title: { absolute: 'Building Resources Hub | Guides, Advice & Case Studies | Demo Builder Merchant' },
   description:
-    'Step-by-step how-to guides, plain-English building advice, and real project case studies from Star Hawk Builders Merchant. Everything you need to plan, budget and run a building project.',
+    'Step-by-step how-to guides, plain-English building advice, and real project case studies from Demo Builder Merchant. Everything you need to plan, budget and run a building project.',
   keywords: [
     'builders merchant resources',
     'building guides',
@@ -54,30 +54,30 @@ export const metadata: Metadata = {
     'self build advice',
   ],
   alternates: { canonical: `${SITE_URL}/guides` },
-  authors: [{ name: 'Star Hawk Builders Merchant', url: SITE_URL }],
+  authors: [{ name: 'Demo Builder Merchant', url: SITE_URL }],
   category: 'construction',
   openGraph: {
-    title: 'Building Resources Hub | Star Hawk Builders Merchant',
+    title: 'Building Resources Hub | Demo Builder Merchant',
     description:
-      'How-to guides, building advice and real project case studies — every piece of editorial content from Star Hawk in one place.',
+      'How-to guides, building advice and real project case studies — every piece of editorial content from Demo Builder Merchant in one place.',
     url: `${SITE_URL}/guides`,
     type: 'website',
-    siteName: 'Star Hawk Builders Merchant',
+    siteName: 'Demo Builder Merchant',
     locale: 'en_GB',
     images: [
       {
         url: `${SITE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: 'Star Hawk Builders Merchant resources hub',
+        alt: 'Demo Builder Merchant resources hub',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Building Resources Hub | Star Hawk Builders Merchant',
+    title: 'Building Resources Hub | Demo Builder Merchant',
     description:
-      'How-to guides, building advice and real project case studies — every piece of editorial content from Star Hawk in one place.',
+      'How-to guides, building advice and real project case studies — every piece of editorial content from Demo Builder Merchant in one place.',
     images: [`${SITE_URL}/opengraph-image`],
   },
 }
@@ -104,12 +104,12 @@ export default async function GuidesHubPage() {
     '@id': `${SITE_URL}/guides#collection`,
     name: 'Building resources — guides, advice and case studies',
     description:
-      'Every piece of editorial content from Star Hawk Builders Merchant: how-to guides, plain-English building advice and real project case studies.',
+      'Every piece of editorial content from Demo Builder Merchant: how-to guides, plain-English building advice and real project case studies.',
     url: `${SITE_URL}/guides`,
     isPartOf: {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
-      name: 'Star Hawk Builders Merchant',
+      name: 'Demo Builder Merchant',
       url: SITE_URL,
     },
     hasPart: [
@@ -150,7 +150,7 @@ export default async function GuidesHubPage() {
         {/* Background photo */}
         <Image
           src="/hero-2-4kgen.webp"
-          alt="Step-by-step building guides and how-to resources from Star Hawk Builders Merchant"
+          alt="Step-by-step building guides and how-to resources from Demo Builder Merchant"
           fill
           sizes="100vw"
           priority
@@ -264,7 +264,7 @@ export default async function GuidesHubPage() {
               id="resources-case-studies-heading"
               eyebrow="Recent projects"
               title="Real projects, supplied by us."
-              description="Every project below was supplied by Star Hawk Builders Merchant — from foundation aggregates to the last fixing. Use the filters at the full index to explore by type, town or county."
+              description="Every project below was supplied by Demo Builder Merchant — from foundation aggregates to the last fixing. Use the filters at the full index to explore by type, town or county."
               viewAllHref="/case-studies"
               viewAllLabel="All case studies"
               icon={<Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />}

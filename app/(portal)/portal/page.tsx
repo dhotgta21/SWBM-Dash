@@ -192,7 +192,7 @@ export default async function PortalPage({ searchParams: _searchParams }: Portal
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Your portal account is not linked to a customer record yet. Please contact Star Hawk to finish
+          Your portal account is not linked to a customer record yet. Please contact Demo Builder Merchant to finish
           setting up your account.
         </AlertDescription>
       </Alert>

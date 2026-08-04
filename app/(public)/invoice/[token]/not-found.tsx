@@ -16,7 +16,7 @@ export default function PublicInvoiceNotFound() {
           invoice. Please contact the sender if you believe this is a mistake.
         </p>
         <div className="mt-6 text-xs text-muted-foreground">
-          Star Hawk Builders Merchant
+          Demo Builder Merchant
         </div>
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground mb-2">Are you the sender?</p>

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { BRAND_LOGO_ASPECT } from '@/lib/brand'
 import {
   getDefaultLegalName,
-  isDemoMode,
+  getWordmarkLines,
 } from '@/lib/demo/brand'
 
 type BrandVariant = 'horizontal' | 'sidebar' | 'login' | 'mobile' | 'collapsed'
@@ -86,9 +86,7 @@ export function BrandLogo({
   const resolvedVariant = variant ?? pickVariant(imageSize, showText)
   const SIZES = sizeRecord(logoUrl, logoUpdatedAt)
   const legalName = getDefaultLegalName()
-  const demo = isDemoMode()
-  const titleLine = demo ? 'DEMO BUILDER' : 'STAR HAWK'
-  const subtitleLine = demo ? 'MERCHANT' : 'BUILDERS MERCHANT LTD.'
+  const { title: titleLine, subtitle: subtitleLine } = getWordmarkLines()
 
   if (resolvedVariant === 'horizontal') {
     return (

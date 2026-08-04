@@ -78,7 +78,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   // Load the company name for the header wordmark. Falls back to a
   // sensible default so the page still renders if the company row is
   // missing for any reason.
-  let companyName = 'Star Hawk Builders Merchant'
+  let companyName = 'Demo Builder Merchant'
   try {
     const supabase = await createClient()
     const { data } = await supabase

@@ -6,6 +6,7 @@ import { BRAND_LOGO_ASPECT } from '@/lib/brand'
 import {
   DEMO_COMPANY_NAME,
   getDefaultCompanyName,
+  getWordmarkLines,
   useStarHawkWordmark,
 } from '@/lib/demo/brand'
 
@@ -21,10 +22,9 @@ interface DashboardBrandProps {
 
 const DEFAULT_LOGO = '/Logo.webp'
 const DEFAULT_NAME = getDefaultCompanyName()
-const OFFICIAL_TITLE = 'STAR HAWK'
-const OFFICIAL_SUBTITLE = 'BUILDERS MERCHANT LTD.'
-const DEMO_TITLE = 'DEMO BUILDER'
-const DEMO_SUBTITLE = 'MERCHANT'
+const WORDMARK = getWordmarkLines()
+const OFFICIAL_TITLE = WORDMARK.title
+const OFFICIAL_SUBTITLE = WORDMARK.subtitle
 
 // Aspect ratio of public/Logo.png — single source of truth in lib/brand.ts.
 const LOGO_ASPECT = BRAND_LOGO_ASPECT
@@ -44,13 +44,17 @@ export function DashboardBrand({
 }: DashboardBrandProps) {
   const resolvedName = companyName || DEFAULT_NAME
   const resolvedLogo = buildLogoSrc(logoUrl, logoUpdatedAt)
+  // Use wordmark lockup for production Star Hawk or for Demo Builder Merchant.
   const isStarHawkWordmark = useStarHawkWordmark(companyName)
   const isDemoWordmark =
     !isStarHawkWordmark &&
-    (!companyName || companyName === DEMO_COMPANY_NAME || companyName === DEFAULT_NAME)
+    (!companyName ||
+      companyName === DEMO_COMPANY_NAME ||
+      companyName === DEFAULT_NAME ||
+      companyName === 'Demo Builder Merchant')
   const isOfficialBrand = isStarHawkWordmark || isDemoWordmark
-  const wordmarkTitle = isStarHawkWordmark ? OFFICIAL_TITLE : DEMO_TITLE
-  const wordmarkSubtitle = isStarHawkWordmark ? OFFICIAL_SUBTITLE : DEMO_SUBTITLE
+  const wordmarkTitle = OFFICIAL_TITLE
+  const wordmarkSubtitle = OFFICIAL_SUBTITLE
 
   if (variant === 'collapsed') {
     return (

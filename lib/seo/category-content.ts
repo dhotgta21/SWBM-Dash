@@ -290,7 +290,7 @@ export function getCategoryContent(category: string | null | undefined): Categor
 
   const lower = category.toLowerCase()
   return {
-    intro: `${category} is a stocked category of building materials at Star Hawk Builders Merchant, sold by the unit or pack and available for same-day delivery on stock lines across the core service area. We keep the common trade lines on the shelf and can source specialist sizes or grades through our supplier network with short lead times. Add the lines you need to a quote list for trade pricing and we will come back the same business day with stock confirmation and a delivery slot.`,
+    intro: `${category} is a stocked category of building materials at Demo Builder Merchant, sold by the unit or pack and available for same-day delivery on stock lines across the core service area. We keep the common trade lines on the shelf and can source specialist sizes or grades through our supplier network with short lead times. Add the lines you need to a quote list for trade pricing and we will come back the same business day with stock confirmation and a delivery slot.`,
     faqs: [
       {
         q: `Do you stock ${lower} for trade and DIY?`,

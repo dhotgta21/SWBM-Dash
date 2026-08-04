@@ -29,7 +29,7 @@ export interface BlogArticleFrontmatter {
   readonly excerpt: string
   /** Editorial category, e.g. "First-time buyers". */
   readonly category: string
-  /** Author name. Defaults to "Star Hawk Builders Merchant" if omitted. */
+  /** Author name. Defaults to "Demo Builder Merchant" if omitted. */
   readonly author?: string
   /** FAQ items rendered as accordion + FAQPage JSON-LD. */
   readonly faqs: readonly FaqItem[]
@@ -82,7 +82,7 @@ function readAll(): BlogArticle[] {
 
     return {
       ...(fm as BlogArticleFrontmatter),
-      author: fm.author?.trim() || 'Star Hawk Builders Merchant',
+      author: fm.author?.trim() || 'Demo Builder Merchant',
       body: content,
     }
   })

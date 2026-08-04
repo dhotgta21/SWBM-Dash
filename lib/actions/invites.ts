@@ -113,7 +113,7 @@ async function sendInviteEmail(opts: {
   // shown in the From header (e.g. "Customer Service") which reads
   // oddly in the email body. Body content should always reference
   // the actual business name.
-  let companyName = 'Star Hawk Builders Merchant'
+  let companyName = 'Demo Builder Merchant'
   let emailFromName: string | null = null
   let logoUrl: string | null = null
   let company: Parameters<typeof renderClientInviteEmailHtml>[0]['company'] = {
@@ -679,14 +679,14 @@ export async function acceptInviteWithToken(
   }
 
   if (invite.status === 'revoked') {
-    return { ok: false, error: 'This invite has been revoked. Please ask your contact at Star Hawk to send a new one.' }
+    return { ok: false, error: 'This invite has been revoked. Please ask your contact at Demo Builder Merchant to send a new one.' }
   }
   if (invite.status === 'expired' || new Date(invite.expires_at) < new Date()) {
     // Mark as expired if it hasn't been already (idempotent).
     if (invite.status !== 'expired') {
       await admin.from('client_invitations').update({ status: 'expired' }).eq('id', invite.id)
     }
-    return { ok: false, error: 'This invite has expired. Please ask your contact at Star Hawk to send a new one.' }
+    return { ok: false, error: 'This invite has expired. Please ask your contact at Demo Builder Merchant to send a new one.' }
   }
   if (invite.status === 'accepted') {
     return { ok: false, error: 'This invite has already been used. Please sign in instead.' }
@@ -755,7 +755,7 @@ export async function acceptInviteWithToken(
         return {
           ok: false,
           error:
-            'This email is already linked to a different client. Please ask your contact at Star Hawk to check the portal account.',
+            'This email is already linked to a different client. Please ask your contact at Demo Builder Merchant to check the portal account.',
         }
       }
       userId = profileByEmail.id
@@ -805,7 +805,7 @@ export async function acceptInviteWithToken(
           return {
             ok: false,
             error:
-              'A user with this email already exists but could not be linked. Please ask your contact at Star Hawk to reset the portal account.',
+              'A user with this email already exists but could not be linked. Please ask your contact at Demo Builder Merchant to reset the portal account.',
           }
         }
         userId = found.id
@@ -881,20 +881,20 @@ export async function acceptInviteWithToken(
     if (acceptErr.code === 'P0001' && /revoked/i.test(msg)) {
       return {
         ok: false,
-        error: 'This invite has been revoked. Please ask your contact at Star Hawk to send a new one.',
+        error: 'This invite has been revoked. Please ask your contact at Demo Builder Merchant to send a new one.',
       }
     }
     if (acceptErr.code === 'P0001' && /expired/i.test(msg)) {
       return {
         ok: false,
-        error: 'This invite has expired. Please ask your contact at Star Hawk to send a new one.',
+        error: 'This invite has expired. Please ask your contact at Demo Builder Merchant to send a new one.',
       }
     }
     if (acceptErr.code === 'P0001' && /already linked to a different client/i.test(msg)) {
       return {
         ok: false,
         error:
-          'This email is already linked to a different client. Please ask your contact at Star Hawk to check the portal account.',
+          'This email is already linked to a different client. Please ask your contact at Demo Builder Merchant to check the portal account.',
       }
     }
     if (

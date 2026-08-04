@@ -129,7 +129,7 @@ export function ProductSeoEditor({ products, canEdit }: ProductSeoEditorProps) {
                       id={`seo_title_${product.id}`}
                       name="seo_title"
                       defaultValue={product.seoTitle ?? ''}
-                      placeholder="Product | Trade Prices & Same-Day Delivery | Star Hawk"
+                      placeholder="Product | Trade Prices & Same-Day Delivery | Demo Builder Merchant"
                       disabled={!canEdit}
                     />
                   </div>

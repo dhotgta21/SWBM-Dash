@@ -334,7 +334,7 @@ export default async function LocationPage({ params }: PageProps) {
                 the actual content-cas-study mtime per town. */}
             <p className="mt-6 text-xs text-muted-foreground">
               <span className="font-semibold text-foreground">
-                Reviewed by the Star Hawk delivery team
+                Reviewed by the Demo Builder Merchant delivery team
               </span>
               {' '}· 15+ years serving {location.county} ·{' '}
               <time dateTime={new Date().toISOString().slice(0, 10)}>

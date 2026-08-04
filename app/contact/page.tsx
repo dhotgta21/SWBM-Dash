@@ -230,7 +230,7 @@ export default async function ContactPage() {
 
               <div className="overflow-hidden rounded-xl border border-border bg-white">
                 <iframe
-                  title="Star Hawk Builders Merchant location"
+                  title="Demo Builder Merchant location"
                   src={mapSrc}
                   width="100%"
                   height="320"

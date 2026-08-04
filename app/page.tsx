@@ -1,5 +1,5 @@
 // app/page.tsx
-// Public marketing landing page for Star Hawk Builders Merchant.
+// Public marketing landing page for Demo Builder Merchant.
 //
 // Replaces the old behaviour of redirecting "/" → "/login" so the
 // canonical site entry point is now a customer-facing showcase of the

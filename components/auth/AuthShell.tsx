@@ -143,7 +143,7 @@ export function AuthShell({
             coloured brand statement. Uses hero-1 so the photo is
             already preloaded by the landing page. */}
         <aside
-          aria-label="About Star Hawk Builders Merchant"
+          aria-label="About Demo Builder Merchant"
           className="relative hidden overflow-hidden bg-slate-900 lg:flex lg:w-1/2 xl:w-[55%]"
         >
           <div className="absolute inset-0">

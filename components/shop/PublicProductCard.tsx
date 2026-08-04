@@ -62,7 +62,7 @@ export function PublicProductCard({ product, onSelect, searchQuery }: PublicProd
       {product.imageUrl ? (
         <Image
           src={product.imageUrl}
-          alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Star Hawk Builders Merchant`}
+          alt={`${product.name}${product.category ? ` — ${product.category}` : ''} at Demo Builder Merchant`}
           title={product.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

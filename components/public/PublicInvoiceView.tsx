@@ -33,7 +33,7 @@ export async function PublicInvoiceView({
   downloadToken,
 }: PublicInvoiceViewProps) {
   const resolvedLogoSrc = logoSrc ?? LOGO_SRC
-  const companyName = company?.company_name || 'Star Hawk Builders Merchant'
+  const companyName = company?.company_name || 'Demo Builder Merchant'
   const isDeliveryNote = mode === 'delivery-note'
   const docTypeLabel = isDeliveryNote
     ? invoice.delivery_method === 'collection'
@@ -100,7 +100,7 @@ export async function PublicInvoiceView({
       </div>
 
       <p className="text-center text-xs text-gray-400 pb-8 print:hidden">
-        Shared by {companyName} • Powered by Star Hawk
+        Shared by {companyName} • Powered by Demo Builder Merchant
       </p>
     </div>
   )

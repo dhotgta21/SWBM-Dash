@@ -105,8 +105,8 @@ export async function generateMetadata({ params, searchParams }: PublicInvoicePa
       }
     }
 
-    const title = 'Document | Star Hawk Builders Merchant'
-    const description = 'View your shared document from Star Hawk Builders Merchant'
+    const title = 'Document | Demo Builder Merchant'
+    const description = 'View your shared document from Demo Builder Merchant'
 
     return {
       title,
@@ -126,7 +126,7 @@ export async function generateMetadata({ params, searchParams }: PublicInvoicePa
   } catch (err) {
     console.error('Public invoice metadata generation failed:', err)
     return {
-      title: 'Document | Star Hawk Builders Merchant',
+      title: 'Document | Demo Builder Merchant',
       robots: { index: false, follow: false },
     }
   }

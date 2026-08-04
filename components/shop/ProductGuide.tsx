@@ -22,7 +22,7 @@ export function ProductGuide({ product }: ProductGuideProps) {
     paragraphs.push(guide.intro)
   } else {
     paragraphs.push(
-      `${categoryName} from Star Hawk Builders Merchant are stocked for trade and DIY customers across the South East. ` +
+      `${categoryName} from Demo Builder Merchant are stocked for trade and DIY customers across the South East. ` +
         `We keep the common lines on the shelf and can source specialist sizes or grades through our supplier network with short lead times.`,
     )
   }

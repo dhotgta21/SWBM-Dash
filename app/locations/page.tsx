@@ -22,7 +22,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Delivery Areas & Local Projects | Star Hawk Builders Merchant',
+    absolute: 'Delivery Areas & Local Projects | Demo Builder Merchant',
   },
   description:
     'See builders merchant delivery areas and local building projects near you. Same-day building materials across 900+ towns in the South East, Greater London, north Essex, north Kent, Sussex, Hampshire and Oxfordshire.',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     canonical: canonical('locations'),
   },
   openGraph: {
-    title: 'Delivery Areas & Local Projects | Star Hawk Builders Merchant',
+    title: 'Delivery Areas & Local Projects | Demo Builder Merchant',
     description:
       'Browse building materials delivery and recent projects across 900+ towns in the South East.',
     url: canonical('locations'),

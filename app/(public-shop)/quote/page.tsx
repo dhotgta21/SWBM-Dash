@@ -226,7 +226,7 @@ export default async function ShopPage() {
 
       <section className="mt-16 grid gap-8 lg:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Why builders choose Star Hawk</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Why builders choose Demo Builder Merchant</h2>
           <ul className="mt-5 space-y-3 text-muted-foreground">
             {[
               'Same-day delivery on stock lines across Greater London, Berkshire, Buckinghamshire and Surrey',

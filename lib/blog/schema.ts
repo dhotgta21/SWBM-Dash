@@ -36,7 +36,7 @@ export interface CompanyShape {
 }
 
 const DEFAULT_COMPANY: CompanyShape = {
-  name: 'Star Hawk Builders Merchant',
+  name: 'Demo Builder Merchant',
   url: SITE_URL,
   streetAddress: 'Unit 14, Star Hawk Trade Park',
   addressLocality: 'Slough',

@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
   }
 
   const fromName =
-    companyRow?.email_from_name || companyRow?.company_name || 'Star Hawk Builders Merchant'
+    companyRow?.email_from_name || companyRow?.company_name || 'Demo Builder Merchant'
   const replyTo = (companyRow?.email_reply_to || companyRow?.email || '').trim() || undefined
 
   if (shouldBypassOutboundEmail()) {
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
       line_total: Number(it.line_total),
     })),
     company: {
-      company_name: companyForRendering.company_name || 'Star Hawk Builders Merchant',
+      company_name: companyForRendering.company_name || 'Demo Builder Merchant',
       address_line_1: companyForRendering.address_line_1,
       address_line_2: companyForRendering.address_line_2,
       town: companyForRendering.town,

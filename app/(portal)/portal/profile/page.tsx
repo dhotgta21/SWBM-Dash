@@ -1,6 +1,6 @@
 // app/(portal)/portal/profile/page.tsx
 // Read-only profile view + sign-out affordance. Clients see the
-// contact details Star Hawk has on file for them and can sign out
+// contact details Demo Builder Merchant has on file for them and can sign out
 // from here (the same Sign Out also lives in the header dropdown,
 // but having it inline keeps the page self-contained — a customer
 // who lands here from a "View profile" link shouldn't have to hunt
@@ -112,13 +112,13 @@ export default async function PortalProfilePage() {
       <PageHeader
         eyebrow={<EyebrowChip label="Account" tone="info" />}
         title="My profile"
-        description="The details Star Hawk has on file for you. Need a change? Get in touch with the office."
+        description="The details Demo Builder Merchant has on file for you. Need a change? Get in touch with the office."
       />
 
       {(!client) && (
         <Alert variant="destructive">
           <AlertDescription>
-            We couldn&apos;t find your customer record. Please contact Star Hawk to finish setting up your account.
+            We couldn&apos;t find your customer record. Please contact Demo Builder Merchant to finish setting up your account.
           </AlertDescription>
         </Alert>
       )}
@@ -137,7 +137,7 @@ export default async function PortalProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>On file with Star Hawk</CardTitle>
+          <CardTitle>On file with Demo Builder Merchant</CardTitle>
           <CardDescription>These details appear on your invoices and delivery paperwork.</CardDescription>
         </CardHeader>
         <CardContent className="px-6 pb-2">

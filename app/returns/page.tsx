@@ -11,20 +11,20 @@ import { loadPublicCompanyChrome } from '@/lib/public-company'
 export const metadata: Metadata = {
   title: 'Returns Policy',
   description:
-    'Star Hawk Builders Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
+    'Demo Builder Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
   alternates: { canonical: `${SITE_URL}/returns` },
   openGraph: {
-    title: 'Returns Policy | Star Hawk Builders Merchant',
+    title: 'Returns Policy | Demo Builder Merchant',
     description:
-      'Star Hawk Builders Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
+      'Demo Builder Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
     url: `${SITE_URL}/returns`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Returns Policy | Star Hawk Builders Merchant',
+    title: 'Returns Policy | Demo Builder Merchant',
     description:
-      'Star Hawk Builders Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
+      'Demo Builder Merchant returns policy: 30-day returns with a valid invoice, provided goods are unopened, unused and undamaged.',
   },
 }
 

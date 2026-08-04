@@ -9,9 +9,9 @@ import { ClientLoginForm } from '@/components/auth/ClientLoginForm'
 import { getTurnstileSiteKey } from '@/lib/turnstile'
 
 export const metadata: Metadata = {
-  title: { absolute: `Client portal sign in | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Star Hawk Builders Merchant'}` },
+  title: { absolute: `Client portal sign in | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Demo Builder Merchant'}` },
   description:
-    'Sign in to the Star Hawk client portal to view invoices, quotes and account details.',
+    'Sign in to the Demo Builder Merchant client portal to view invoices, quotes and account details.',
   robots: { index: false, follow: true },
 }
 

@@ -102,7 +102,7 @@ interface CompanyBranding {
 }
 
 async function loadCompanyBranding(baseUrl: string | null): Promise<CompanyBranding> {
-  let companyName = 'Star Hawk Builders Merchant'
+  let companyName = 'Demo Builder Merchant'
   let emailFromName: string | null = null
   let logoUrl: string | null = null
   let company: CompanyBranding['company'] = {

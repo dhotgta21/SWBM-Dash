@@ -12,27 +12,27 @@ import { loadPublicCompanyChrome } from '@/lib/public-company'
 export const metadata: Metadata = {
   title: 'Website Terms',
   description:
-    'Terms of use for the Star Hawk Builders Merchant website, including the public catalogue and quote builder.',
+    'Terms of use for the Demo Builder Merchant website, including the public catalogue and quote builder.',
   alternates: { canonical: `${SITE_URL}/terms` },
   openGraph: {
-    title: 'Website Terms | Star Hawk Builders Merchant',
+    title: 'Website Terms | Demo Builder Merchant',
     description:
-      'Terms of use for the Star Hawk Builders Merchant website and quote builder.',
+      'Terms of use for the Demo Builder Merchant website and quote builder.',
     url: `${SITE_URL}/terms`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Website Terms | Star Hawk Builders Merchant',
+    title: 'Website Terms | Demo Builder Merchant',
     description:
-      'Terms of use for the Star Hawk Builders Merchant website and quote builder.',
+      'Terms of use for the Demo Builder Merchant website and quote builder.',
   },
 }
 
 const SECTIONS = [
   {
     title: 'Using this website',
-    body: 'This site is provided free of charge for general information about Star Hawk Builders Merchant, our stock categories, services and delivery area. You may browse, share links and submit quote requests through the quote builder. You agree not to misuse the site, attempt to disrupt it, or scrape its contents for commercial purposes.',
+    body: 'This site is provided free of charge for general information about Demo Builder Merchant, our stock categories, services and delivery area. You may browse, share links and submit quote requests through the quote builder. You agree not to misuse the site, attempt to disrupt it, or scrape its contents for commercial purposes.',
   },
   {
     title: 'Quotes and pricing',
@@ -44,7 +44,7 @@ const SECTIONS = [
   },
   {
     title: 'Intellectual property',
-    body: 'All content on this site — including the Star Hawk brand mark, category imagery, photography and copy — is owned by Star Hawk Builders Merchant or our licensors and is protected by UK and international copyright laws.',
+    body: 'All content on this site — including the Demo Builder Merchant brand mark, category imagery, photography and copy — is owned by Demo Builder Merchant or our licensors and is protected by UK and international copyright laws.',
   },
   {
     title: 'Liability',
@@ -94,7 +94,7 @@ export default async function TermsPage() {
                 <li>You can browse the site and request quotes free of charge.</li>
                 <li>Online prices are indicative — final pricing is confirmed in writing.</li>
                 <li>Trade accounts are subject to status and credit checks.</li>
-                <li>All content is owned by Star Hawk Builders Merchant and protected by copyright.</li>
+                <li>All content is owned by Demo Builder Merchant and protected by copyright.</li>
                 <li>These terms are governed by English law.</li>
               </ul>
             </div>

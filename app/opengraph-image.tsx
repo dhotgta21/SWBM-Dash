@@ -5,7 +5,7 @@ import { loadSeoConfig, type SeoConfig } from '@/lib/seo/company-seo'
 import { getConfiguredLogoPath, getBrandAssetBuffer } from '@/lib/logo'
 
 export const runtime = 'nodejs'
-export const alt = 'Star Hawk Builders Merchant'
+export const alt = 'Demo Builder Merchant'
 export const size = {
   width: 1200,
   height: 630,
@@ -15,15 +15,15 @@ export const contentType = 'image/png'
 
 const FALLBACK_SEO: SeoConfig = {
   siteUrl: 'https://www.starhawkbm.com',
-  siteName: 'Star Hawk Builders Merchant',
+  siteName: 'Demo Builder Merchant',
   home: {
-    title: 'Star Hawk Builders Merchant | Building Materials & Timber',
+    title: 'Demo Builder Merchant | Building Materials & Timber',
     description:
-      'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.',
+      'Building materials, aggregates, bricks, timber, blocks & more from Demo Builder Merchant. Same-day delivery across Greater London & the Home Counties.',
     keywords: [],
-    ogTitle: 'Star Hawk Builders Merchant | Building Materials & Timber',
+    ogTitle: 'Demo Builder Merchant | Building Materials & Timber',
     ogDescription:
-      'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.',
+      'Building materials, aggregates, bricks, timber, blocks & more from Demo Builder Merchant. Same-day delivery across Greater London & the Home Counties.',
   },
   shop: { title: 'Get a Trade Quote', description: '' },
   catalog: { title: 'Full Product Catalogue', description: '' },

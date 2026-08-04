@@ -61,7 +61,7 @@ export async function generateMetadata({
   return {
     title: { absolute: title },
     description:
-      'Real building-materials case studies from Star Hawk: extensions, loft conversions, self-builds, garden offices and commercial fit-outs across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
+      'Real building-materials case studies from Demo Builder Merchant: extensions, loft conversions, self-builds, garden offices and commercial fit-outs across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
     keywords: [
       'builders merchant case studies',
       'building materials case studies',
@@ -84,34 +84,34 @@ export async function generateMetadata({
           follow: true,
           googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
         },
-    authors: [{ name: 'Star Hawk Builders Merchant', url: SITE_URL }],
+    authors: [{ name: 'Demo Builder Merchant', url: SITE_URL }],
     category: 'construction',
     openGraph: {
       title: isPaginated
-        ? `Builders Merchant Case Studies | Page ${currentPage} | Star Hawk`
-        : 'Builders Merchant Case Studies | Star Hawk',
+        ? `Builders Merchant Case Studies | Page ${currentPage} | Demo Builder Merchant`
+        : 'Builders Merchant Case Studies | Demo Builder Merchant',
       description:
-        'Real building-materials case studies from Star Hawk: extensions, loft conversions, self-builds and more, delivered across 20+ towns.',
+        'Real building-materials case studies from Demo Builder Merchant: extensions, loft conversions, self-builds and more, delivered across 20+ towns.',
       url: `${SITE_URL}/case-studies`,
       type: 'website',
-      siteName: 'Star Hawk Builders Merchant',
+      siteName: 'Demo Builder Merchant',
       locale: 'en_GB',
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: 'Star Hawk Builders Merchant case studies',
+          alt: 'Demo Builder Merchant case studies',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title: isPaginated
-        ? `Builders Merchant Case Studies | Page ${currentPage} | Star Hawk`
-        : 'Builders Merchant Case Studies | Star Hawk',
+        ? `Builders Merchant Case Studies | Page ${currentPage} | Demo Builder Merchant`
+        : 'Builders Merchant Case Studies | Demo Builder Merchant',
       description:
-        'Real building-materials case studies from Star Hawk: extensions, loft conversions, self-builds and more, delivered across 20+ towns.',
+        'Real building-materials case studies from Demo Builder Merchant: extensions, loft conversions, self-builds and more, delivered across 20+ towns.',
       images: [ogImage],
     },
   }
@@ -142,12 +142,12 @@ export default async function CaseStudiesIndex({
     '@id': `${SITE_URL}/case-studies#collection`,
     name: 'Builders merchant case studies',
     description:
-      'A growing library of case studies showing how Star Hawk Builders Merchant supplies materials for real projects across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
+      'A growing library of case studies showing how Demo Builder Merchant supplies materials for real projects across Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and West London.',
     url: `${SITE_URL}/case-studies`,
     isPartOf: {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
-      name: 'Star Hawk Builders Merchant',
+      name: 'Demo Builder Merchant',
       url: SITE_URL,
     },
     hasPart: allPosts.map((p) => ({
@@ -205,7 +205,7 @@ export default async function CaseStudiesIndex({
             behind a dark gradient so the heading stays legible. */}
         <Image
           src="/hero-3-4kgen.webp"
-          alt="Real building project case studies supplied by Star Hawk Builders Merchant"
+          alt="Real building project case studies supplied by Demo Builder Merchant"
           fill
           sizes="100vw"
           priority
@@ -232,7 +232,7 @@ export default async function CaseStudiesIndex({
             How we supply real building projects across the South East.
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Every project below was supplied by Star Hawk Builders Merchant, from
+            Every project below was supplied by Demo Builder Merchant, from
             foundation aggregates to the last fixing. Use the filters to explore by
             project type, town or county.
           </p>
@@ -284,7 +284,7 @@ export default async function CaseStudiesIndex({
             Common questions about our case studies
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Quick answers about how Star Hawk supplies building materials for real
+            Quick answers about how Demo Builder Merchant supplies building materials for real
             projects across the South East.
           </p>
 
@@ -465,14 +465,14 @@ const faqs = [
       'Yes. Use the project type filter above to narrow case studies by extension, loft conversion, self-build, commercial fit-out or any other category. Each case study lists the exact building materials supplied.',
   },
   {
-    question: 'Which towns do Star Hawk Builders Merchant deliver to?',
+    question: 'Which towns do Demo Builder Merchant deliver to?',
     answer:
       'We deliver building materials to towns across the South East including Slough, Reading, Maidenhead, High Wycombe, Bracknell, Camberley, Farnborough, Basingstoke, Oxford, Bicester, Guildford and many more.',
   },
   {
     question: 'Are the projects on this page real customer jobs?',
     answer:
-      'Yes. Every case study documents a real building project supplied by Star Hawk Builders Merchant, from foundation aggregates and bricks to timber, insulation and finishing materials.',
+      'Yes. Every case study documents a real building project supplied by Demo Builder Merchant, from foundation aggregates and bricks to timber, insulation and finishing materials.',
   },
   {
     question: 'How can I request the same materials for my project?',

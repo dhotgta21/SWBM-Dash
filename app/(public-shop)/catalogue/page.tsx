@@ -36,7 +36,7 @@ const PAGE_SIZE = 24
 
 const CATALOG_FAQS = [
   {
-    q: 'What is included in the Star Hawk product catalogue?',
+    q: 'What is included in the Demo Builder Merchant product catalogue?',
     a: 'The catalogue covers aggregates, cement, bricks, blocks, timber, sheet materials, plasterboard, insulation, roofing, drainage, fixings, steel, lintels and tools. Every active line has its own product page with a trade-quote form.',
   },
   {
