@@ -49,37 +49,144 @@ async function twoTierRateLimit(
   return rateLimit(supabase, key, max, windowMs, { failOpen })
 }
 
-function sanitizeAuthError(error: { message?: string; code?: string }) {
+function isOpaqueAuthError(error: { message?: string; code?: string }): boolean {
+  const raw = (error.message ?? '').trim()
+  const msg = raw.toLowerCase()
+  return (
+    !raw ||
+    raw === '{}' ||
+    raw === '"{}"' ||
+    msg === '[object object]' ||
+    msg.includes('captcha') ||
+    msg.includes('captcha_failed') ||
+    error.code === 'captcha_failed'
+  )
+}
+
+function sanitizeAuthError(error: { message?: string; code?: string; status?: number }) {
   // Don't leak internal Supabase details to users, and don't reveal whether
   // an email address is registered. Return a single generic message for all
   // credential / confirmation / not-found failures.
   const code = error.code
+  const status = error.status
   const raw = (error.message ?? '').trim()
   const msg = raw.toLowerCase()
 
-  if (code === 'over_request_rate_limit' || msg.includes('rate limit')) {
+  if (code === 'over_request_rate_limit' || msg.includes('rate limit') || status === 429) {
     return 'Too many attempts. Please try again later.'
   }
   if (code === 'invalid_credentials' || code === 'email_not_confirmed' || code === 'user_not_found') {
     return 'Invalid email or password.'
   }
-  // Supabase often returns an empty or literal "{}" message when CAPTCHA /
-  // Attack Protection blocks the request (common on demo projects without
-  // Turnstile). Never surface "{}" in the UI.
-  if (
-    !raw ||
-    raw === '{}' ||
-    raw === '"{}"' ||
-    msg.includes('captcha') ||
-    msg.includes('captcha_failed') ||
-    code === 'captcha_failed'
-  ) {
+  // Explicit captcha failures (and only those).
+  if (msg.includes('captcha') || msg.includes('captcha_failed') || code === 'captcha_failed') {
     if (shouldBypassCaptcha()) {
-      return 'Sign-in blocked by Supabase CAPTCHA. In Supabase: Authentication → Attack Protection → turn CAPTCHA off for this demo project, then try again.'
+      return 'Sign-in blocked by Supabase CAPTCHA. Turn CAPTCHA off under Authentication → Attack Protection (or Bot and Abuse Protection), save, then try again. Demo mode does not use Cloudflare Turnstile.'
     }
     return 'Please complete the security check and try again.'
   }
+  // Empty / "{}" bodies are common for CAPTCHA blocks, paused projects, and
+  // misconfigured API keys. Do not assume CAPTCHA when the message is empty.
+  if (!raw || raw === '{}' || raw === '"{}"' || msg === '[object object]') {
+    if (shouldBypassCaptcha()) {
+      return 'Sign-in failed with no details from Supabase. Check: (1) Authentication → Attack Protection CAPTCHA is OFF, (2) email/password match the demo admin seed, (3) NEXT_PUBLIC_SUPABASE_URL and keys match this project.'
+    }
+    return 'Sign-in failed. Please try again.'
+  }
   return raw
+}
+
+/**
+ * Demo-only fallback when public password grant is blocked (often CAPTCHA /
+ * Attack Protection) even though the app has no Turnstile widget.
+ *
+ * 1. Verifies email+password against auth.users via pgcrypto (same hash the
+ *    SQL demo admin seed writes).
+ * 2. Mints a session with admin generateLink + cookie-client verifyOtp so we
+ *    never skip password checks.
+ *
+ * Requires a Postgres URL env var (POSTGRES_URL / POSTGRES_PRISMA_URL /
+ * POSTGRES_URL_NON_POOLING). Returns null when the fallback cannot run.
+ */
+async function tryDemoPasswordSession(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  email: string,
+  password: string
+): Promise<
+  | { ok: true; user: { id: string; email?: string | null } }
+  | { ok: false; reason: 'bad_password' | 'unavailable' | 'session_failed'; detail?: string }
+> {
+  if (!shouldBypassCaptcha()) {
+    return { ok: false, reason: 'unavailable' }
+  }
+
+  let pg: PostgresClient | undefined
+  try {
+    pg = await getPostgresClient()
+    // pgcrypto crypt() matches the bcrypt hashes written by GoTrue and by
+    // supabase/seed/05_demo_admin.sql. Do not filter deleted_at: older Auth
+    // schemas omit that column.
+    const res = await pg.query(
+      `SELECT id
+         FROM auth.users
+        WHERE lower(email) = lower($1)
+          AND encrypted_password IS NOT NULL
+          AND encrypted_password = crypt($2, encrypted_password)
+        LIMIT 1`,
+      [email, password]
+    )
+    if (!res.rows[0]) {
+      return { ok: false, reason: 'bad_password' }
+    }
+  } catch (err) {
+    console.error('signIn: demo password verify via Postgres failed', err)
+    return { ok: false, reason: 'unavailable', detail: String(err) }
+  } finally {
+    if (pg) {
+      try {
+        await pg.end()
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  try {
+    const admin = createAdminClient()
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+    })
+    if (linkError || !linkData?.properties?.hashed_token) {
+      console.error('signIn: demo generateLink failed', linkError)
+      return { ok: false, reason: 'session_failed', detail: linkError?.message }
+    }
+
+    const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: 'magiclink',
+    })
+    if (verifyError || !verified.user) {
+      // Some projects expect type: 'email' for magic-link token hashes.
+      const retry = await supabase.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: 'email',
+      })
+      if (retry.error || !retry.data.user) {
+        console.error('signIn: demo verifyOtp failed', verifyError ?? retry.error)
+        return {
+          ok: false,
+          reason: 'session_failed',
+          detail: (verifyError ?? retry.error)?.message,
+        }
+      }
+      return { ok: true, user: retry.data.user }
+    }
+    return { ok: true, user: verified.user }
+  } catch (err) {
+    console.error('signIn: demo session mint unexpected error', err)
+    return { ok: false, reason: 'session_failed', detail: String(err) }
+  }
 }
 
 // Friendly, non-leaky messages for the password set/change actions. Returning
@@ -146,9 +253,15 @@ function lockoutMessage(lockedUntil: string): string {
 }
 
 async function getPostgresClient() {
-  const connectionString = process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL
+  const connectionString =
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL
   if (!connectionString) {
-    throw new Error('Missing POSTGRES_PRISMA_URL or POSTGRES_URL')
+    throw new Error(
+      'Missing POSTGRES_PRISMA_URL, POSTGRES_URL, POSTGRES_URL_NON_POOLING, or DATABASE_URL'
+    )
   }
   // Strip sslmode from the connection string so we can supply our own SSL
   // config. Supabase pooler uses a self-signed cert.
@@ -298,21 +411,53 @@ export async function signIn(formData: FormData) {
     ...(captchaToken ? { options: { captchaToken } } : {}),
   })
 
-  if (error) {
-    console.error('signIn: Supabase sign-in error', { code: error.code, message: error.message })
-    // Record the failed attempt against the profile (if any) so repeated
-    // failures eventually lock the account.
-    await recordFailedSignIn(email)
-    return { error: sanitizeAuthError(error) }
+  let signedInUser = data?.user ?? null
+
+  if (error || !signedInUser) {
+    console.error('signIn: Supabase sign-in error', {
+      code: error?.code,
+      message: error?.message,
+      status: (error as { status?: number } | null)?.status,
+    })
+
+    // Demo deployments skip Turnstile, but Supabase Attack Protection CAPTCHA
+    // still blocks the public password grant. Fall back to password verify +
+    // admin-minted session when the error is opaque / captcha-shaped.
+    if (shouldBypassCaptcha() && (!error || isOpaqueAuthError(error))) {
+      const fallback = await tryDemoPasswordSession(supabase, email, password)
+      if (fallback.ok) {
+        debugLog('signIn: demo CAPTCHA-bypass session established')
+        signedInUser = fallback.user as typeof signedInUser
+      } else if (fallback.reason === 'bad_password') {
+        await recordFailedSignIn(email)
+        return { error: 'Invalid email or password.' }
+      } else if (error) {
+        await recordFailedSignIn(email)
+        return { error: sanitizeAuthError(error) }
+      } else {
+        await recordFailedSignIn(email)
+        return {
+          error:
+            'Sign-in failed. For demo: turn Supabase CAPTCHA off, or set POSTGRES_URL so the app can verify passwords without CAPTCHA.',
+        }
+      }
+    } else if (error) {
+      await recordFailedSignIn(email)
+      return { error: sanitizeAuthError(error) }
+    } else {
+      return { error: 'An unexpected error occurred. Please try again.' }
+    }
   }
 
   debugLog('signIn: Supabase sign-in success')
 
-  if (!data.user) {
+  if (!signedInUser) {
     // Should not happen after a successful Supabase sign-in, but handle
     // defensively.
     return { error: 'An unexpected error occurred. Please try again.' }
   }
+
+  const authUserId = signedInUser.id
 
   // The pre-auth lookup keys on profiles.email, which can legitimately
   // diverge from the Auth email while an email-change confirmation is
@@ -325,14 +470,14 @@ export async function signIn(formData: FormData) {
   // profiles.email has no unique constraint, so a by-email hit that belongs
   // to a DIFFERENT user must not drive role/active checks either — resolve
   // by id in that case too.
-  if (profile && profile.id !== data.user.id) {
+  if (profile && profile.id !== authUserId) {
     profile = null
   }
   if (!profile) {
     const { data: profileById, error: profileByIdError } = await adminClient
       .from('profiles')
       .select('id, is_active, role, locked_until, failed_sign_in_attempts')
-      .eq('id', data.user.id)
+      .eq('id', authUserId)
       .maybeSingle()
     if (profileByIdError) {
       console.error('signIn: profile-by-id lookup error', {
@@ -386,7 +531,7 @@ export async function signIn(formData: FormData) {
           locked_until: null,
           last_sign_in_at: new Date().toISOString(),
         })
-        .eq('id', data.user.id)
+        .eq('id', authUserId)
       if (updateError) console.error('signIn: failed to update profile after sign-in:', updateError)
     } catch (e) {
       console.error('signIn: unexpected error updating profile after sign-in:', e)

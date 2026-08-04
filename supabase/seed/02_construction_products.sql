@@ -6,16 +6,30 @@
 -- Idempotent: ON CONFLICT (code) DO UPDATE.
 -- =============================================================================
 
--- Public read (homepage + catalogue)
+-- Columns + RLS required by app (homepage, /catalogue, /admin/products)
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS is_temporary boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+
 DROP POLICY IF EXISTS products_select ON public.products;
-CREATE POLICY products_select ON public.products
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS products_select_anon ON public.products;
+DROP POLICY IF EXISTS products_select_authenticated ON public.products;
+
+CREATE POLICY products_select_anon ON public.products
+  FOR SELECT TO anon
+  USING (
+    deleted_at IS NULL
+    AND is_active = true
+    AND COALESCE(is_temporary, false) = false
+  );
+
+CREATE POLICY products_select_authenticated ON public.products
+  FOR SELECT TO authenticated
+  USING (true);
+
 GRANT SELECT ON public.products TO anon;
 GRANT SELECT ON public.products TO authenticated;
-
--- Soft-delete column used by app queries (optional on older schemas)
-ALTER TABLE public.products
-  ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
 
 INSERT INTO public.products (code, name, unit, category, default_price, is_active) VALUES
   -- Aggregates & Cement

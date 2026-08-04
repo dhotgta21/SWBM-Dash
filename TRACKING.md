@@ -29,5 +29,15 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 3. Category images for new verticals are placeholders (copied tools.webp).
 4. Optional DEMO banner (F-demo-banner) not built.
 
+## Incident: products empty + sign-in CAPTCHA (2026-08-04)
+| Item | Detail |
+|------|--------|
+| **Products root cause** | Partial schema missing `products.deleted_at` / `is_temporary`; admin queries filter those columns → empty UI. Anon RLS may also block public reads. |
+| **Products fix** | `schema.sql` columns + RLS; seed `00b_fix_products_columns_and_rls.sql`; resilient admin list; public list fallback |
+| **Auth root cause** | Demo skips Turnstile, but Supabase Attack Protection CAPTCHA still blocks password grant; empty `{}` over-reported as CAPTCHA |
+| **Auth fix** | Clearer errors; demo password verify via Postgres + generateLink session mint; register path session mint |
+| **Proof** | `npx tsc --noEmit` exit 0; vitest brand + public-products 10/10 |
+| **Operator** | Run `00b` + `02` SQL; CAPTCHA OFF; redeploy |
+
 ## Decisions
 See `docs/lifecycle/decisions.md` D-001–D-005.

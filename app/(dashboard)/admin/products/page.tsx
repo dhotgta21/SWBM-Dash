@@ -116,6 +116,158 @@ function resolveView(
   return 'data'
 }
 
+function isMissingColumnError(error: { message?: string; code?: string } | null, column: string): boolean {
+  if (!error?.message) return false
+  const msg = error.message.toLowerCase()
+  return (
+    msg.includes(column.toLowerCase()) &&
+    (msg.includes('does not exist') || msg.includes('schema cache') || error.code === '42703')
+  )
+}
+
+type SupabaseLike = Awaited<ReturnType<typeof createClient>>
+
+/**
+ * Count permanent vs temporary products. Retries without deleted_at /
+ * is_temporary when the live DB was bootstrapped from a partial schema.
+ */
+async function loadProductTabCounts(
+  supabase: SupabaseLike
+): Promise<{ catalogCount: number; tempCount: number }> {
+  const full = await Promise.all([
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_temporary', false)
+      .is('deleted_at', null),
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_temporary', true)
+      .is('deleted_at', null),
+  ])
+
+  const [catalogRes, tempRes] = full
+  const missingSoftDelete =
+    isMissingColumnError(catalogRes.error, 'deleted_at') ||
+    isMissingColumnError(tempRes.error, 'deleted_at')
+  const missingTemporary =
+    isMissingColumnError(catalogRes.error, 'is_temporary') ||
+    isMissingColumnError(tempRes.error, 'is_temporary')
+
+  if (!catalogRes.error && !tempRes.error) {
+    return {
+      catalogCount: catalogRes.count ?? 0,
+      tempCount: tempRes.count ?? 0,
+    }
+  }
+
+  if (missingSoftDelete || missingTemporary) {
+    console.warn(
+      'admin/products: soft-delete/temporary columns missing; counting without those filters. Run supabase/seed/00b_fix_products_columns_and_rls.sql'
+    )
+    if (missingTemporary) {
+      const { count, error } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+      if (error) {
+        console.error('admin/products: fallback product count failed', error)
+        return { catalogCount: 0, tempCount: 0 }
+      }
+      return { catalogCount: count ?? 0, tempCount: 0 }
+    }
+    // has is_temporary but not deleted_at
+    const [c, t] = await Promise.all([
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_temporary', false),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_temporary', true),
+    ])
+    return { catalogCount: c.count ?? 0, tempCount: t.count ?? 0 }
+  }
+
+  console.error('admin/products: product counts failed', catalogRes.error ?? tempRes.error)
+  return { catalogCount: 0, tempCount: 0 }
+}
+
+async function loadCatalogProducts(supabase: SupabaseLike, query: string): Promise<ProductRow[]> {
+  if (query.trim()) {
+    const { data: searchResults, error } = await supabase.rpc('search_products', {
+      p_query: query,
+      p_limit: 1000,
+      p_active_only: false,
+    })
+    if (error) {
+      console.warn('admin/products: search_products RPC failed, falling back to list', error.message)
+    } else {
+      return (searchResults as ProductRow[] | null) ?? []
+    }
+  }
+
+  const withDeleted = await supabase.from('products').select('*').is('deleted_at', null).order('name')
+  if (!withDeleted.error) {
+    return (withDeleted.data as ProductRow[] | null) ?? []
+  }
+
+  if (isMissingColumnError(withDeleted.error, 'deleted_at')) {
+    console.warn('admin/products: deleted_at missing; loading catalog without soft-delete filter')
+    const fallback = await supabase.from('products').select('*').order('name')
+    if (fallback.error) {
+      console.error('admin/products: catalog fallback failed', fallback.error)
+      return []
+    }
+    return (fallback.data as ProductRow[] | null) ?? []
+  }
+
+  console.error('admin/products: catalog load failed', withDeleted.error)
+  return []
+}
+
+async function loadTemporaryProducts(
+  supabase: SupabaseLike,
+  query: string
+): Promise<TempProductRow[]> {
+  const selectCols =
+    'id, code, name, description, unit, category, default_price, image_url, temp_placeholder_code, is_active, created_at, created_by, is_temporary, sale_price, sale_starts_at, sale_ends_at, sale_label'
+
+  const full = await supabase
+    .from('products')
+    .select(selectCols)
+    .eq('is_temporary', true)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  let rows: TempProductRow[] = []
+  if (!full.error) {
+    rows = ((full.data ?? []) as unknown) as TempProductRow[]
+  } else if (isMissingColumnError(full.error, 'is_temporary')) {
+    // No temporary-product support on this schema.
+    return []
+  } else if (isMissingColumnError(full.error, 'deleted_at')) {
+    const fallback = await supabase
+      .from('products')
+      .select(selectCols)
+      .eq('is_temporary', true)
+      .order('created_at', { ascending: false })
+    if (fallback.error) {
+      console.error('admin/products: temporary fallback failed', fallback.error)
+      return []
+    }
+    rows = ((fallback.data ?? []) as unknown) as TempProductRow[]
+  } else {
+    console.error('admin/products: temporary load failed', full.error)
+    return []
+  }
+
+  if (query) {
+    const needle = query.trim().toLowerCase()
+    rows = rows.filter(
+      (p) =>
+        p.name.toLowerCase().includes(needle) ||
+        (p.code ?? '').toLowerCase().includes(needle)
+    )
+  }
+  return rows
+}
+
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const ctx = await getOperatorContext()
   if (!ctx) redirect(ADMIN_LOGIN_PATH)
@@ -143,22 +295,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   }
 
   // ---------- Counts (always needed for tab strip + header) ----------
-  // Two cheap count queries in parallel — no rows returned.
-  const [{ count: catalogCountRaw }, { count: tempCountRaw }] = await Promise.all([
-    supabase
-      .from('products')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', false)
-      .is('deleted_at', null),
-    supabase
-      .from('products')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', true)
-      .is('deleted_at', null),
-  ])
-
-  const catalogCount = catalogCountRaw ?? 0
-  const tempCount = tempCountRaw ?? 0
+  // Prefer soft-delete + temporary filters. Demo DBs created from a partial
+  // schema.sql may lack those columns; fall back so the list still loads.
+  const { catalogCount, tempCount } = await loadProductTabCounts(supabase)
 
   // Resolve the active outer tab now that we know catalog/temp counts.
   // This ensures the temp-redirect logic works (catalog empty → temp tab).
@@ -168,46 +307,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   let products: ProductRow[] = []
   if (activeView === 'catalog') {
-    if (query.trim()) {
-      const { data: searchResults } = await supabase.rpc('search_products', {
-        p_query: query,
-        p_limit: 1000,
-        p_active_only: false,
-      })
-      products = (searchResults as ProductRow[] | null) ?? []
-    } else {
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .is('deleted_at', null)
-        .order('name')
-      products = (data as ProductRow[] | null) ?? []
-    }
+    products = await loadCatalogProducts(supabase, query)
   }
 
   let tempProducts: TempProductRow[] = []
   if (activeView === 'temporary') {
-    const { data: tempProductsData } = await supabase
-      .from('products')
-      .select(
-        'id, code, name, description, unit, category, default_price, image_url, temp_placeholder_code, is_active, created_at, created_by, is_temporary, sale_price, sale_starts_at, sale_ends_at, sale_label'
-      )
-      .eq('is_temporary', true)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-
-    tempProducts = ((tempProductsData ?? []) as unknown) as TempProductRow[]
-
-    // Apply the search term in TS: the q param was previously ignored for
-    // the walk-in queue entirely.
-    if (query) {
-      const needle = query.trim().toLowerCase()
-      tempProducts = tempProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(needle) ||
-          (p.code ?? '').toLowerCase().includes(needle)
-      )
-    }
+    tempProducts = await loadTemporaryProducts(supabase, query)
   }
 
   // Permanent-only catalog. The RPC already excludes temps by default

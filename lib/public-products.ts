@@ -399,14 +399,29 @@ function rowToProduct(row: {
 export async function listPublicProducts(): Promise<PublicProduct[]> {
   try {
     const supabase = createPublicClient()
-    const fullResult = await withRetry(() =>
+    // Prefer permanent catalogue only. Fall back when is_temporary is missing
+    // on partial demo schemas (RLS may still hide temps when 00b has been run).
+    let fullResult = await withRetry(() =>
       supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)
         .eq('is_active', true)
+        .eq('is_temporary', false)
         .order('category', { ascending: true })
         .order('name', { ascending: true })
     )
+
+    if (fullResult.error && isMissingColumnError(fullResult.error, 'is_temporary')) {
+      console.warn('listPublicProducts: is_temporary missing; loading without that filter')
+      fullResult = await withRetry(() =>
+        supabase
+          .from('products')
+          .select(PUBLIC_PRODUCT_COLUMNS)
+          .eq('is_active', true)
+          .order('category', { ascending: true })
+          .order('name', { ascending: true })
+      )
+    }
 
     if (fullResult.error && isMissingColumnError(fullResult.error, 'sale_price')) {
       console.warn('listPublicProducts: sale_price missing, falling back to legacy columns')

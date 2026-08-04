@@ -56,13 +56,34 @@ When demo mode is on, the app **does not require**:
 | **GoAddress / Integrations UI** | Settings → Integrations is hidden. Postcode lookup does not call GoAddress (manual address entry; free postcodes.io only). |
 | **Invoice “email PDF”** | Returns a clear demo message; use download / share link. |
 
-**Supabase CAPTCHA (required for admin login without Turnstile):**
+**Supabase CAPTCHA (still matters even when the app has no Turnstile):**
+
+The app does **not** show Cloudflare Turnstile in demo mode. Supabase can still
+block password sign-in if **Attack Protection CAPTCHA** is on.
 
 1. Supabase Dashboard → **Authentication** → **Attack Protection** (or Bot and Abuse Protection)  
 2. **Turn CAPTCHA / Cloudflare Turnstile OFF** for this demo project  
 3. Save  
 
-If CAPTCHA stays on, staff sign-in fails with a red `{}` (or a clearer message after the latest deploy).
+If CAPTCHA stays on, the app tries a **demo-only** password verify + session mint
+when `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING` is set on Vercel. Prefer
+turning CAPTCHA off so ordinary `signInWithPassword` works.
+
+Also confirm **Email confirmations** are off or the demo admin is already
+confirmed (`05_demo_admin.sql` sets `email_confirmed_at`).
+
+**Products not showing (homepage / catalogue / admin):**
+
+Almost always schema + RLS, not “empty marketing UI”:
+
+1. Run `supabase/seed/00b_fix_products_columns_and_rls.sql` (adds `deleted_at`,
+   `is_temporary`, fixes anon SELECT policies).
+2. Run `supabase/seed/02_construction_products.sql` (sample SKUs + grants).
+3. Confirm the diagnostic query at the end of `00b` shows
+   `public_catalogue_count > 0`.
+
+Without `deleted_at` / `is_temporary`, `/admin/products` filters fail and the
+list looks empty even when rows exist.
 
 **Seed safety**
 
@@ -82,6 +103,8 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 |-------|------|---------|
 | 0 (optional) | `supabase/seed/00_wipe_demo_clients_invoices.sql` | Clear old demo clients/invoices |
 | 0a **(if payments fail)** | `supabase/seed/00a_add_picking_columns.sql` | Adds `picking_status` columns missing from partial schema |
+| **0b (if no products)** | `supabase/seed/00b_fix_products_columns_and_rls.sql` | Adds `deleted_at` / `is_temporary` + anon/auth product SELECT RLS |
+| 0c (legacy) | `supabase/seed/00c_fix_products_deleted_at.sql` | Minimal deleted_at + RLS (prefer **0b**) |
 | 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
 | 2 **(for landing grid)** | `supabase/seed/02_construction_products.sql` | Construction products + public product read (categories on homepage) |
 | 2b (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |

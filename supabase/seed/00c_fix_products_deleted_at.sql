@@ -7,18 +7,39 @@
 -- Run this, then run 02_construction_products.sql if the grid still has 0 products.
 -- =============================================================================
 
-ALTER TABLE public.products
-  ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+-- Prefer the fuller 00b_fix_products_columns_and_rls.sql when available.
+-- This file remains as a minimal fallback for older runbooks.
 
--- Public catalogue reads (homepage + shop)
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS is_temporary boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+
 DROP POLICY IF EXISTS products_select ON public.products;
-CREATE POLICY products_select ON public.products
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS products_select_anon ON public.products;
+DROP POLICY IF EXISTS products_select_authenticated ON public.products;
+
+CREATE POLICY products_select_anon ON public.products
+  FOR SELECT TO anon
+  USING (
+    deleted_at IS NULL
+    AND is_active = true
+    AND COALESCE(is_temporary, false) = false
+  );
+
+CREATE POLICY products_select_authenticated ON public.products
+  FOR SELECT TO authenticated
+  USING (true);
 
 GRANT SELECT ON public.products TO anon;
 GRANT SELECT ON public.products TO authenticated;
 
 SELECT
   COUNT(*) AS total_products,
-  COUNT(*) FILTER (WHERE COALESCE(is_active, true) AND category IS NOT NULL) AS active_with_category
+  COUNT(*) FILTER (
+    WHERE deleted_at IS NULL
+      AND COALESCE(is_active, true)
+      AND COALESCE(is_temporary, false) = false
+      AND category IS NOT NULL
+  ) AS public_catalogue_count
 FROM public.products;

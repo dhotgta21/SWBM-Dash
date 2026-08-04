@@ -83,10 +83,46 @@ export async function registerFirstAdmin(
 
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
     if (signInErr) {
-      console.error('registerFirstAdmin (demo): sign-in error:', signInErr)
-      return {
-        error:
-          'Account was created but automatic sign-in failed. Sign in with the same email and password.',
+      // When Attack Protection CAPTCHA is still on, password grant fails even
+      // though the user was just created. Mint a session via admin magic link
+      // (password already set on the account we created).
+      console.error('registerFirstAdmin (demo): sign-in error, trying session mint:', signInErr)
+      try {
+        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+        })
+        const tokenHash = linkData?.properties?.hashed_token
+        if (linkError || !tokenHash) {
+          console.error('registerFirstAdmin (demo): generateLink failed:', linkError)
+          return {
+            error:
+              'Account was created but automatic sign-in failed. Turn Supabase CAPTCHA off (Authentication → Attack Protection), then sign in with the same email and password.',
+          }
+        }
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'magiclink',
+        })
+        if (verifyError) {
+          const retry = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'email',
+          })
+          if (retry.error) {
+            console.error('registerFirstAdmin (demo): verifyOtp failed:', verifyError, retry.error)
+            return {
+              error:
+                'Account was created but automatic sign-in failed. Turn Supabase CAPTCHA off, then sign in at /admin-login.',
+            }
+          }
+        }
+      } catch (mintErr) {
+        console.error('registerFirstAdmin (demo): session mint unexpected:', mintErr)
+        return {
+          error:
+            'Account was created but automatic sign-in failed. Sign in with the same email and password.',
+        }
       }
     }
 

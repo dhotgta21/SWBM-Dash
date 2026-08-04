@@ -542,6 +542,27 @@ ALTER TABLE public.products
 COMMENT ON COLUMN public.products.price_includes_vat IS
   'True when the displayed default_price + sale_price already include VAT @ 20%. Default false (trade standard: VAT exclusive). Public PDP adds an "inc. VAT" hint when true.';
 
+-- Soft-delete + temporary/walk-in products (migrations 064 + 093).
+-- Required by /admin/products filters (.is('deleted_at', null), .eq('is_temporary', …)).
+-- Without these columns PostgREST rejects every catalogue query and the UI
+-- shows zero products even when rows exist.
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS is_temporary boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS promoted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS temp_placeholder_code boolean NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS idx_products_deleted_at
+  ON public.products(deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_products_is_temporary
+  ON public.products(is_temporary) WHERE is_temporary = true;
+
+-- Stock columns used by the Stock tab and invoice picking (migration 110+).
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS track_stock boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS stock_quantity numeric NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS reorder_level numeric NOT NULL DEFAULT 0;
+
 -- Sanity constraint: a sale_price above the regular price is almost always a
 -- data-entry mistake. Refuse it at the DB layer as defence in depth.
 DO $$
@@ -2180,10 +2201,26 @@ DROP POLICY IF EXISTS clients_delete ON public.clients;
 CREATE POLICY clients_delete ON public.clients
   FOR DELETE TO authenticated USING (created_by = auth.uid() OR public.is_admin());
 
--- products (public read, write admin only)
+-- products (public catalogue read for anon; full select for authenticated;
+-- write admin only). Drop any split policies from migration 123 so a fresh
+-- schema.sql run never leaves conflicting SELECT policies behind.
 DROP POLICY IF EXISTS products_select ON public.products;
-CREATE POLICY products_select ON public.products
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS products_select_anon ON public.products;
+DROP POLICY IF EXISTS products_select_authenticated ON public.products;
+-- Anon: active permanent catalogue only (matches public shop filters).
+CREATE POLICY products_select_anon ON public.products
+  FOR SELECT
+  TO anon
+  USING (
+    deleted_at IS NULL
+    AND is_active = true
+    AND COALESCE(is_temporary, false) = false
+  );
+-- Signed-in staff/clients: full row set (dashboard, soft-deleted, temps).
+CREATE POLICY products_select_authenticated ON public.products
+  FOR SELECT
+  TO authenticated
+  USING (true);
 DROP POLICY IF EXISTS products_insert ON public.products;
 CREATE POLICY products_insert ON public.products
   FOR INSERT TO authenticated WITH CHECK (public.is_admin());
