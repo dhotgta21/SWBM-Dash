@@ -11,7 +11,9 @@
 --
 -- Prerequisites:
 --   1. schema.sql applied successfully
---   2. Optional: run 00_wipe_demo_clients_invoices.sql first to reseed cleanly
+--   2. If you see "column picking_status does not exist", run
+--      00a_add_picking_columns.sql first (partial schema fix)
+--   3. Optional: run 00_wipe_demo_clients_invoices.sql first to reseed cleanly
 --
 -- Admin for created_by:
 --   If no admin profile exists, this script creates a demo admin automatically:
