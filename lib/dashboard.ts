@@ -137,28 +137,51 @@ export async function getDashboardMetrics(
   const PAGE_SIZE = 1000
   const MAX_PAGES = 50
 
+  // Partial demo schemas may lack soft-delete columns (migration 093).
+  // Prefer filtering deleted rows when the column exists; otherwise load
+  // without the filter so Analytics still renders.
+  let filterInvoiceDeletedAt = true
+  let filterPaymentDeletedAt = true
+
+  function isMissingDeletedAtError(message: string | undefined): boolean {
+    const msg = (message ?? '').toLowerCase()
+    return msg.includes('deleted_at') && msg.includes('does not exist')
+  }
+
   const [rawInvoices, rawPayments] = await Promise.all([
     (async () => {
       const rows: RawInvoice[] = []
       for (let page = 0; page < MAX_PAGES; page++) {
         const from = page * PAGE_SIZE
-        const { data, error } = await supabase
+        let query = supabase
           .from('invoices')
           .select(
             'id, document_number, issue_date, due_date, total, amount_paid, balance_due, status, type, client_id, clients(first_name, last_name, company_name)'
           )
           .eq('type', 'invoice')
-          .is('deleted_at', null)
-          // Always include every outstanding invoice, however old —
-          // unpaid debt older than the window must still feed the
-          // dueToday / overdue / dueThisWeek KPIs. Paid history stays
-          // windowed for performance.
+        if (filterInvoiceDeletedAt) {
+          query = query.is('deleted_at', null)
+        }
+        // Always include every outstanding invoice, however old —
+        // unpaid debt older than the window must still feed the
+        // dueToday / overdue / dueThisWeek KPIs. Paid history stays
+        // windowed for performance.
+        const { data, error } = await query
           .or(`balance_due.gt.0,issue_date.gte.${windowStartStr}`)
           .order('issue_date', { ascending: false })
           // Unique tiebreaker: offset pagination over a non-unique order
           // can double-count or skip rows at page boundaries.
           .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1)
+
+        if (error && filterInvoiceDeletedAt && isMissingDeletedAtError(error.message)) {
+          console.warn(
+            'getDashboardMetrics: invoices.deleted_at missing; retrying without soft-delete filter'
+          )
+          filterInvoiceDeletedAt = false
+          page -= 1
+          continue
+        }
         if (error) {
           console.warn('getDashboardMetrics: invoice query failed', error.message)
           throw new Error('Dashboard data load failed')
@@ -176,17 +199,28 @@ export async function getDashboardMetrics(
       const rows: RawPayment[] = []
       for (let page = 0; page < MAX_PAGES; page++) {
         const from = page * PAGE_SIZE
-        const { data, error } = await supabase
+        let query = supabase
           .from('payments')
           .select('id, amount, payment_date, invoice_id, invoices!inner(type, status, issue_date)')
-          .is('deleted_at', null)
-          .is('invoices.deleted_at', null)
           .eq('invoices.type', 'invoice')
           .gte('payment_date', windowStartStr)
+        if (filterPaymentDeletedAt) {
+          query = query.is('deleted_at', null).is('invoices.deleted_at', null)
+        }
+        const { data, error } = await query
           .order('payment_date', { ascending: false })
           // Unique tiebreaker for offset pagination (see above).
           .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1)
+
+        if (error && filterPaymentDeletedAt && isMissingDeletedAtError(error.message)) {
+          console.warn(
+            'getDashboardMetrics: payments/invoices.deleted_at missing; retrying without soft-delete filter'
+          )
+          filterPaymentDeletedAt = false
+          page -= 1
+          continue
+        }
         if (error) {
           console.warn('getDashboardMetrics: payments query failed', error.message)
           throw new Error('Dashboard data load failed')

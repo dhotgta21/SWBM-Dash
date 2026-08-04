@@ -118,20 +118,40 @@ export interface PublicCategorySummary {
   imageUrl: string | null
 }
 
+// Full column set (current schema). Older demo DBs may be missing
+// materials / variant_options / family_slug / source_url / sale_* etc.
+// Callers walk PUBLIC_PRODUCT_COLUMN_SETS until a SELECT succeeds.
 const PUBLIC_PRODUCT_COLUMNS =
   'id, code, name, description, unit, default_price, price_from, price_includes_vat, sale_price, sale_starts_at, sale_ends_at, sale_label, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type, materials, variant_options, family_slug, source_url'
+
+// Core set present on partial demo schemas (has sale + SEO, no variant pack).
+const PUBLIC_PRODUCT_COLUMNS_CORE =
+  'id, code, name, description, unit, default_price, price_from, price_includes_vat, sale_price, sale_starts_at, sale_ends_at, sale_label, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type'
 
 // Fallback when `sale_price` (or any newer sale column) is missing on the
 // live DB. Strips the sale quartet but keeps price_from + price_includes_vat
 // when they're present.
 const PUBLIC_PRODUCT_COLUMNS_NO_SALE =
-  'id, code, name, description, unit, default_price, price_from, price_includes_vat, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type, materials, variant_options, family_slug, source_url'
+  'id, code, name, description, unit, default_price, price_from, price_includes_vat, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type'
 
 const PUBLIC_PRODUCT_COLUMNS_FALLBACK =
-  'id, code, name, description, unit, default_price, price_from, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type, materials, variant_options, family_slug, source_url'
+  'id, code, name, description, unit, default_price, price_from, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type'
 
 const PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY =
-  'id, code, name, description, unit, default_price, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type, materials, variant_options, family_slug, source_url'
+  'id, code, name, description, unit, default_price, category, image_url, updated_at, seo_title, seo_description, short_description, key_features, search_tags, brand, mpn, applications, length_mm, width_mm, height_mm, thickness_mm, coverage_m2_per_unit, coverage_linear_m_per_unit, unit_weight_kg, pack_size, wastage_pct, calculator_type'
+
+const PUBLIC_PRODUCT_COLUMNS_MINIMAL =
+  'id, code, name, description, unit, default_price, category, image_url, updated_at'
+
+/** Ordered from richest → leanest. Used by list + get-by-code. */
+const PUBLIC_PRODUCT_COLUMN_SETS = [
+  PUBLIC_PRODUCT_COLUMNS,
+  PUBLIC_PRODUCT_COLUMNS_CORE,
+  PUBLIC_PRODUCT_COLUMNS_NO_SALE,
+  PUBLIC_PRODUCT_COLUMNS_FALLBACK,
+  PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY,
+  PUBLIC_PRODUCT_COLUMNS_MINIMAL,
+] as const
 
 interface CampaignLike {
   id: string
@@ -320,28 +340,29 @@ function rowToProduct(row: {
   category: string | null
   image_url: string | null
   updated_at: string
-  seo_title: string | null
-  seo_description: string | null
-  short_description: string | null
-  key_features: unknown
-  search_tags: unknown
-  brand: string | null
-  mpn: string | null
-  applications: unknown
-  length_mm: number | null
-  width_mm: number | null
-  height_mm: number | null
-  thickness_mm: number | null
-  coverage_m2_per_unit: number | null
-  coverage_linear_m_per_unit: number | null
-  unit_weight_kg: number | null
-  pack_size: number | null
-  wastage_pct: number | null
-  calculator_type: string | null
-  materials: unknown
-  variant_options: unknown
-  family_slug: string | null
-  source_url: string | null
+  seo_title?: string | null
+  seo_description?: string | null
+  short_description?: string | null
+  key_features?: unknown
+  search_tags?: unknown
+  brand?: string | null
+  mpn?: string | null
+  applications?: unknown
+  length_mm?: number | null
+  width_mm?: number | null
+  height_mm?: number | null
+  thickness_mm?: number | null
+  coverage_m2_per_unit?: number | null
+  coverage_linear_m_per_unit?: number | null
+  unit_weight_kg?: number | null
+  pack_size?: number | null
+  wastage_pct?: number | null
+  calculator_type?: string | null
+  // Optional: missing on partial demo schemas (migration 070 not applied).
+  materials?: unknown
+  variant_options?: unknown
+  family_slug?: string | null
+  source_url?: string | null
 }): PublicProduct {
   return {
     id: row.id,
@@ -362,13 +383,13 @@ function rowToProduct(row: {
     category: row.category,
     imageUrl: row.image_url,
     updatedAt: row.updated_at,
-    seoTitle: row.seo_title,
-    seoDescription: row.seo_description,
-    shortDescription: row.short_description,
+    seoTitle: row.seo_title ?? null,
+    seoDescription: row.seo_description ?? null,
+    shortDescription: row.short_description ?? null,
     keyFeatures: parseStringArray(row.key_features),
     searchTags: parseStringArray(row.search_tags),
-    brand: row.brand,
-    mpn: row.mpn,
+    brand: row.brand ?? null,
+    mpn: row.mpn ?? null,
     applications: parseStringArray(row.applications),
     lengthMm: row.length_mm ? Number(row.length_mm) : null,
     widthMm: row.width_mm ? Number(row.width_mm) : null,
@@ -379,11 +400,11 @@ function rowToProduct(row: {
     unitWeightKg: row.unit_weight_kg ? Number(row.unit_weight_kg) : null,
     packSize: row.pack_size ? Number(row.pack_size) : null,
     wastagePct: row.wastage_pct ? Number(row.wastage_pct) : null,
-    calculatorType: row.calculator_type,
+    calculatorType: row.calculator_type ?? null,
     materials: parseStringArray(row.materials),
     variantOptions: parseVariantOptions(row.variant_options),
-    familySlug: row.family_slug,
-    sourceUrl: row.source_url,
+    familySlug: row.family_slug ?? null,
+    sourceUrl: row.source_url ?? null,
   }
 }
 
@@ -401,17 +422,9 @@ export async function listPublicProducts(): Promise<PublicProduct[]> {
   try {
     const { client: supabase, mode } = createProductReader()
 
-    const columnSets = [
-      PUBLIC_PRODUCT_COLUMNS,
-      PUBLIC_PRODUCT_COLUMNS_NO_SALE,
-      PUBLIC_PRODUCT_COLUMNS_FALLBACK,
-      PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY,
-      'id, code, name, description, unit, default_price, category, image_url, updated_at',
-    ]
-
     let lastError: string | null = null
 
-    for (const columns of columnSets) {
+    for (const columns of PUBLIC_PRODUCT_COLUMN_SETS) {
       // Try with is_temporary filter first, then without if column missing.
       for (const useTempFilter of [true, false] as const) {
         const result = await withRetry(() => {
@@ -431,15 +444,10 @@ export async function listPublicProducts(): Promise<PublicProduct[]> {
           continue
         }
 
-        if (
-          result.error &&
-          (isMissingColumnError(result.error, 'sale_price') ||
-            isMissingColumnError(result.error, 'price_includes_vat') ||
-            isMissingColumnError(result.error, 'price_from') ||
-            /column .* does not exist/i.test(result.error.message ?? ''))
-        ) {
+        // Missing SELECT columns (materials, sale_*, etc.) → try leaner set.
+        if (result.error && isAnyMissingColumnError(result.error)) {
           lastError = formatSupabaseError(result)
-          break // next column set
+          break
         }
 
         if (result.error) {
@@ -566,81 +574,45 @@ export async function getRedirectedProductCode(code: string): Promise<string | n
 export async function getPublicProductByCode(code: string): Promise<PublicProduct | null> {
   try {
     const { client: supabase } = createProductReader()
-    const fullResult = await withRetry(() =>
-      supabase
-        .from('products')
-        .select(PUBLIC_PRODUCT_COLUMNS)
-        .eq('is_active', true)
-        .eq('code', code.trim().toUpperCase())
-        .maybeSingle()
-    )
+    const normalizedCode = code.trim().toUpperCase()
+    let lastError: string | null = null
 
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'sale_price')) {
-      console.warn('getPublicProductByCode: sale_price missing, falling back')
-      const fallbackResult = await supabase
-        .from('products')
-        .select(PUBLIC_PRODUCT_COLUMNS_NO_SALE)
-        .eq('is_active', true)
-        .eq('code', code.trim().toUpperCase())
-        .maybeSingle()
+    // Same column-set walk as listPublicProducts. Critical: list was
+    // resilient when materials/variant columns were missing on partial
+    // demo schemas, but get-by-code was not, so category pages showed
+    // cards that linked to "Product not found" detail pages.
+    for (const columns of PUBLIC_PRODUCT_COLUMN_SETS) {
+      const result = await withRetry(() =>
+        supabase
+          .from('products')
+          .select(columns)
+          .eq('is_active', true)
+          .eq('code', normalizedCode)
+          .maybeSingle()
+      )
 
-      if (fallbackResult.error) {
-        console.error('getPublicProductByCode: fallback database error', formatSupabaseError(fallbackResult))
+      if (result.error && isAnyMissingColumnError(result.error)) {
+        lastError = formatSupabaseError(result)
+        continue
+      }
+
+      if (result.error) {
+        console.error('getPublicProductByCode: database error', formatSupabaseError(result))
         return null
       }
-      if (!fallbackResult.data) return null
-      const product = rowToProduct(fallbackResult.data)
+
+      if (!result.data) return null
+      // Dynamic column sets make Supabase's generated row type a union that
+      // includes ParserError; cast via unknown before mapping.
+      const product = rowToProduct(
+        result.data as unknown as Parameters<typeof rowToProduct>[0]
+      )
       await applyActiveCampaignsToProducts([product])
       return product
     }
 
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'price_includes_vat')) {
-      console.warn('getPublicProductByCode: price_includes_vat missing, falling back')
-      const fallbackResult = await supabase
-        .from('products')
-        .select(PUBLIC_PRODUCT_COLUMNS_FALLBACK)
-        .eq('is_active', true)
-        .eq('code', code.trim().toUpperCase())
-        .maybeSingle()
-
-      if (fallbackResult.error) {
-        console.error('getPublicProductByCode: fallback database error', formatSupabaseError(fallbackResult))
-        return null
-      }
-      if (!fallbackResult.data) return null
-      const product = rowToProduct(fallbackResult.data)
-      await applyActiveCampaignsToProducts([product])
-      return product
-    }
-
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'price_from')) {
-      console.warn('getPublicProductByCode: price_from missing, falling back')
-      const fallbackResult = await supabase
-        .from('products')
-        .select(PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY)
-        .eq('is_active', true)
-        .eq('code', code.trim().toUpperCase())
-        .maybeSingle()
-
-      if (fallbackResult.error) {
-        console.error('getPublicProductByCode: fallback database error', formatSupabaseError(fallbackResult))
-        return null
-      }
-      if (!fallbackResult.data) return null
-      const product = rowToProduct(fallbackResult.data)
-      await applyActiveCampaignsToProducts([product])
-      return product
-    }
-
-    if (fullResult.error) {
-      console.error('getPublicProductByCode: database error', formatSupabaseError(fullResult))
-      return null
-    }
-
-    if (!fullResult.data) return null
-    const product = rowToProduct(fullResult.data)
-    await applyActiveCampaignsToProducts([product])
-    return product
+    console.error('getPublicProductByCode: all column sets failed', { lastError })
+    return null
   } catch (err) {
     console.error('getPublicProductByCode: unexpected error', err)
     return null
@@ -702,7 +674,17 @@ async function withRetry<T extends SupabaseResultBase>(
 
 function isMissingColumnError(error: { message?: string; code?: string }, column: string): boolean {
   const msg = (error.message ?? '').toLowerCase()
-  return msg.includes(`column "${column}" does not exist`) || (msg.includes('column') && msg.includes(column) && msg.includes('does not exist'))
+  return (
+    msg.includes(`column "${column}" does not exist`) ||
+    (msg.includes('column') && msg.includes(column) && msg.includes('does not exist'))
+  )
+}
+
+/** True for any Postgres/PostgREST "column X does not exist" (schema drift). */
+function isAnyMissingColumnError(error: { message?: string; code?: string }): boolean {
+  const msg = error.message ?? ''
+  if (error.code === '42703') return true
+  return /column .* does not exist/i.test(msg)
 }
 
 /**

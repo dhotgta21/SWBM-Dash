@@ -134,27 +134,47 @@ export async function loadMoneyCollectionSnapshot(
 
     // Pull every real invoice (sent / partial / paid / overdue).
     // Drafts, cancelled invoices and soft-deleted (bin) invoices are
-    // intentionally excluded — they don't represent money we're
+    // intentionally excluded - they don't represent money we're
     // trying to collect. Quotations are also excluded.
     // Paginated explicitly: without a .limit() PostgREST silently caps at
     // 1000 rows, which would understate every headline figure at scale.
     const PAGE_SIZE = 1000
     const MAX_PAGES = 50
+
+    // Partial demo schemas may lack soft-delete columns (migration 093).
+    const isMissingDeletedAt = (message: string | undefined) => {
+      const msg = (message ?? '').toLowerCase()
+      return msg.includes('deleted_at') && msg.includes('does not exist')
+    }
+    let filterInvoiceDeletedAt = true
+    let filterPaymentDeletedAt = true
+
     const invoices: InvoiceRow[] = []
     for (let page = 0; page < MAX_PAGES; page++) {
       const from = page * PAGE_SIZE
-      const { data, error } = await admin
+      let query = admin
         .from('invoices')
         .select(
           'id, document_number, client_id, status, issue_date, due_date, total, amount_paid, balance_due'
         )
         .eq('type', 'invoice')
-        .is('deleted_at', null)
         .in('status', ['sent', 'partial', 'paid', 'overdue'])
-        // A stable unique order is REQUIRED for offset pagination —
-        // without it Postgres may return a row on two pages or skip it.
+      if (filterInvoiceDeletedAt) {
+        query = query.is('deleted_at', null)
+      }
+      // A stable unique order is REQUIRED for offset pagination —
+      // without it Postgres may return a row on two pages or skip it.
+      const { data, error } = await query
         .order('id', { ascending: true })
         .range(from, from + PAGE_SIZE - 1)
+      if (error && filterInvoiceDeletedAt && isMissingDeletedAt(error.message)) {
+        console.warn(
+          'loadMoneyCollectionSnapshot: invoices.deleted_at missing; retrying without soft-delete filter'
+        )
+        filterInvoiceDeletedAt = false
+        page -= 1
+        continue
+      }
       if (error) {
         console.warn('loadMoneyCollectionSnapshot: invoice query failed', error.message)
         return makeFallback()
@@ -171,20 +191,29 @@ export async function loadMoneyCollectionSnapshot(
 
     // Pull recent payments for collected totals + per-client "avg days
     // to pay". We only need a 90-day window to keep the row count
-    // manageable. Exclude soft-deleted payments and any payment whose
-    // invoice is not a real, live invoice (draft / cancelled / deleted
-    // / quotation) — those shouldn't count as collections.
+    // manageable. Exclude soft-deleted payments when the column exists.
     const payments: PaymentRow[] = []
     for (let page = 0; page < MAX_PAGES; page++) {
       const from = page * PAGE_SIZE
-      const { data, error } = await admin
+      let query = admin
         .from('payments')
         .select('invoice_id, payment_date, amount')
-        .is('deleted_at', null)
         .gte('payment_date', dsoWindowStart.toISOString())
-        // Stable unique order required for offset pagination (see above).
+      if (filterPaymentDeletedAt) {
+        query = query.is('deleted_at', null)
+      }
+      // Stable unique order required for offset pagination (see above).
+      const { data, error } = await query
         .order('id', { ascending: true })
         .range(from, from + PAGE_SIZE - 1)
+      if (error && filterPaymentDeletedAt && isMissingDeletedAt(error.message)) {
+        console.warn(
+          'loadMoneyCollectionSnapshot: payments.deleted_at missing; retrying without soft-delete filter'
+        )
+        filterPaymentDeletedAt = false
+        page -= 1
+        continue
+      }
       if (error) {
         // Same policy as the invoices query: a failed page means the
         // collected/avg-days figures would be silently understated, so

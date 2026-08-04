@@ -1,28 +1,35 @@
 # HANDOFF
 
 ## Mode
-Bugfix / polish: **products empty** + **sign-in blocked** (Supabase CAPTCHA / incomplete schema).
+Bugfix: **Analytics dashboard blank** + **public product detail 404**.
 
 ## Stage
 S11 residual fixes (demo campaign already complete).
 
 ## What was fixed (this session)
-1. **Products not showing**
-   - Root cause: partial `schema.sql` omitted `products.deleted_at` and `products.is_temporary`. App filters on those columns → PostgREST errors → empty lists. RLS for anon could also block public reads.
-   - Fix: columns + split SELECT policies in `schema.sql`; operator one-shot `supabase/seed/00b_fix_products_columns_and_rls.sql`; resilient `/admin/products` queries; public list handles missing `is_temporary`.
+1. **Analytics: "Unable to load dashboard data"**
+   - Root cause: live Supabase missing `invoices.deleted_at` and `payments.deleted_at`. Dashboard queries filtered on those columns and threw.
+   - Fix: retry without soft-delete filters in `lib/dashboard.ts` and `lib/money-collection.ts` when the column is missing.
 
-2. **Sign-in / “Supabase CAPTCHA”**
-   - App never uses Turnstile in demo mode, but Supabase **Attack Protection CAPTCHA** can still block password grant.
-   - Empty `{}` errors were over-blamed on CAPTCHA.
-   - Fix: clearer diagnostics; demo fallback that verifies password via Postgres (`crypt`) then mints a session with admin `generateLink` + `verifyOtp` when CAPTCHA-shaped errors occur (needs `POSTGRES_URL*`).
+2. **Product detail "Product not found" (category list still worked)**
+   - Root cause: live DB missing `products.materials` (and related variant columns). List used multi-column fallbacks; get-by-code did not.
+   - Fix: shared `PUBLIC_PRODUCT_COLUMN_SETS` walk in `getPublicProductByCode` (same resilience as list), plus a CORE column set with sale/SEO fields but no materials pack.
 
-## Operator next steps (required on live Supabase)
-1. **Products still empty?** SQL Editor: run **`supabase/seed/00_ALL_IN_ONE_fix_products.sql`** once. Result must show `public_visible > 0`.
-2. Vercel env: **`SUPABASE_SERVICE_ROLE_KEY`** must match the same project as `NEXT_PUBLIC_SUPABASE_URL` (app reads products via service role).
-3. Redeploy after pulling latest (service-role product reader).
-4. Auth → Attack Protection → **CAPTCHA OFF** (recommended).
-5. Run **`05_demo_admin.sql`** if staff login user missing: `dhotgta@gmail.com` / `A1b2c3d4@`.
+3. **Operator SQL (permanent schema parity)**
+   - `supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql` adds the missing columns safely (`IF NOT EXISTS`).
+
+## Operator next steps (required for production)
+1. **Deploy** this branch to Vercel (app-side fix is enough for both bugs).
+2. **Optional but recommended:** Supabase SQL Editor → run **`supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql`** once.
+3. Hard-refresh Analytics and open e.g. https://swbm-dash.vercel.app/products/ENG-CLAS (from Bricks category).
+4. If products list empty again: still run `00_ALL_IN_ONE_fix_products.sql` / `00b` as before.
+5. Auth CAPTCHA still recommended OFF on the demo project (prior incident).
+
+## Verify after deploy
+- `/dashboard` (admin) shows Money collection + charts (not the red error banner).
+- `/quote/bricks` → click a product → product page loads with name/price/Add to quote.
+- Direct: `/products/ENG-CLAS` and `/products/WIRE-FN` are not "Product not found".
 
 ## Do not
 - Wipe production customer data.
-- Leave CAPTCHA on without Postgres URL if you need password login without Turnstile.
+- Force-push or amend published history without explicit request.

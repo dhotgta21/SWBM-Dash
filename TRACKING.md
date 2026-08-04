@@ -39,5 +39,16 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 | **Proof** | `npx tsc --noEmit` exit 0; vitest brand + public-products 10/10 |
 | **Operator** | Run `00b` + `02` SQL; CAPTCHA OFF; redeploy |
 
+## Incident: Analytics blank + product detail 404 (2026-08-04)
+| Item | Detail |
+|------|--------|
+| **Symptoms** | Dashboard: "Unable to load dashboard data"; `/quote/bricks` lists products; `/products/ENG-CLAS` title "Product not found" |
+| **Dashboard root cause** | Live DB missing `invoices.deleted_at` and `payments.deleted_at` (migration 093 not applied). `getDashboardMetrics` and money-collection filtered those columns → query throw → error alert |
+| **Product detail root cause** | Live DB missing `products.materials` / `variant_options` / `family_slug` / `source_url`. `listPublicProducts` fell through column sets; `getPublicProductByCode` did not → null → not found |
+| **App fix** | Resilient column-set walk in `getPublicProductByCode` + CORE set; soft-delete filter retry in `lib/dashboard.ts` and `lib/money-collection.ts` |
+| **Schema fix (optional permanent)** | `supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql` |
+| **Proof** | Live Supabase repro of both errors; resilient shapes return data; `npx tsc --noEmit` exit 0; vitest public-products + money-collection 12/12 |
+| **Operator** | Deploy this commit to Vercel. Optionally run `00e` SQL once for full schema parity |
+
 ## Decisions
 See `docs/lifecycle/decisions.md` D-001–D-005.
