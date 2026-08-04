@@ -128,7 +128,13 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
               required
             />
           </div>
-          <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey ?? undefined} className="flex justify-center" />
+          {turnstileSiteKey ? (
+            <TurnstileCaptcha
+              ref={turnstileRef}
+              siteKey={turnstileSiteKey}
+              className="flex justify-center"
+            />
+          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

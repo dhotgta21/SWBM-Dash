@@ -57,7 +57,12 @@ export function AdminLoginForm({ turnstileSiteKey, pendingMfa = null }: AdminLog
     setError(null)
     const result = await signIn(formData)
     if (result?.error) {
-      setError(result.error)
+      // Always coerce to a readable string (never show raw "{}" objects).
+      const message =
+        typeof result.error === 'string' && result.error.trim() && result.error.trim() !== '{}'
+          ? result.error
+          : 'Sign-in failed. Please try again.'
+      setError(message)
       setLoading(false)
       // Turnstile tokens are single-use. Reset the widget so the next attempt
       // gets a fresh token instead of re-submitting the consumed one.
@@ -130,7 +135,9 @@ export function AdminLoginForm({ turnstileSiteKey, pendingMfa = null }: AdminLog
               disabled={loading}
             />
           </div>
-          <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey ?? undefined} />
+          {turnstileSiteKey ? (
+            <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey} />
+          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

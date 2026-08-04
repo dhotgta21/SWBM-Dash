@@ -107,7 +107,9 @@ export function ClientLoginForm({ turnstileSiteKey }: ClientLoginFormProps) {
               className="bg-white"
             />
           </div>
-          <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey ?? undefined} />
+          {turnstileSiteKey ? (
+            <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey} />
+          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

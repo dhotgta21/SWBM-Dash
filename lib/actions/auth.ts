@@ -54,11 +54,32 @@ function sanitizeAuthError(error: { message?: string; code?: string }) {
   // an email address is registered. Return a single generic message for all
   // credential / confirmation / not-found failures.
   const code = error.code
-  if (code === 'over_request_rate_limit') return 'Too many attempts. Please try again later.'
+  const raw = (error.message ?? '').trim()
+  const msg = raw.toLowerCase()
+
+  if (code === 'over_request_rate_limit' || msg.includes('rate limit')) {
+    return 'Too many attempts. Please try again later.'
+  }
   if (code === 'invalid_credentials' || code === 'email_not_confirmed' || code === 'user_not_found') {
     return 'Invalid email or password.'
   }
-  return error.message || 'An unexpected error occurred. Please try again.'
+  // Supabase often returns an empty or literal "{}" message when CAPTCHA /
+  // Attack Protection blocks the request (common on demo projects without
+  // Turnstile). Never surface "{}" in the UI.
+  if (
+    !raw ||
+    raw === '{}' ||
+    raw === '"{}"' ||
+    msg.includes('captcha') ||
+    msg.includes('captcha_failed') ||
+    code === 'captcha_failed'
+  ) {
+    if (shouldBypassCaptcha()) {
+      return 'Sign-in blocked by Supabase CAPTCHA. In Supabase: Authentication → Attack Protection → turn CAPTCHA off for this demo project, then try again.'
+    }
+    return 'Please complete the security check and try again.'
+  }
+  return raw
 }
 
 // Friendly, non-leaky messages for the password set/change actions. Returning
