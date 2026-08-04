@@ -389,7 +389,7 @@ export function TeamManagement({
       const formData = new FormData()
       formData.set('userId', member.id)
       const result = await deleteUser(formData)
-      if (result.error) setError(result.error)
+      if ('error' in result && result.error) setError(result.error)
       else {
         setSuccess(`Deleted ${member.email}.`)
         router.refresh()

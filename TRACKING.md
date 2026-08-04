@@ -76,5 +76,15 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 | **Proof** | Live SQL verify permanent=100, PDF cols present, Summer Trade Sale 40 products; `npx tsc --noEmit` exit 0; vitest money-collection + discount 48/48 |
 | **Operator** | Deploy app. If another env still broken: run `00f` SQL (or `node scripts/apply-00f-clients.mjs` with Postgres URL). |
 
+## Incident: company details empty + admin delete blocked (2026-08-04)
+| Item | Detail |
+|------|--------|
+| **Company** | Live `company_settings` had null address/phone/email/VAT/reg/reply-to; bank row empty |
+| **Company fix** | `supabase/seed/06_demo_company_details.sql` applied (example NAP + bank + channels) |
+| **Delete symptom** | Could not delete `dhotgta@gmail.com` from Team settings |
+| **Delete root cause** | `deleteUser` hard-failed when reassigning missing `stock_audit_alerts` table; also blocked on owned invoices instead of reassigning |
+| **Delete fix** | Reassign invoices/clients/payments/products + skip missing relations; user deleted from live demo |
+| **Proof** | Company row filled; dhotgta absent from profiles; `npx tsc --noEmit` OK |
+
 ## Decisions
 See `docs/lifecycle/decisions.md` D-001–D-005.

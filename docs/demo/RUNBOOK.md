@@ -109,6 +109,7 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 0c (legacy) | `supabase/seed/00c_fix_products_deleted_at.sql` | Minimal deleted_at + RLS (prefer **0b**) |
 | **0e (if Analytics blank)** | `supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql` | invoices/payments `deleted_at` + product variants |
 | **0f (Clients=0 / Unknown client / PDF not found)** | `supabase/seed/00f_fix_clients_columns.sql` | clients `deleted_at`/`is_temporary`/`account_balance` + invoice discount cols for PDF |
+| **6 (company NAP / bank / reply-to)** | `supabase/seed/06_demo_company_details.sql` | Example address, phone, email, VAT, company reg, bank, reply-to |
 | 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
 | 2 **(for landing grid)** | `supabase/seed/02_construction_products.sql` | Construction products + public product read (categories on homepage) |
 | 2b (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |

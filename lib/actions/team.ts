@@ -278,6 +278,8 @@ export async function deleteUser(formData: FormData) {
   }
 
   const adminClient = createAdminClient()
+  // Narrowed for nested helpers (TS does not carry the early return through closures).
+  const actorUserId = user.id
 
   // Only operator accounts (admin/staff/picker) may be deleted from the team page.
   const { data: targetProfile } = await adminClient
@@ -289,82 +291,86 @@ export async function deleteUser(formData: FormData) {
     return { error: 'Invalid user.' }
   }
 
-  // Block deletion when the user still owns protected business records.
-  // These tables reference auth.users(id) with ON DELETE RESTRICT, so the
-  // auth delete will fail if any remain. We pre-check to give a clear message.
+  // Reassign RESTRICT FKs to the acting admin so auth.users → profiles CASCADE
+  // can complete. Demo seed often attributes thousands of invoices/clients to
+  // one admin; blocking delete until "reassign first" made removing legacy
+  // admin accounts (e.g. dhotgta@gmail.com) impossible from the UI.
   //
-  // Picker operational history (delivery_loads.picked_by, stock_audit_alerts
-  // .raised_by) also uses ON DELETE RESTRICT on profiles — unlike drivers,
-  // whose assigned_driver_id is ON DELETE SET NULL. Those are reassigned to
-  // the acting admin below so a picker who has actually worked can still be
-  // removed without wiping load history.
-  const [
-    { count: invoiceCount, error: invoiceError },
-    { count: clientCount, error: clientError },
-    { count: paymentCount, error: paymentError },
-    { count: invitationCount, error: invitationError },
-  ] = await Promise.all([
-    adminClient.from('invoices').select('*', { count: 'exact', head: true }).eq('created_by', targetUserId).is('deleted_at', null),
-    adminClient.from('clients').select('*', { count: 'exact', head: true }).eq('created_by', targetUserId).is('deleted_at', null),
-    adminClient.from('payments').select('*', { count: 'exact', head: true }).eq('created_by', targetUserId).is('deleted_at', null),
-    adminClient.from('client_invitations').select('*', { count: 'exact', head: true }).eq('invited_by', targetUserId),
-  ])
-
-  const dependencyErrors = {
-    invoices: invoiceError,
-    clients: clientError,
-    payments: paymentError,
-    client_invitations: invitationError,
+  // Missing tables on partial schemas (e.g. stock_audit_alerts) must not
+  // hard-fail the whole delete — PostgREST returns an error for unknown
+  // relations and the previous code treated that as "still has alerts".
+  function isMissingRelationError(message: string | undefined): boolean {
+    const msg = (message ?? '').toLowerCase()
+    return (
+      msg.includes('does not exist') ||
+      msg.includes('could not find the table') ||
+      msg.includes('schema cache')
+    )
   }
-  const failedChecks = Object.entries(dependencyErrors).filter(([, e]) => !!e)
-  if (failedChecks.length > 0) {
-    for (const [table, err] of failedChecks) {
-      console.error(`[team] deleteUser dependency check failed for ${table}:`, err)
+
+  async function reassignCreatedBy(
+    table: 'invoices' | 'clients' | 'payments' | 'products',
+    column: 'created_by' = 'created_by'
+  ): Promise<{ error: string } | null> {
+    const { error } = await adminClient
+      .from(table)
+      .update({ [column]: actorUserId })
+      .eq(column, targetUserId)
+    if (error && !isMissingRelationError(error.message)) {
+      console.error(`[team] deleteUser reassign ${table}.${column} failed:`, error)
+      return {
+        error: `Cannot delete this user because reassigning their ${table} failed. Try again or reassign records manually.`,
+      }
     }
-    return { error: 'Could not verify user dependencies. Please try again.' }
+    return null
   }
 
-  const invoicesOwned = invoiceCount ?? 0
-  const clientsOwned = clientCount ?? 0
-  const paymentsOwned = paymentCount ?? 0
-  const invitationsOwned = invitationCount ?? 0
-
-  const dependencies = []
-  if (invoicesOwned > 0) dependencies.push(`${invoicesOwned} invoice${invoicesOwned === 1 ? '' : 's'}`)
-  if (clientsOwned > 0) dependencies.push(`${clientsOwned} client${clientsOwned === 1 ? '' : 's'}`)
-  if (paymentsOwned > 0) dependencies.push(`${paymentsOwned} payment${paymentsOwned === 1 ? '' : 's'}`)
-  if (invitationsOwned > 0)
-    dependencies.push(`${invitationsOwned} client invitation${invitationsOwned === 1 ? '' : 's'}`)
-
-  if (dependencies.length > 0) {
-    return {
-      error: `Cannot delete this user because they still own ${dependencies.join(' and ')}. Reassign or remove those records first.`,
-    }
+  for (const table of ['invoices', 'clients', 'payments', 'products'] as const) {
+    const result = await reassignCreatedBy(table)
+    if (result) return result
   }
 
-  // Reassign picker RESTRICT FKs so auth.users → profiles CASCADE can complete.
-  // Keep load/alert history; just move attribution to the admin performing delete.
-  const { error: loadsReassignError } = await adminClient
-    .from('delivery_loads')
-    .update({ picked_by: user.id })
-    .eq('picked_by', targetUserId)
-  if (loadsReassignError) {
-    console.error('[team] deleteUser reassign delivery_loads failed:', loadsReassignError)
-    return {
-      error:
-        'Cannot delete this user because they still have delivery loads. Reassign those loads first, or try again.',
+  {
+    const { error } = await adminClient
+      .from('client_invitations')
+      .update({ invited_by: actorUserId })
+      .eq('invited_by', targetUserId)
+    if (error && !isMissingRelationError(error.message)) {
+      console.error('[team] deleteUser reassign client_invitations failed:', error)
+      return {
+        error:
+          'Cannot delete this user because reassigning their client invitations failed. Try again.',
+      }
     }
   }
 
-  const { error: alertsReassignError } = await adminClient
-    .from('stock_audit_alerts')
-    .update({ raised_by: user.id })
-    .eq('raised_by', targetUserId)
-  if (alertsReassignError) {
-    console.error('[team] deleteUser reassign stock_audit_alerts failed:', alertsReassignError)
-    return {
-      error:
-        'Cannot delete this user because they still have stock audit alerts. Resolve or reassign those first.',
+  // Picker operational history: keep load/alert rows, re-attribute ownership.
+  {
+    const { error: loadsReassignError } = await adminClient
+      .from('delivery_loads')
+      .update({ picked_by: actorUserId })
+      .eq('picked_by', targetUserId)
+    if (loadsReassignError && !isMissingRelationError(loadsReassignError.message)) {
+      console.error('[team] deleteUser reassign delivery_loads failed:', loadsReassignError)
+      return {
+        error:
+          'Cannot delete this user because they still have delivery loads. Reassign those loads first, or try again.',
+      }
+    }
+  }
+
+  {
+    const { error: alertsReassignError } = await adminClient
+      .from('stock_audit_alerts')
+      .update({ raised_by: actorUserId })
+      .eq('raised_by', targetUserId)
+    // Partial demo schemas often lack this table entirely — skip quietly.
+    if (alertsReassignError && !isMissingRelationError(alertsReassignError.message)) {
+      console.error('[team] deleteUser reassign stock_audit_alerts failed:', alertsReassignError)
+      return {
+        error:
+          'Cannot delete this user because they still have stock audit alerts. Resolve or reassign those first.',
+      }
     }
   }
 
