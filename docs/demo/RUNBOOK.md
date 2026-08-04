@@ -80,7 +80,15 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 3 | `supabase/seed/03_demo_client_portal_accounts.sql` | Portal login for **every** client |
 | 4 | `supabase/seed/04_demo_company_brand.sql` | Force company name + logo wordmark to **Demo Builder Merchant** |
 
-**Important:** `01_demo_clients_invoices.sql` needs at least one **admin** profile. Create it first via `/register` on the empty project.
+**Admin:** `01_demo_clients_invoices.sql` will **create a demo admin for you** if none exists:
+
+| Field | Value |
+|-------|--------|
+| Email | `demo.admin@demo-builder.example` |
+| Password | `DemoAdmin1!` |
+| Sign-in | `/admin-login` |
+
+You no longer need `/register` before seeding.
 
 To change volume, edit at the top of the `DO $$` block in file 01:
 

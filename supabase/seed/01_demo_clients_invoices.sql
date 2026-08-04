@@ -11,16 +11,26 @@
 --
 -- Prerequisites:
 --   1. schema.sql applied successfully
---   2. At least one profile with role = 'admin' (register first admin)
---   3. Optional: run 00_wipe_demo_clients_invoices.sql first to reseed cleanly
+--   2. Optional: run 00_wipe_demo_clients_invoices.sql first to reseed cleanly
+--
+-- Admin for created_by:
+--   If no admin profile exists, this script creates a demo admin automatically:
+--     email:    demo.admin@demo-builder.example
+--     password: DemoAdmin1!
+--   You can still sign in with that account after the seed.
 --
 -- Tune volume: change v_client_count and v_months below.
 -- Safe to re-run only after wipe (document numbers / account numbers must stay unique).
 -- =============================================================================
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 DO $$
 DECLARE
   v_admin           uuid;
+  v_instance_id     uuid;
+  v_admin_email     text := 'demo.admin@demo-builder.example';
+  v_admin_password  text := 'DemoAdmin1!';
   v_client_count    int := 50;   -- raise to 100 if your project is comfortable
   v_months          int := 24;   -- history window
   v_vat             numeric := 20;
@@ -68,7 +78,7 @@ DECLARE
   v_pc_prefix       text;
   v_delivery        text;
   v_terms           int;
-  v_start           date := (date_trunc('month', CURRENT_DATE) - (make_interval(months => v_months)))::date;
+  v_start           date;
   v_end             date := CURRENT_DATE;
   v_rng             float;
   v_product_count   int;
@@ -122,7 +132,11 @@ DECLARE
     42.50, 6.80, 0.85, 1.95, 4.20, 8.40, 28.00, 12.50, 48.00, 35.00
   ];
 BEGIN
-  -- Admin for created_by
+  v_start := (date_trunc('month', CURRENT_DATE) - make_interval(months => v_months))::date;
+
+  -- ------------------------------------------------------------------
+  -- Resolve or create demo admin (for clients/invoices.created_by)
+  -- ------------------------------------------------------------------
   SELECT id INTO v_admin
     FROM public.profiles
    WHERE role = 'admin'
@@ -131,8 +145,107 @@ BEGIN
    LIMIT 1;
 
   IF v_admin IS NULL THEN
-    RAISE EXCEPTION
-      'No admin profile found. Open /register on an empty database first, then re-run this seed.';
+    SELECT id INTO v_instance_id FROM auth.instances LIMIT 1;
+    IF v_instance_id IS NULL THEN
+      v_instance_id := '00000000-0000-0000-0000-000000000000'::uuid;
+    END IF;
+
+    -- Reuse auth user by email if it already exists
+    SELECT id INTO v_admin
+      FROM auth.users
+     WHERE lower(email) = lower(v_admin_email)
+     LIMIT 1;
+
+    IF v_admin IS NULL THEN
+      v_admin := gen_random_uuid();
+
+      INSERT INTO auth.users (
+        instance_id,
+        id,
+        aud,
+        role,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at,
+        is_super_admin,
+        is_sso_user,
+        is_anonymous
+      ) VALUES (
+        v_instance_id,
+        v_admin,
+        'authenticated',
+        'authenticated',
+        v_admin_email,
+        crypt(v_admin_password, gen_salt('bf')),
+        now(),
+        jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')),
+        jsonb_build_object(
+          'full_name', 'Demo Admin',
+          'invited_role', 'admin',
+          'demo_admin', true
+        ),
+        now(),
+        now(),
+        false,
+        false,
+        false
+      );
+
+      INSERT INTO auth.identities (
+        id,
+        user_id,
+        identity_data,
+        provider,
+        provider_id,
+        last_sign_in_at,
+        created_at,
+        updated_at
+      ) VALUES (
+        gen_random_uuid(),
+        v_admin,
+        jsonb_build_object(
+          'sub', v_admin::text,
+          'email', v_admin_email,
+          'email_verified', true,
+          'phone_verified', false
+        ),
+        'email',
+        v_admin::text,
+        now(),
+        now(),
+        now()
+      );
+    ELSE
+      -- Ensure password is the known demo password
+      UPDATE auth.users
+         SET encrypted_password = crypt(v_admin_password, gen_salt('bf')),
+             email_confirmed_at = COALESCE(email_confirmed_at, now()),
+             updated_at = now()
+       WHERE id = v_admin;
+    END IF;
+
+    -- handle_new_user may have created a staff profile; force admin
+    IF EXISTS (SELECT 1 FROM public.profiles WHERE id = v_admin) THEN
+      UPDATE public.profiles
+         SET role = 'admin',
+             full_name = COALESCE(NULLIF(full_name, ''), 'Demo Admin'),
+             email = v_admin_email,
+             is_active = true,
+             client_id = NULL
+       WHERE id = v_admin;
+    ELSE
+      INSERT INTO public.profiles (
+        id, email, full_name, role, is_active, created_by
+      ) VALUES (
+        v_admin, v_admin_email, 'Demo Admin', 'admin', true, v_admin
+      );
+    END IF;
+
+    RAISE NOTICE 'Created demo admin % / password %', v_admin_email, v_admin_password;
   END IF;
 
   SELECT COALESCE(invoice_prefix, 'INV'),
@@ -141,6 +254,17 @@ BEGIN
     INTO v_inv_prefix, v_qte_prefix, v_vat
     FROM public.company_settings
    WHERE id = 1;
+
+  -- company_settings may be missing on a half-setup DB
+  IF NOT FOUND OR v_inv_prefix IS NULL THEN
+    INSERT INTO public.company_settings (id, company_name)
+    VALUES (1, 'Demo Builder Merchant')
+    ON CONFLICT (id) DO UPDATE
+      SET company_name = COALESCE(public.company_settings.company_name, 'Demo Builder Merchant');
+    v_inv_prefix := 'INV';
+    v_qte_prefix := 'QTE';
+    v_vat := 20;
+  END IF;
 
   -- Demo branding (optional)
   UPDATE public.company_settings
