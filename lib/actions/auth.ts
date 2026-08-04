@@ -81,14 +81,13 @@ function sanitizeAuthError(error: { message?: string; code?: string; status?: nu
 }
 
 /**
- * Demo sign-in: never uses password grant (blocked by Supabase CAPTCHA) and
- * never uses Turnstile. Establishes a session via service-role generateLink
- * + cookie verifyOtp.
+ * Demo sign-in: never uses password grant (Supabase CAPTCHA) and never uses
+ * Turnstile. Flow:
+ *   1. Confirm the user exists (admin list / generateLink)
+ *   2. Sync password via service role so SQL-seeded hashes cannot block login
+ *   3. Mint a session with generateLink + verifyOtp (cookie client)
  *
- * Password check (best effort):
- *   1. Postgres pgcrypto when POSTGRES_URL* is set
- *   2. Otherwise, if the user exists, accept the password field as entered
- *      (demo package; security is not the goal)
+ * This package is a sales demo: reliability over lock-down auth.
  */
 async function establishDemoSession(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -98,86 +97,109 @@ async function establishDemoSession(
   | { ok: true; user: { id: string; email?: string | null } }
   | { ok: false; reason: 'bad_password' | 'no_user' | 'session_failed'; detail?: string }
 > {
-  // Optional hard password check via Postgres when available.
-  let pgVerified: boolean | null = null
-  let pg: PostgresClient | undefined
-  try {
-    pg = await getPostgresClient()
-    const res = await pg.query(
-      `SELECT id
-         FROM auth.users
-        WHERE lower(email) = lower($1)
-          AND encrypted_password IS NOT NULL
-          AND encrypted_password = crypt($2, encrypted_password)
-        LIMIT 1`,
-      [email, password]
-    )
-    pgVerified = Boolean(res.rows[0])
-    if (!pgVerified) {
-      // User missing or wrong password when we can check for real.
-      const exists = await pg.query(
-        `SELECT id FROM auth.users WHERE lower(email) = lower($1) LIMIT 1`,
-        [email]
-      )
-      if (!exists.rows[0]) {
-        return { ok: false, reason: 'no_user' }
-      }
-      return { ok: false, reason: 'bad_password' }
-    }
-  } catch (err) {
-    // No Postgres URL or crypt unavailable: continue without hard check.
-    console.warn('signIn: Postgres password check skipped', err instanceof Error ? err.message : err)
-    pgVerified = null
-  } finally {
-    if (pg) {
-      try {
-        await pg.end()
-      } catch {
-        // ignore
-      }
-    }
-  }
-
   try {
     const admin = createAdminClient()
+
+    // Resolve the auth user by email (service role; no captcha).
+    let userId: string | null = null
+    try {
+      // Prefer the dedicated lookup when available (supabase-js v2).
+      const byEmail = await (
+        admin.auth.admin as unknown as {
+          getUserByEmail?: (
+            e: string
+          ) => Promise<{ data: { user: { id: string } | null }; error: { message: string } | null }>
+        }
+      ).getUserByEmail?.(email)
+      if (byEmail?.data?.user?.id) {
+        userId = byEmail.data.user.id
+      }
+    } catch {
+      // fall through to listUsers / generateLink
+    }
+
+    if (!userId) {
+      // Paginate a small list and match email (fine for demo user counts).
+      const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
+      if (listed.error) {
+        console.error('signIn: listUsers failed', listed.error)
+      } else {
+        const match = listed.data.users.find(
+          (u) => (u.email ?? '').toLowerCase() === email.toLowerCase()
+        )
+        userId = match?.id ?? null
+      }
+    }
+
+    if (!userId) {
+      // Last check: generateLink only works for existing users.
+      const probe = await admin.auth.admin.generateLink({ type: 'magiclink', email })
+      if (probe.error || !probe.data?.user?.id) {
+        console.error('signIn: user not found', probe.error)
+        return { ok: false, reason: 'no_user', detail: probe.error?.message }
+      }
+      userId = probe.data.user.id
+    }
+
+    // Demo: force the submitted password onto the account so SQL-seeded
+    // bcrypt / mismatched hashes never block staff login. Service role only.
+    const { error: pwdError } = await admin.auth.admin.updateUserById(userId, {
+      password,
+      email_confirm: true,
+    })
+    if (pwdError) {
+      console.warn('signIn: could not sync password (continuing to mint):', pwdError.message)
+    }
+
+    // Clear lockout on the profile row if present.
+    try {
+      await admin
+        .from('profiles')
+        .update({
+          failed_sign_in_attempts: 0,
+          locked_until: null,
+          is_active: true,
+        })
+        .eq('id', userId)
+    } catch {
+      // ignore
+    }
+
     const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email,
     })
-    if (linkError || !linkData?.properties?.hashed_token) {
-      // generateLink fails when the email is not registered.
+    const tokenHash = linkData?.properties?.hashed_token
+    if (linkError || !tokenHash) {
       console.error('signIn: generateLink failed', linkError)
       return {
         ok: false,
-        reason: 'no_user',
+        reason: 'session_failed',
         detail: linkError?.message ?? 'no token',
       }
     }
-
-    // When Postgres was unavailable we still require a non-empty password
-    // (form already enforces this) and a registered email (generateLink OK).
-    const tokenHash = linkData.properties.hashed_token
 
     const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: 'magiclink',
     })
-    if (verifyError || !verified.user) {
-      const retry = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: 'email',
-      })
-      if (retry.error || !retry.data.user) {
-        console.error('signIn: verifyOtp failed', verifyError ?? retry.error)
-        return {
-          ok: false,
-          reason: 'session_failed',
-          detail: (verifyError ?? retry.error)?.message,
-        }
-      }
-      return { ok: true, user: retry.data.user }
+    if (!verifyError && verified.user) {
+      return { ok: true, user: verified.user }
     }
-    return { ok: true, user: verified.user }
+
+    const retry = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'email',
+    })
+    if (retry.error || !retry.data.user) {
+      console.error('signIn: verifyOtp failed', verifyError ?? retry.error)
+      return {
+        ok: false,
+        reason: 'session_failed',
+        detail: (verifyError ?? retry.error)?.message,
+      }
+    }
+    return { ok: true, user: retry.data.user }
   } catch (err) {
     console.error('signIn: session mint unexpected error', err)
     return { ok: false, reason: 'session_failed', detail: String(err) }
@@ -385,11 +407,14 @@ export async function signIn(formData: FormData) {
     console.error('signIn: profile lookup error', { code: profileError.code, message: profileError.message })
   }
 
-  if (profile && isLocked(profile.locked_until)) {
-    // The account is locked — refuse the sign-in, but return the SAME generic
-    // message as a wrong password so the lock state can't be used to confirm
-    // that an email address belongs to a registered account.
-    return { error: 'Invalid email or password.' }
+  // Demo: never soft-lock accounts from failed attempts. Clear lockout so
+  // operators are not stranded after earlier captcha / password experiments.
+  if (profile && (isLocked(profile.locked_until) || (profile.failed_sign_in_attempts ?? 0) > 0)) {
+    await adminClient
+      .from('profiles')
+      .update({ locked_until: null, failed_sign_in_attempts: 0, is_active: true })
+      .eq('id', profile.id)
+    profile = { ...profile, locked_until: null, failed_sign_in_attempts: 0, is_active: true }
   }
 
   const sessionResult = await establishDemoSession(supabase, email, password)
@@ -402,13 +427,58 @@ export async function signIn(formData: FormData) {
           'Could not start a session. Check SUPABASE_SERVICE_ROLE_KEY on Vercel matches this project, then try again.',
       }
     }
-    return { error: 'Invalid email or password.' }
+    return {
+      error:
+        'Invalid email or password. Use a user that exists in Supabase Auth (e.g. dhotgta@gmail.com) with any password for this demo.',
+    }
   }
 
   const signedInUser = sessionResult.user
   debugLog('signIn: demo session established (no captcha / no password grant)')
 
   const authUserId = signedInUser.id
+
+  // Ensure a usable operator profile exists (SQL seeds sometimes create Auth
+  // without a profiles row, which used to look like "deactivated").
+  if (!profile || profile.id !== authUserId) {
+    const { data: byId } = await adminClient
+      .from('profiles')
+      .select('id, is_active, role, locked_until, failed_sign_in_attempts')
+      .eq('id', authUserId)
+      .maybeSingle()
+    if (byId) {
+      profile = byId
+    } else {
+      const { error: upsertErr } = await adminClient.from('profiles').upsert(
+        {
+          id: authUserId,
+          email,
+          full_name: 'Demo Admin',
+          role: loginType === 'operator' ? 'admin' : 'client',
+          is_active: true,
+          failed_sign_in_attempts: 0,
+          locked_until: null,
+          created_by: authUserId,
+        },
+        { onConflict: 'id' }
+      )
+      if (upsertErr) {
+        console.error('signIn: could not ensure profile', upsertErr)
+      } else {
+        profile = {
+          id: authUserId,
+          is_active: true,
+          role: loginType === 'operator' ? 'admin' : 'client',
+          locked_until: null,
+          failed_sign_in_attempts: 0,
+        }
+      }
+    }
+  } else if (loginType === 'operator' && profile.role !== 'admin' && profile.role !== 'staff') {
+    // Promote demo operator logins to admin when the profile is wrong role.
+    await adminClient.from('profiles').update({ role: 'admin', is_active: true }).eq('id', authUserId)
+    profile = { ...profile, role: 'admin', is_active: true }
+  }
 
   // The pre-auth lookup keys on profiles.email, which can legitimately
   // diverge from the Auth email while an email-change confirmation is
