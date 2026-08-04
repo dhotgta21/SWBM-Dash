@@ -17,9 +17,9 @@
 --
 -- Admin for created_by:
 --   If no admin profile exists, this script creates a demo admin automatically:
---     email:    demo.admin@demo-builder.example
---     password: DemoAdmin1!
---   You can still sign in with that account after the seed.
+--     email:    dhotgta@gmail.com
+--     password: A1b2c3d4@
+--   You can still sign in with that account after the seed (also see 05_demo_admin.sql).
 --
 -- Tune volume: change v_client_count and v_months below.
 -- Re-run safe: removes previous *@demo-trade.example clients (and their
@@ -32,8 +32,8 @@ DO $$
 DECLARE
   v_admin           uuid;
   v_instance_id     uuid;
-  v_admin_email     text := 'demo.admin@demo-builder.example';
-  v_admin_password  text := 'DemoAdmin1!';
+  v_admin_email     text := 'dhotgta@gmail.com';
+  v_admin_password  text := 'A1b2c3d4@';
   v_client_count    int := 50;   -- raise to 100 if your project is comfortable
   v_months          int := 24;   -- history window
   v_vat             numeric := 20;

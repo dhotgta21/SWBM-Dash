@@ -80,13 +80,14 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 2 (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
 | 3 | `supabase/seed/03_demo_client_portal_accounts.sql` | Portal login for **every** client |
 | 4 | `supabase/seed/04_demo_company_brand.sql` | Force company name + logo wordmark to **Demo Builder Merchant** |
+| 5 | `supabase/seed/05_demo_admin.sql` | Staff admin `dhotgta@gmail.com` / `A1b2c3d4@` |
 
-**Admin:** `01_demo_clients_invoices.sql` will **create a demo admin for you** if none exists:
+**Admin:** run `05_demo_admin.sql` (or let `01` create one if missing):
 
 | Field | Value |
 |-------|--------|
-| Email | `demo.admin@demo-builder.example` |
-| Password | `DemoAdmin1!` |
+| Email | `dhotgta@gmail.com` |
+| Password | `A1b2c3d4@` |
 | Sign-in | `/admin-login` |
 
 You no longer need `/register` before seeding.
