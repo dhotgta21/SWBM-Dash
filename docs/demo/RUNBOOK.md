@@ -195,7 +195,7 @@ No multi-tenant switcher UI is required; env is intentional for sales control.
 1. **Homepage** – vertical hero story, categories, trust strip  
 2. **Catalogue / product** – open a stocked line  
 3. **Quote** – add items to cart (optional)  
-4. **Staff login** – `/admin-login` (no captcha in demo mode)  
+4. **Staff login** – single URL `/admin-login` for admin, picker, and driver (auto-routes by role; no captcha in demo mode)  
 5. **Dashboard** – KPIs and charts populated by seed  
 6. **Clients** – open a “hot” trade account with long history  
 7. **Invoice** – open a multi-line invoice, show PDF / share if useful  

@@ -33,3 +33,44 @@ export const ADMIN_LOGIN_PATH: string = (() => {
   const withSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
   return withSlash.replace(/\/+$/, '') || '/admin-login'
 })()
+
+/**
+ * Post-login home for a profile role.
+ *
+ * Staff sign-in is a **single** page (`ADMIN_LOGIN_PATH` / `/admin-login`).
+ * After password (+ optional MFA), every operator role is routed here:
+ *   - admin / staff → main dashboard shells
+ *   - picker → pick queue workspace
+ *   - driver → delivery jobs workspace
+ *   - client → portal (client login is `/login`, not staff login)
+ *
+ * `/picker` and `/driver` are **workspaces after auth**, not alternate
+ * sign-in URLs. Unauthenticated visits redirect back to staff login.
+ */
+export function getPostLoginPath(role: string | null | undefined): string {
+  switch (role) {
+    case 'client':
+      return '/portal'
+    case 'picker':
+      return '/picker'
+    case 'driver':
+      return '/driver'
+    case 'staff':
+      return '/invoices?view=due'
+    case 'admin':
+    default:
+      return '/dashboard'
+  }
+}
+
+/** Roles allowed on the staff sign-in form (`login_type=operator`). */
+export const STAFF_LOGIN_ROLES = ['admin', 'staff', 'picker', 'driver'] as const
+
+export function isStaffLoginRole(role: string | null | undefined): boolean {
+  return (
+    role === 'admin' ||
+    role === 'staff' ||
+    role === 'picker' ||
+    role === 'driver'
+  )
+}

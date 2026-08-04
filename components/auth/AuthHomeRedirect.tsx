@@ -20,14 +20,7 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-
-// Dashboard route constants — kept here so this component can be lifted
-// into another client surface later without dragging the whole
-// homepage dependency tree.
-const DASHBOARD_FOR_OPS = '/invoices?view=due'
-const PORTAL_FOR_CLIENTS = '/portal'
-const PICKER_DASHBOARD = '/picker'
-const DRIVER_DASHBOARD = '/driver'
+import { getPostLoginPath } from '@/lib/auth/login-paths'
 
 export function AuthHomeRedirect() {
   const router = useRouter()
@@ -45,7 +38,7 @@ export function AuthHomeRedirect() {
         const user = data.user
         if (!user) return
 
-        // Resolve role. Fall back to the operator dashboard if the
+        // Resolve role. Fall back to admin home if the
         // profile lookup fails — never block on this.
         let role: string | null = null
         try {
@@ -60,15 +53,7 @@ export function AuthHomeRedirect() {
         }
 
         dispatchedRef.current = true
-        router.replace(
-          role === 'client'
-            ? PORTAL_FOR_CLIENTS
-            : role === 'picker'
-              ? PICKER_DASHBOARD
-              : role === 'driver'
-                ? DRIVER_DASHBOARD
-                : DASHBOARD_FOR_OPS
-        )
+        router.replace(getPostLoginPath(role))
       } catch {
         // Best-effort. Anonymous / offline / expired session — leave the
         // user on the marketing page.

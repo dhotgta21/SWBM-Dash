@@ -7,7 +7,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient, getSupabaseProjectHost } from '@/lib/supabase/admin'
 import { rateLimit, type RateLimitResult } from '@/lib/rate-limit'
 import { createMemoryRateLimiter } from '@/lib/rate-limit/memory'
-import { ADMIN_LOGIN_PATH } from '@/lib/auth/login-paths'
+import {
+  ADMIN_LOGIN_PATH,
+  getPostLoginPath,
+  isStaffLoginRole,
+} from '@/lib/auth/login-paths'
 import { getClientIp } from '@/lib/ip'
 import { safeActionError } from '@/lib/errors'
 import { Client as PostgresClient } from 'pg'
@@ -547,11 +551,11 @@ export async function signIn(formData: FormData) {
         }
       }
     }
-  } else if (loginType === 'operator' && profile.role !== 'admin' && profile.role !== 'staff') {
-    // Promote demo operator logins to admin when the profile is wrong role.
-    await adminClient.from('profiles').update({ role: 'admin', is_active: true }).eq('id', authUserId)
-    profile = { ...profile, role: 'admin', is_active: true }
   }
+  // Do NOT promote picker/driver → admin on staff login. All operator roles
+  // share ADMIN_LOGIN_PATH; post-login routing uses profile.role
+  // (getPostLoginPath). Overwriting roles broke auto-routing and made demo
+  // picker/driver accounts land on the full dashboard as "admins".
 
   // The pre-auth lookup keys on profiles.email, which can legitimately
   // diverge from the Auth email while an email-change confirmation is
@@ -594,24 +598,16 @@ export async function signIn(formData: FormData) {
     return { error: 'Your account has been deactivated. Contact an administrator.' }
   }
 
-  // Portal/role enforcement. The client portal login only accepts
-  // client accounts; the operator login accepts admins and staff.
+  // Portal/role enforcement. Client portal = clients only. Staff login =
+  // admin, staff, picker, driver (one form, auto-route after success).
   // Sign the user out so the invalid session can't be reused.
   if (loginType === 'client' && profile.role !== 'client') {
     await supabase.auth.signOut()
     return { error: 'This account cannot sign in to the client portal.' }
   }
-  if (loginType === 'operator' && profile.role === 'client') {
+  if (loginType === 'operator' && !isStaffLoginRole(profile.role)) {
     await supabase.auth.signOut()
     return { error: 'Client accounts must use the client portal to sign in.' }
-  }
-  if (loginType === 'client' && profile.role === 'picker') {
-    await supabase.auth.signOut()
-    return { error: 'This account cannot sign in to the client portal.' }
-  }
-  if (loginType === 'client' && profile.role === 'driver') {
-    await supabase.auth.signOut()
-    return { error: 'This account cannot sign in to the client portal.' }
   }
 
   // Clear any prior failed attempts now that the user has authenticated.
@@ -666,19 +662,8 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  if (profile.role === 'client') {
-    redirect('/portal')
-  }
-  if (profile.role === 'picker') {
-    redirect('/picker')
-  }
-  if (profile.role === 'driver') {
-    redirect('/driver')
-  }
-  // Land on Analytics after sign-in — money-collection KPIs,
-  // overdue queue and top-debtors are the highest-leverage things
-  // an operator should see first thing every morning.
-  redirect('/dashboard')
+  // Single staff login → role-based home (admin dashboard, picker queue, etc.).
+  redirect(getPostLoginPath(profile.role))
 }
 
 export async function signOut() {

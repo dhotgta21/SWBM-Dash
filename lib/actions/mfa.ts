@@ -8,6 +8,7 @@ import { rateLimit, type RateLimitResult } from '@/lib/rate-limit'
 import { createMemoryRateLimiter } from '@/lib/rate-limit/memory'
 import { getClientIp } from '@/lib/ip'
 import { canUseMfa } from '@/lib/auth/roles'
+import { getPostLoginPath } from '@/lib/auth/login-paths'
 import {
   AUTHENTICATOR_APP_LABELS,
   isAuthenticatorApp,
@@ -436,9 +437,6 @@ export async function verifyMfaLogin(
   }
 
   revalidatePath('/', 'layout')
-  // Staff land on invoices (their day-to-day); admins on analytics dashboard.
-  if (profile?.role === 'staff') {
-    redirect('/invoices?view=due')
-  }
-  redirect('/dashboard')
+  // Same role homes as password sign-in (shared staff login → auto-route).
+  redirect(getPostLoginPath(profile?.role))
 }

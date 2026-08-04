@@ -7,10 +7,11 @@ Demo fully seeded for sales: products, multi-year invoices, quotes, campaigns, t
 
 | Role | Email | Password | Where |
 |------|-------|----------|--------|
-| **Admin** | `admin@demo-builder.com` | `A1b2c3d4@` | `/admin-login` → Analytics, products, campaigns, quote requests |
-| **Picker** | `picker@demo-builder.com` | `A1b2c3d4@` | `/picker` |
-| **Driver** | `driver@demo-builder.com` | `A1b2c3d4@` | `/driver` |
-| Admin (legacy) | `dhotgta@gmail.com` | `A1b2c3d4@` | same |
+| **Admin** | `admin@demo-builder.com` | `A1b2c3d4@` | **`/admin-login`** → `/dashboard` |
+| **Picker** | `picker@demo-builder.com` | `A1b2c3d4@` | **`/admin-login`** → `/picker` (auto) |
+| **Driver** | `driver@demo-builder.com` | `A1b2c3d4@` | **`/admin-login`** → `/driver` (auto) |
+
+All staff use **one** sign-in URL (`/admin-login`). Role routing is automatic.
 | **Client portal** | e.g. `andrew.johnson.0@demo-trade.example` | `DemoClient1!` | `/login` |
 
 Regenerate the local cheat-sheet anytime:

@@ -87,7 +87,8 @@ export function AdminLoginForm({ pendingMfa = null }: AdminLoginFormProps) {
         <div className="space-y-1.5">
           <CardTitle>Staff sign in</CardTitle>
           <CardDescription>
-            Operator portal for the Demo Builder Merchant team.
+            One login for admin, staff, picker, and driver. You are routed to
+            the right workspace after sign-in.
           </CardDescription>
         </div>
       </CardHeader>
