@@ -403,7 +403,6 @@ export async function listPublicProducts(): Promise<PublicProduct[]> {
       supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)
-        .is('deleted_at', null)
         .eq('is_active', true)
         .order('category', { ascending: true })
         .order('name', { ascending: true })
@@ -452,7 +451,6 @@ export async function listPublicCategories(): Promise<PublicCategorySummary[]> {
     const { data, error } = await supabase
       .from('products')
       .select('category, image_url')
-      .is('deleted_at', null)
       .eq('is_active', true)
       .not('category', 'is', null)
 
@@ -524,7 +522,6 @@ export async function getPublicProductByCode(code: string): Promise<PublicProduc
       supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)
-        .is('deleted_at', null)
         .eq('is_active', true)
         .eq('code', code.trim().toUpperCase())
         .maybeSingle()
@@ -535,7 +532,6 @@ export async function getPublicProductByCode(code: string): Promise<PublicProduc
       const fallbackResult = await supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS_NO_SALE)
-        .is('deleted_at', null)
         .eq('is_active', true)
         .eq('code', code.trim().toUpperCase())
         .maybeSingle()
@@ -555,7 +551,6 @@ export async function getPublicProductByCode(code: string): Promise<PublicProduc
       const fallbackResult = await supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS_FALLBACK)
-        .is('deleted_at', null)
         .eq('is_active', true)
         .eq('code', code.trim().toUpperCase())
         .maybeSingle()
@@ -575,7 +570,6 @@ export async function getPublicProductByCode(code: string): Promise<PublicProduc
       const fallbackResult = await supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY)
-        .is('deleted_at', null)
         .eq('is_active', true)
         .eq('code', code.trim().toUpperCase())
         .maybeSingle()
@@ -678,7 +672,6 @@ async function selectWithFallback(
   const result = await supabase
     .from('products')
     .select(columns)
-    .is('deleted_at', null)
     .eq('is_active', true)
     .order('category', { ascending: true })
     .order('name', { ascending: true })

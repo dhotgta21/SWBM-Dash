@@ -29,20 +29,16 @@ export async function GET(request: NextRequest) {
     supabase
       .from('products')
       .select('id, code, name, category, default_price')
-      .is('deleted_at', null)
-      .eq('is_temporary', false)
+      .eq('is_active', true)
       .gt('default_price', 0)
-      .is('price_from', null)
       .ilike('name', likePattern)
       .order('name')
       .limit(20),
     supabase
       .from('products')
       .select('id, code, name, category, default_price')
-      .is('deleted_at', null)
-      .eq('is_temporary', false)
+      .eq('is_active', true)
       .gt('default_price', 0)
-      .is('price_from', null)
       .ilike('code', likePattern)
       .order('name')
       .limit(20),
