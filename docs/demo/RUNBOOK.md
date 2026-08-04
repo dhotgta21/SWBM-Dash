@@ -72,6 +72,7 @@ Run these files **in order** in Supabase → **SQL Editor** (after `schema.sql` 
 | 0 (optional) | `supabase/seed/00_wipe_demo_clients_invoices.sql` | Clear old demo clients/invoices |
 | 1 | `supabase/seed/01_demo_clients_invoices.sql` | ~50 clients + ~2 years invoices/payments |
 | 2 (optional) | `supabase/seed/02_demo_vertical_products.sql` | Sample plumbing/electrical/windows/tile SKUs |
+| 3 | `supabase/seed/03_demo_client_portal_accounts.sql` | Portal login for **every** client |
 
 **Important:** `01_demo_clients_invoices.sql` needs at least one **admin** profile. Create it first via `/register` on the empty project.
 
@@ -83,6 +84,17 @@ v_months       int := 24;
 ```
 
 If the SQL Editor times out, lower `v_client_count` to `20` and re-run after wipe.
+
+### Client portal logins (after step 3)
+
+Run `03_demo_client_portal_accounts.sql`. Then each client can sign in at **`/login`** (client portal):
+
+| Field | Value |
+|-------|--------|
+| **Email** | The client’s email (e.g. `james.smith.1@demo-trade.example`) |
+| **Password** | `DemoClient1!` (same for all demo portal users) |
+
+The SQL result panel lists sample company → email pairs after it runs.
 
 ### Option B – Node scripts (same data, needs Postgres URL)
 
