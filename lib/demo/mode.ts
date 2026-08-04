@@ -1,15 +1,18 @@
 // lib/demo/mode.ts
-// Feature flags for the sales-demo deployment. When demo mode is on we
-// intentionally skip third-party services so a demo environment only needs
-// Supabase + the Next app (no Resend, Turnstile, GoAddress, etc.).
+// Feature flags for the sales-demo package.
+// This product is a client demo: no captcha, no third-party gatekeeping.
 
 import { isDemoMode } from '@/lib/demo/brand'
 
 export { isDemoMode }
 
-/** Skip Cloudflare Turnstile on auth / public forms. */
+/**
+ * Never require Cloudflare Turnstile or any captcha in this package.
+ * Always true: demo deploys must not depend on Attack Protection CAPTCHA
+ * or Turnstile keys.
+ */
 export function shouldBypassCaptcha(): boolean {
-  return isDemoMode()
+  return true
 }
 
 /** Skip Resend and other outbound transactional email. */

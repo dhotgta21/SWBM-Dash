@@ -1,9 +1,9 @@
 // components/auth/ResetPasswordForm.tsx
-// Password-reset form rendered by the server /reset-password page.
+// Password-reset form. Demo package: no captcha / Turnstile.
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Loader2, Mail } from 'lucide-react'
 import { resetPassword } from '@/lib/actions/auth'
@@ -13,17 +13,16 @@ import { Label } from '@/components/ui/label'
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AuthCard } from '@/components/auth/AuthCard'
-import { TurnstileCaptcha, type TurnstileCaptchaRef } from '@/components/turnstile/TurnstileCaptcha'
 
 interface ResetPasswordFormProps {
+  /** @deprecated Demo never uses captcha. */
   turnstileSiteKey?: string | null
 }
 
-export function ResetPasswordForm({ turnstileSiteKey }: ResetPasswordFormProps) {
+export function ResetPasswordForm(_props: ResetPasswordFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const turnstileRef = useRef<TurnstileCaptchaRef>(null)
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
@@ -31,8 +30,11 @@ export function ResetPasswordForm({ turnstileSiteKey }: ResetPasswordFormProps) 
     setSuccess(false)
     const result = await resetPassword(formData)
     if (result?.error) {
-      setError(result.error)
-      turnstileRef.current?.reset()
+      setError(
+        /captcha|turnstile|security check/i.test(result.error)
+          ? 'Could not start password reset. Please try again.'
+          : result.error
+      )
     } else if (result?.success) {
       setSuccess(true)
     }
@@ -59,16 +61,16 @@ export function ResetPasswordForm({ turnstileSiteKey }: ResetPasswordFormProps) 
           )}
           {success && (
             <Alert variant="success">
-              <AlertDescription>Check your email for a password reset link.</AlertDescription>
+              <AlertDescription>
+                If that email is registered, a reset link was prepared. Check server logs on demo
+                deploys (email is not sent).
+              </AlertDescription>
             </Alert>
           )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" placeholder="you@example.com" required />
           </div>
-          {turnstileSiteKey ? (
-            <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey} />
-          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

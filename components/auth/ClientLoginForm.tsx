@@ -1,10 +1,9 @@
 // components/auth/ClientLoginForm.tsx
-// Client-side login form rendered by the server /login page.
-// MFA is admin-only — this form never challenges for 2FA.
+// Client portal login. Demo package: no captcha / Turnstile.
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Loader2, LogIn } from 'lucide-react'
@@ -15,13 +14,8 @@ import { Label } from '@/components/ui/label'
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AuthCard } from '@/components/auth/AuthCard'
-import { TurnstileCaptcha, type TurnstileCaptchaRef } from '@/components/turnstile/TurnstileCaptcha'
 import { ADMIN_LOGIN_PATH } from '@/lib/auth/login-paths'
 
-// Keep every entry to ≤ ~50 chars so it fits on a single line at
-// the auth card's max-w-md width (≈ 416 px at 14 px text-sm). The
-// Alert itself also enforces a 1-line max with ellipsis, but
-// short copy first means no clipping for the common cases.
 const ERROR_MESSAGES: Record<string, string> = {
   inactive: 'Account deactivated. Contact an admin.',
   session_expired: 'Session expired. Sign in again.',
@@ -29,28 +23,31 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 interface ClientLoginFormProps {
+  /** @deprecated Demo never uses captcha. */
   turnstileSiteKey?: string | null
 }
 
-export function ClientLoginForm({ turnstileSiteKey }: ClientLoginFormProps) {
+export function ClientLoginForm(_props: ClientLoginFormProps) {
   const searchParams = useSearchParams()
   const urlError = searchParams.get('error')
   const justActivated = searchParams.get('welcome') === '1'
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(urlError ? (ERROR_MESSAGES[urlError] ?? urlError) : null)
-  const turnstileRef = useRef<TurnstileCaptchaRef>(null)
+  const [error, setError] = useState<string | null>(
+    urlError ? (ERROR_MESSAGES[urlError] ?? urlError) : null
+  )
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
     setError(null)
     const result = await signIn(formData)
     if (result?.error) {
-      setError(result.error)
+      const message =
+        typeof result.error === 'string' && result.error.trim()
+          ? result.error
+          : 'Sign-in failed. Please try again.'
+      setError(/captcha|turnstile|security check/i.test(message) ? 'Invalid email or password.' : message)
       setLoading(false)
-      // Turnstile tokens are single-use. Reset the widget so the next attempt
-      // gets a fresh token instead of re-submitting the consumed one.
-      turnstileRef.current?.reset()
     }
   }
 
@@ -62,9 +59,7 @@ export function ClientLoginForm({ turnstileSiteKey }: ClientLoginFormProps) {
         </div>
         <div className="space-y-1.5">
           <CardTitle className="text-2xl font-bold tracking-tight">Client portal</CardTitle>
-          <CardDescription>
-            Sign in to view your invoices and account.
-          </CardDescription>
+          <CardDescription>Sign in to view your invoices and account.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
@@ -107,9 +102,6 @@ export function ClientLoginForm({ turnstileSiteKey }: ClientLoginFormProps) {
               className="bg-white"
             />
           </div>
-          {turnstileSiteKey ? (
-            <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey} />
-          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

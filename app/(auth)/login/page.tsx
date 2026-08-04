@@ -1,28 +1,22 @@
 // app/(auth)/login/page.tsx
-// Server wrapper for the client portal sign-in page. Exports
-// metadata and a semantic H1 while the interactive form lives
-// in a client component.
+// Client portal sign-in. Demo: no captcha.
 
 import type { Metadata } from 'next'
 import { AuthPage } from '@/components/auth/AuthPage'
 import { ClientLoginForm } from '@/components/auth/ClientLoginForm'
-import { getTurnstileSiteKey } from '@/lib/turnstile'
 
 export const metadata: Metadata = {
-  title: { absolute: `Client portal sign in | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Demo Builder Merchant'}` },
+  title: { absolute: 'Client portal sign in | Demo Builder Merchant' },
   description:
     'Sign in to the Demo Builder Merchant client portal to view invoices, quotes and account details.',
   robots: { index: false, follow: true },
 }
 
-export default async function LoginPage() {
-  // MFA is admin-only — client portal never challenges for 2FA.
-  const turnstileSiteKey = await getTurnstileSiteKey()
-
+export default function LoginPage() {
   return (
     <AuthPage image="login">
       <h1 className="sr-only">Client portal sign in</h1>
-      <ClientLoginForm turnstileSiteKey={turnstileSiteKey} />
+      <ClientLoginForm />
     </AuthPage>
   )
 }

@@ -1,15 +1,9 @@
 // components/auth/RegisterForm.tsx
-// "Bootstrap" form. Only mounted while company_settings has zero
-// users — once any profile exists, app/(auth)/register/page.tsx
-// returns notFound() and the route is sealed.
-//
-// Uses the shared AuthCard treatment so the bootstrap screen reads
-// as part of the same product as /login. A UserPlus icon badge in
-// a primary-tinted chip signals "first run" without being loud.
+// Bootstrap first admin. Demo package: no captcha / Turnstile.
 
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, UserPlus } from 'lucide-react'
 import { registerFirstAdmin } from '@/lib/actions/setup'
@@ -19,20 +13,19 @@ import { Label } from '@/components/ui/label'
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AuthCard } from '@/components/auth/AuthCard'
-import { TurnstileCaptcha, type TurnstileCaptchaRef } from '@/components/turnstile/TurnstileCaptcha'
 
 interface RegisterFormProps {
+  /** @deprecated Demo never uses captcha. */
   turnstileSiteKey?: string | null
 }
 
-export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
+export function RegisterForm(_props: RegisterFormProps) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const turnstileRef = useRef<TurnstileCaptchaRef>(null)
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,12 +46,19 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
     }
 
     const formData = new FormData(e.currentTarget as HTMLFormElement)
+    formData.set('fullName', fullName)
+    formData.set('email', email)
+    formData.set('password', password)
+    formData.set('confirmPassword', confirmPassword)
     const result = await registerFirstAdmin(formData)
     setLoading(false)
 
     if (result.error) {
-      setError(result.error)
-      turnstileRef.current?.reset()
+      setError(
+        /captcha|turnstile|security check/i.test(result.error)
+          ? 'Could not create account. Please try again.'
+          : result.error
+      )
       return
     }
 
@@ -93,6 +93,7 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
             <Label htmlFor="fullName">Full name</Label>
             <Input
               id="fullName"
+              name="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -102,6 +103,7 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -112,6 +114,7 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -122,19 +125,13 @@ export function RegisterForm({ turnstileSiteKey }: RegisterFormProps) {
             <Label htmlFor="confirmPassword">Confirm password</Label>
             <Input
               id="confirmPassword"
+              name="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </div>
-          {turnstileSiteKey ? (
-            <TurnstileCaptcha
-              ref={turnstileRef}
-              siteKey={turnstileSiteKey}
-              className="flex justify-center"
-            />
-          ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

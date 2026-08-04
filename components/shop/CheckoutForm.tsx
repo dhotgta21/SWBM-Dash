@@ -21,9 +21,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { submitQuoteRequest } from '@/lib/actions/quote-requests'
-import { TurnstileCaptcha, type TurnstileCaptchaRef } from '@/components/turnstile/TurnstileCaptcha'
 
 interface CheckoutFormProps {
+  /** @deprecated Demo never uses captcha. */
   turnstileSiteKey?: string | null
 }
 
@@ -45,7 +45,7 @@ function formatGBP(value: number): string {
   })}`
 }
 
-export function CheckoutForm({ turnstileSiteKey }: CheckoutFormProps) {
+export function CheckoutForm(_props: CheckoutFormProps = {}) {
   const cart = useCart()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -59,7 +59,6 @@ export function CheckoutForm({ turnstileSiteKey }: CheckoutFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [submitting, startSubmit] = useTransition()
   const [submittingCart, setSubmittingCart] = useState<SerialisedCart | null>(null)
-  const turnstileRef = useRef<TurnstileCaptchaRef>(null)
 
   // Snapshot the cart on mount so the server action payload is stable
   // even if the user clicks back to /cart mid-submit and changes
@@ -134,7 +133,7 @@ export function CheckoutForm({ turnstileSiteKey }: CheckoutFormProps) {
       const result = await submitQuoteRequest(formData)
       if (!result.ok) {
         setError(result.error)
-        turnstileRef.current?.reset()
+
         return
       }
       // Clear the cart and reset the snapshot so a return to the page
@@ -377,7 +376,6 @@ export function CheckoutForm({ turnstileSiteKey }: CheckoutFormProps) {
           </section>
 
           <div className="space-y-3">
-            <TurnstileCaptcha ref={turnstileRef} siteKey={turnstileSiteKey ?? undefined} />
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-success" />
