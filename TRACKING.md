@@ -62,5 +62,19 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 | **Proof** | Live Supabase repro of both errors; resilient shapes return data; `npx tsc --noEmit` exit 0; vitest public-products + money-collection 12/12 |
 | **Operator** | Deploy this commit to Vercel. Optionally run `00e` SQL once for full schema parity |
 
+## Incident: Clients zero + Unknown client + PDF not found + discounts zero (2026-08-04)
+| Item | Detail |
+|------|--------|
+| **Clients symptom** | Admin Clients: 0 accounts; Client Dashboard empty; Top debtors "Unknown client". Portal still showed invoices. |
+| **Clients root cause** | Live DB missing `clients.deleted_at`, `is_temporary`, `promoted_at`, `account_balance`. Admin queries hard-filter those columns; count errors collapsed to 0. Name lookup filtered `deleted_at` and returned no rows. |
+| **PDF symptom** | Invoice list/detail line items OK; Preview / Print / Download returned "Invoice not found". |
+| **PDF root cause** | `/api/invoices/pdf` full select required `discount_amount` / `discount_percent` (migration 101) missing on live invoices + invoice_items. Select error mapped to 404. Also authz denials returned the same 404 string. |
+| **Discounts symptom** | Campaign groups Live now > 0; Product discounts hero showed 0. |
+| **Discounts root cause** | Two systems: campaign groups vs per-product `sale_price`. Seed had 0 individual sales and 120 campaign products; dashboard only counted `sale_price`. |
+| **Schema fix** | `supabase/seed/00f_fix_clients_columns.sql` + `scripts/apply-00f-clients.mjs` applied on live demo DB. Permanent clients now 100. |
+| **App fix** | Resilient clients list/detail/dashboard; money-collection name lookup retry; PDF lean select + prefer invoiceId + 403 for authz; `loadSeasonalSalesProducts` merges live campaign products. |
+| **Proof** | Live SQL verify permanent=100, PDF cols present, Summer Trade Sale 40 products; `npx tsc --noEmit` exit 0; vitest money-collection + discount 48/48 |
+| **Operator** | Deploy app. If another env still broken: run `00f` SQL (or `node scripts/apply-00f-clients.mjs` with Postgres URL). |
+
 ## Decisions
 See `docs/lifecycle/decisions.md` D-001–D-005.

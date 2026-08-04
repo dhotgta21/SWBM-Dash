@@ -133,12 +133,22 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   let loadError = false
 
   try {
-    const clientResult = await supabase
+    // Prefer soft-delete filter; retry without it when clients.deleted_at is
+    // missing on partial demo schemas (same class of bug as product/analytics).
+    let clientResult = await supabase
       .from('clients')
       .select('*')
       .eq('id', id)
       .is('deleted_at', null)
       .single()
+    if (
+      clientResult.error &&
+      (clientResult.error.message ?? '').toLowerCase().includes('deleted_at') &&
+      (clientResult.error.message ?? '').toLowerCase().includes('does not exist')
+    ) {
+      console.warn('Client detail: clients.deleted_at missing; retrying without filter')
+      clientResult = await supabase.from('clients').select('*').eq('id', id).single()
+    }
     if (clientResult.error) {
       if (clientResult.error.code === 'PGRST116') {
         notFound()
@@ -147,12 +157,24 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     }
     client = clientResult.data
 
-    const allResult = await supabase
+    let allResult = await supabase
       .from('invoices')
       .select('*')
       .eq('client_id', id)
       .is('deleted_at', null)
       .order('issue_date', { ascending: false })
+    if (
+      allResult.error &&
+      (allResult.error.message ?? '').toLowerCase().includes('deleted_at') &&
+      (allResult.error.message ?? '').toLowerCase().includes('does not exist')
+    ) {
+      console.warn('Client detail: invoices.deleted_at missing; retrying without filter')
+      allResult = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('client_id', id)
+        .order('issue_date', { ascending: false })
+    }
     if (allResult.error) throw allResult.error
     allInvoices = allResult.data ?? []
 

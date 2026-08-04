@@ -361,17 +361,52 @@ export async function loadMoneyCollectionSnapshot(
     }
 
     // ---------- Client lookup for top-debtor display names ----------
+    // Partial demo schemas may lack clients.deleted_at (migration 093).
+    // Filtering on a missing column returns no rows → every debtor shows
+    // as "Unknown client" even though invoices loaded fine via service role.
     const clientIds = Array.from(perClient.keys())
     let clientLookup = new Map<string, { first_name: string | null; last_name: string | null; company_name: string | null }>()
     if (clientIds.length > 0) {
-      const { data: clientData } = await admin
-        .from('clients')
-        .select('id, first_name, last_name, company_name')
-        .is('deleted_at', null)
-        .in('id', clientIds)
-      clientLookup = new Map(
-        (clientData ?? []).map((c: { id: string; first_name: string | null; last_name: string | null; company_name: string | null }) => [c.id, c])
-      )
+      let filterClientDeletedAt = true
+      for (let attempt = 0; attempt < 2; attempt++) {
+        let clientQuery = admin
+          .from('clients')
+          .select('id, first_name, last_name, company_name')
+          .in('id', clientIds)
+        if (filterClientDeletedAt) {
+          clientQuery = clientQuery.is('deleted_at', null)
+        }
+        const { data: clientData, error: clientError } = await clientQuery
+        if (
+          clientError &&
+          filterClientDeletedAt &&
+          isMissingDeletedAt(clientError.message)
+        ) {
+          console.warn(
+            'loadMoneyCollectionSnapshot: clients.deleted_at missing; retrying name lookup without soft-delete filter'
+          )
+          filterClientDeletedAt = false
+          continue
+        }
+        if (clientError) {
+          console.warn(
+            'loadMoneyCollectionSnapshot: client name lookup failed',
+            clientError.message
+          )
+          break
+        }
+        clientLookup = new Map(
+          (clientData ?? []).map(
+            (c: {
+              id: string
+              first_name: string | null
+              last_name: string | null
+              company_name: string | null
+            }) => [c.id, c]
+          )
+        )
+        break
+      }
     }
 
     const topDebtors: TopDebtor[] = Array.from(perClient.entries())

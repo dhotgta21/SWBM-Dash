@@ -71,16 +71,20 @@ async function fetchPdfBlob(
   mode: PrintDocumentType,
   copies: number
 ): Promise<Blob> {
+  // Never send both invoiceId and shareToken. The API prefers invoiceId when
+  // present; older clients still omit shareToken entirely for authenticated
+  // dashboard downloads so a disabled public share cannot 404 a good UUID.
+  const body: Record<string, unknown> = { mode, copies }
+  if (token) {
+    body.shareToken = token
+  } else {
+    body.invoiceId = invoiceId
+  }
   const res = await fetch('/api/invoices/pdf', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({
-      invoiceId,
-      shareToken: token ?? undefined,
-      mode,
-      copies,
-    }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) {
     const payload = (await res.json().catch(() => ({}))) as { error?: string }

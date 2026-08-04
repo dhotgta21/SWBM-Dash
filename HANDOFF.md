@@ -49,6 +49,17 @@ Staff password logins verified via Supabase `signInWithPassword`.
 1. Hard-refresh production after deploy if needed.
 2. Login paths above for the live demo walkthrough.
 3. Full reseed: catalog → history `--wipe-first` → portal → extras.
+4. If **Clients shows 0 accounts**, **Unknown client**, or **invoice PDF not found**: run
+   `supabase/seed/00f_fix_clients_columns.sql` (or `node scripts/apply-00f-clients.mjs`).
+   Already applied on the current demo Supabase project (2026-08-04).
+
+## Data fix status (2026-08-04)
+
+| Issue | Status |
+|-------|--------|
+| Clients 0 / Unknown client | Schema `00f` applied + resilient loaders |
+| Invoice PDF "not found" | Discount columns added + lean PDF select + clearer 403 |
+| Product discounts zero while campaigns live | Dashboard merges campaign products into discounts hero |
 
 ## Do not
 

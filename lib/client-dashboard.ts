@@ -108,46 +108,74 @@ export async function getClientDashboardMetrics(
   try {
     const supabase = await createClient()
 
-    // Three parallel queries: permanent count + per-client rollups
-    // for money KPIs; onboarding alerts for AI review; and the
-    // most-recently-added customers. We could merge these into one
-    // RPC but keeping them as discrete reads makes the intent of
-    // each block obvious and matches the pattern used elsewhere in
-    // the dashboard.
-    const [clientRollupResult, aiReviewResult, recentResult] = await Promise.all([
-      // Permanent customers + their non-cancelled invoice balances.
-      // Selecting only the fields we need keeps the payload small.
-      supabase
-        .from('clients')
-        .select(
-          'id, is_temporary, ai_created, reviewed, invoices(status, balance_due, deleted_at)'
-        )
-        .eq('is_temporary', false)
-        .is('deleted_at', null),
-      // Up to N AI-created customers that need an operator's eyes.
-      supabase
+    // Partial demo schemas may lack clients.deleted_at / is_temporary
+    // (migrations 093 / 064). Prefer full filters; fall back so the
+    // dashboard still shows the 100 seeded accounts instead of zeros.
+    const isMissingColumn = (message: string | undefined, column: string) => {
+      const msg = (message ?? '').toLowerCase()
+      return msg.includes(column.toLowerCase()) && msg.includes('does not exist')
+    }
+
+    type ClientQueryMode = 'full' | 'no_deleted_at' | 'lean'
+    let mode: ClientQueryMode = 'full'
+
+    async function loadClientQueries(m: ClientQueryMode) {
+      const useTemp = m !== 'lean'
+      const useDeleted = m === 'full'
+
+      let rollup = supabase.from('clients').select(
+        useTemp
+          ? useDeleted
+            ? 'id, is_temporary, ai_created, reviewed, invoices(status, balance_due, deleted_at)'
+            : 'id, is_temporary, ai_created, reviewed, invoices(status, balance_due)'
+          : 'id, ai_created, reviewed, invoices(status, balance_due)'
+      )
+      if (useTemp) rollup = rollup.eq('is_temporary', false)
+      if (useDeleted) rollup = rollup.is('deleted_at', null)
+
+      let aiReview = supabase
         .from('clients')
         .select(
           'id, first_name, last_name, company_name, email, phone, address_line_1, postcode, created_at'
         )
-        .eq('is_temporary', false)
         .eq('ai_created', true)
         .eq('reviewed', false)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .limit(alertLimit),
-      // Most-recently-added permanent customers for the "Recent
-      // clients" list. Excludes temps — they have their own tab.
-      supabase
+        .limit(alertLimit)
+      if (useTemp) aiReview = aiReview.eq('is_temporary', false)
+      if (useDeleted) aiReview = aiReview.is('deleted_at', null)
+
+      let recent = supabase
         .from('clients')
         .select(
           'id, first_name, last_name, company_name, email, account_number, created_at'
         )
-        .eq('is_temporary', false)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .limit(recentLimit),
-    ])
+        .limit(recentLimit)
+      if (useTemp) recent = recent.eq('is_temporary', false)
+      if (useDeleted) recent = recent.is('deleted_at', null)
+
+      return Promise.all([rollup, aiReview, recent])
+    }
+
+    let [clientRollupResult, aiReviewResult, recentResult] =
+      await loadClientQueries(mode)
+
+    if (clientRollupResult.error) {
+      const msg = clientRollupResult.error.message
+      if (isMissingColumn(msg, 'deleted_at') || isMissingColumn(msg, 'is_temporary')) {
+        console.warn(
+          'getClientDashboardMetrics: clients schema lag; retrying without missing columns',
+          msg
+        )
+        mode =
+          isMissingColumn(msg, 'is_temporary') || msg.includes('is_temporary')
+            ? 'lean'
+            : 'no_deleted_at'
+        ;[clientRollupResult, aiReviewResult, recentResult] =
+          await loadClientQueries(mode)
+      }
+    }
 
     // supabase-js never throws on query failure — check each result
     // explicitly or a failed read renders all-zero KPIs with no signal.
@@ -178,7 +206,7 @@ export async function getClientDashboardMetrics(
       reviewed: boolean
       invoices: { status: string; balance_due: number; deleted_at: string | null }[] | null
     }
-    const rollup = (clientRollupResult.data ?? []) as RollupRow[]
+    const rollup = (clientRollupResult.data ?? []) as unknown as RollupRow[]
 
     for (const c of rollup) {
       totalClients += 1
@@ -204,38 +232,61 @@ export async function getClientDashboardMetrics(
       ? Math.round(balanceSum / withBalance)
       : null
 
-    // Temporary count comes through the same permanent-only
-    // rollup as a by-product — it would be a leftover
-    // `is_temporary=true` row, but we filtered them out at the SQL
-    // layer. Use a cheap separate count instead.
-    const { count: tempCount } = await supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', true)
-      .is('deleted_at', null)
+    // Temporary / AI-review counts — skip filters the schema cannot support.
+    let tempCount: number | null = 0
+    let aiReviewCount: number | null = 0
+    let tempData: Array<{
+      id: string
+      first_name: string | null
+      last_name: string | null
+      company_name: string | null
+      email: string | null
+      phone: string | null
+      address_line_1: string | null
+      postcode: string | null
+      created_at: string
+    }> | null = []
 
-    // Count of all AI-created-unreviewed customers for the KPI
-    // (we also fetched a sample for the alert list above). The
-    // count reads the full set, not just the sample slice.
-    const { count: aiReviewCount } = await supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', false)
-      .eq('ai_created', true)
-      .eq('reviewed', false)
-      .is('deleted_at', null)
+    if (mode !== 'lean') {
+      let tempCountQuery = supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_temporary', true)
+      if (mode === 'full') tempCountQuery = tempCountQuery.is('deleted_at', null)
+      const tempCountResult = await tempCountQuery
+      tempCount = tempCountResult.count
 
-    // Temporary alert rows — show the operator the next handful
-    // of walk-in customers waiting to be completed.
-    const { data: tempData } = await supabase
-      .from('clients')
-      .select(
-        'id, first_name, last_name, company_name, email, phone, address_line_1, postcode, created_at'
-      )
-      .eq('is_temporary', true)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(alertLimit)
+      let aiCountQuery = supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_temporary', false)
+        .eq('ai_created', true)
+        .eq('reviewed', false)
+      if (mode === 'full') aiCountQuery = aiCountQuery.is('deleted_at', null)
+      const aiCountResult = await aiCountQuery
+      aiReviewCount = aiCountResult.count
+
+      let tempListQuery = supabase
+        .from('clients')
+        .select(
+          'id, first_name, last_name, company_name, email, phone, address_line_1, postcode, created_at'
+        )
+        .eq('is_temporary', true)
+        .order('created_at', { ascending: false })
+        .limit(alertLimit)
+      if (mode === 'full') tempListQuery = tempListQuery.is('deleted_at', null)
+      const tempListResult = await tempListQuery
+      tempData = tempListResult.data
+    } else {
+      // Lean schema: no is_temporary — treat AI-review count from the sample
+      // path only; temporary queue is empty.
+      const { count } = await supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+        .eq('ai_created', true)
+        .eq('reviewed', false)
+      aiReviewCount = count
+    }
 
     const toAlert = (row: {
       id: string

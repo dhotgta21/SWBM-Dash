@@ -126,33 +126,83 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   // tab only pays for the data it actually renders. Previously every render
   // fetched ALL clients with ALL their invoices plus the full temp list,
   // regardless of the active tab.
-  const [
-    { count: permanentCountRaw },
-    { count: tempCountRaw },
-    { count: aiReviewCountRaw },
-  ] = await Promise.all([
-    supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', false)
-      .is('deleted_at', null),
-    supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', true)
-      .is('deleted_at', null),
-    supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_temporary', false)
-      .eq('ai_created', true)
-      .eq('reviewed', false)
-      .is('deleted_at', null),
+  //
+  // Partial demo schemas may lack clients.deleted_at / is_temporary. Count
+  // errors used to collapse to 0 ("0 account clients") while portal still
+  // worked. Retry without missing filters so seeded data remains visible.
+  const isMissingColumn = (message: string | undefined, column: string) => {
+    const msg = (message ?? '').toLowerCase()
+    return msg.includes(column.toLowerCase()) && msg.includes('does not exist')
+  }
+
+  async function countClients(opts: {
+    temporary?: boolean
+    aiReview?: boolean
+    useDeletedAt: boolean
+    useTemporary: boolean
+  }): Promise<{ count: number | null; error: { message: string } | null }> {
+    let q = supabase.from('clients').select('id', { count: 'exact', head: true })
+    if (opts.useTemporary && opts.temporary === true) {
+      q = q.eq('is_temporary', true)
+    } else if (opts.useTemporary && opts.temporary === false) {
+      q = q.eq('is_temporary', false)
+    }
+    if (opts.useDeletedAt) q = q.is('deleted_at', null)
+    if (opts.aiReview) {
+      q = q.eq('ai_created', true).eq('reviewed', false)
+    }
+    const { count, error } = await q
+    return { count, error }
+  }
+
+  let useDeletedAt = true
+  let useTemporary = true
+  let permanentResult = await countClients({
+    temporary: false,
+    useDeletedAt,
+    useTemporary,
+  })
+  if (
+    permanentResult.error &&
+    (isMissingColumn(permanentResult.error.message, 'deleted_at') ||
+      isMissingColumn(permanentResult.error.message, 'is_temporary'))
+  ) {
+    console.warn(
+      'Clients page: schema lag on clients filters; retrying counts',
+      permanentResult.error.message
+    )
+    if (isMissingColumn(permanentResult.error.message, 'is_temporary')) {
+      useTemporary = false
+    }
+    if (isMissingColumn(permanentResult.error.message, 'deleted_at')) {
+      useDeletedAt = false
+    }
+    permanentResult = await countClients({
+      temporary: false,
+      useDeletedAt,
+      useTemporary,
+    })
+  }
+
+  const [tempResult, aiReviewResult] = await Promise.all([
+    useTemporary
+      ? countClients({ temporary: true, useDeletedAt, useTemporary })
+      : Promise.resolve({ count: 0, error: null }),
+    countClients({
+      temporary: false,
+      aiReview: true,
+      useDeletedAt,
+      useTemporary,
+    }),
   ])
 
-  const permanentCount = permanentCountRaw ?? 0
-  const tempCount = tempCountRaw ?? 0
-  const aiClientsNeedingReviewCount = aiReviewCountRaw ?? 0
+  if (permanentResult.error) {
+    console.error('Clients page permanent count error:', permanentResult.error)
+  }
+
+  const permanentCount = permanentResult.count ?? 0
+  const tempCount = tempResult.count ?? 0
+  const aiClientsNeedingReviewCount = aiReviewResult.count ?? 0
   const activeView = resolveView(rawView, permanentCount, tempCount)
 
   const sanitizedQuery = query.trim() ? sanitizeLikeTerm(query) : ''
@@ -164,27 +214,60 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   let accountsTotal = 0
 
   if (activeView === 'accounts') {
-    let dbQuery = supabase
-      .from('clients')
-      // Permanent-only in the main list. Temporary clients live in their own
-      // tab so the two "trade account vs walk-in" lists stay visually
-      // separate (Selco / BNQ / Home Depot style). Embedded invoices come
-      // along for the page's clients only (was: the whole book).
-      .select('*, invoices(total, amount_paid, balance_due, status, type, deleted_at)', {
-        count: 'exact',
-      })
-      .eq('is_temporary', false)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      // Unique tiebreaker so offset pagination can't skip/double rows.
-      .order('id', { ascending: true })
-      .range((accountsPage - 1) * ACCOUNTS_PAGE_SIZE, accountsPage * ACCOUNTS_PAGE_SIZE - 1)
-
-    if (sanitizedQuery) {
-      dbQuery = dbQuery.or(buildClientSearchFilter(sanitizedQuery))
+    const buildAccountsQuery = (opts: {
+      useTemporary: boolean
+      useDeletedAt: boolean
+      embedInvoiceDeletedAt: boolean
+    }) => {
+      const invoiceEmbed = opts.embedInvoiceDeletedAt
+        ? 'invoices(total, amount_paid, balance_due, status, type, deleted_at)'
+        : 'invoices(total, amount_paid, balance_due, status, type)'
+      let dbQuery = supabase
+        .from('clients')
+        // Permanent-only in the main list. Temporary clients live in their own
+        // tab so the two "trade account vs walk-in" lists stay visually
+        // separate (Selco / BNQ / Home Depot style). Embedded invoices come
+        // along for the page's clients only (was: the whole book).
+        .select(`*, ${invoiceEmbed}`, {
+          count: 'exact',
+        })
+        .order('created_at', { ascending: false })
+        // Unique tiebreaker so offset pagination can't skip/double rows.
+        .order('id', { ascending: true })
+        .range((accountsPage - 1) * ACCOUNTS_PAGE_SIZE, accountsPage * ACCOUNTS_PAGE_SIZE - 1)
+      if (opts.useTemporary) dbQuery = dbQuery.eq('is_temporary', false)
+      if (opts.useDeletedAt) dbQuery = dbQuery.is('deleted_at', null)
+      if (sanitizedQuery) {
+        dbQuery = dbQuery.or(buildClientSearchFilter(sanitizedQuery))
+      }
+      return dbQuery
     }
 
-    const { data, count, error: clientsError } = await dbQuery
+    let accountsQuery = buildAccountsQuery({
+      useTemporary,
+      useDeletedAt,
+      embedInvoiceDeletedAt: true,
+    })
+    let { data, count, error: clientsError } = await accountsQuery
+
+    if (
+      clientsError &&
+      (isMissingColumn(clientsError.message, 'deleted_at') ||
+        isMissingColumn(clientsError.message, 'is_temporary'))
+    ) {
+      console.warn('Clients accounts list: schema lag; retrying lean query', clientsError.message)
+      const leanTemp = !isMissingColumn(clientsError.message, 'is_temporary') && useTemporary
+      const leanDeleted = !isMissingColumn(clientsError.message, 'deleted_at') && useDeletedAt
+      const retry = await buildAccountsQuery({
+        useTemporary: leanTemp,
+        useDeletedAt: leanDeleted,
+        embedInvoiceDeletedAt: leanDeleted,
+      })
+      data = retry.data
+      count = retry.count
+      clientsError = retry.error
+    }
+
     if (clientsError) {
       console.error('Clients page load error:', clientsError)
       return (

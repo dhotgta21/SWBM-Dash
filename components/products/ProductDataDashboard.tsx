@@ -26,12 +26,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SectionErrorBoundary } from '@/components/ui/SectionErrorBoundary'
 import { TopProductsChart } from '@/components/dashboard/TopProductsChart'
-import { SeasonalSalesWidget, type SeasonalSalesProduct } from '@/components/dashboard/SeasonalSalesWidget'
+import { SeasonalSalesWidget } from '@/components/dashboard/SeasonalSalesWidget'
 import { ProductTrendsChart } from '@/components/dashboard/ProductTrendsChart'
 import { ProductMovement } from '@/components/dashboard/ProductMovement'
 import { ProductSeasonalityHeatmap } from '@/components/dashboard/ProductSeasonalityHeatmap'
 import { loadProductAnalytics } from '@/lib/product-analytics'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { loadSeasonalSalesProducts } from '@/lib/dashboard-seasonal'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Package, CalendarRange, TrendingUp } from 'lucide-react'
 
@@ -39,7 +39,7 @@ export async function ProductDataDashboard() {
   try {
     const [analytics, seasonalProducts] = await Promise.all([
       loadProductAnalytics(),
-      loadSeasonalSalesProducts(),
+      loadSeasonalSalesProducts({ limit: 200 }),
     ])
 
     const rangeLabel = `${formatDate(analytics.range.start)} – ${formatDate(analytics.range.end)}`
@@ -162,37 +162,3 @@ function KpiCard({
   )
 }
 
-/**
- * Loads every product with a `sale_price` set so the Product Discounts
- * hero can render its summary + featured rows in a single round trip.
- * Best-effort — returns [] on failure so the dashboard can render its
- * empty state rather than crash the page.
- */
-async function loadSeasonalSalesProducts(
-  limit: number = 30
-): Promise<SeasonalSalesProduct[]> {
-  try {
-    const admin = createAdminClient()
-    const { data, error } = await admin
-      .from('products')
-      .select(
-        'id, code, name, is_active, default_price, sale_price, sale_starts_at, sale_ends_at, sale_label'
-      )
-      .is('deleted_at', null)
-      .gt('default_price', 0)
-      .is('price_from', null)
-      .not('sale_price', 'is', null)
-      .order('updated_at', { ascending: false })
-      .limit(limit)
-
-    if (error) {
-      console.warn('loadSeasonalSalesProducts: query failed', error.message)
-      return []
-    }
-
-    return (data ?? []) as SeasonalSalesProduct[]
-  } catch (err) {
-    console.warn('loadSeasonalSalesProducts: unexpected error', err)
-    return []
-  }
-}

@@ -70,6 +70,10 @@ function notFound() {
   return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
 }
 
+function forbidden(message = 'You do not have permission to download this invoice') {
+  return NextResponse.json({ error: message }, { status: 403 })
+}
+
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 })
 }
@@ -77,6 +81,36 @@ function badRequest(message: string) {
 function serverError(message: string) {
   return NextResponse.json({ error: message }, { status: 500 })
 }
+
+function isMissingColumnError(message: string | undefined, column: string): boolean {
+  const msg = (message ?? '').toLowerCase()
+  return msg.includes(column.toLowerCase()) && msg.includes('does not exist')
+}
+
+const PDF_INVOICE_SELECT_FULL = `id, type, document_number, order_number, account_number, issue_date, issue_time,
+         due_date, expiry_date, operator_name, notes,
+         show_payment_terms, show_watermark, show_paid_watermark, show_partially_paid_watermark, show_overdue_watermark, paid_by, paid_at, overdue_at, status_stamps_enabled, status_stamps_mode, status, updated_at, subtotal, vat_total, total, amount_paid, balance_due,
+         delivery_method, delivery_address_line_1, delivery_address_line_2,
+         delivery_town, delivery_county, delivery_postcode,
+         share_token, public_share_enabled, share_token_expires_at,
+         discount_amount, discount_percent,
+         clients (first_name, last_name, company_name, address_line_1, address_line_2,
+                   town, county, postcode, email, phone),
+         invoice_items (id, product_name, product_code, unit, quantity, price,
+                        vat_rate, vat_amount, line_total, sort_order,
+                        discount_amount, discount_percent)`
+
+// Lean select for partial demo schemas missing migration 101 discount columns.
+const PDF_INVOICE_SELECT_LEAN = `id, type, document_number, order_number, account_number, issue_date, issue_time,
+         due_date, expiry_date, operator_name, notes,
+         show_payment_terms, show_watermark, show_paid_watermark, show_partially_paid_watermark, show_overdue_watermark, paid_by, paid_at, overdue_at, status_stamps_enabled, status_stamps_mode, status, updated_at, subtotal, vat_total, total, amount_paid, balance_due,
+         delivery_method, delivery_address_line_1, delivery_address_line_2,
+         delivery_town, delivery_county, delivery_postcode,
+         share_token, public_share_enabled, share_token_expires_at,
+         clients (first_name, last_name, company_name, address_line_1, address_line_2,
+                   town, county, postcode, email, phone),
+         invoice_items (id, product_name, product_code, unit, quantity, price,
+                        vat_rate, vat_amount, line_total, sort_order)`
 
 function tooManyRequests(retryAfter: number) {
   return NextResponse.json(
@@ -131,8 +165,10 @@ export async function POST(request: NextRequest) {
   }
 
   const typedBody = body as Record<string, unknown>
-  const hasShareToken = typeof typedBody.shareToken === 'string'
-  const hasInvoiceId = typeof typedBody.invoiceId === 'string'
+  const hasShareToken =
+    typeof typedBody.shareToken === 'string' && typedBody.shareToken.length > 0
+  const hasInvoiceId =
+    typeof typedBody.invoiceId === 'string' && typedBody.invoiceId.length > 0
   const hasLoadId = typeof typedBody.loadId === 'string'
   const mode = hasShareToken || hasInvoiceId ? 'existing' : typedBody.preview ? 'preview' : null
 
@@ -141,19 +177,22 @@ export async function POST(request: NextRequest) {
   const copies = Math.max(1, Math.min(50, Math.floor(Number(typedBody.copies) || 1)))
 
   if (mode === 'existing') {
-    if (hasShareToken) {
-      return generatePublicPdf({
-        shareToken: typedBody.shareToken as string,
-        password: typeof typedBody.password === 'string' ? typedBody.password : undefined,
-        supabaseUrl,
-        serviceRoleKey,
+    // Prefer authenticated invoiceId when both are present. Callers used to
+    // send shareToken + invoiceId together; a disabled/draft share path then
+    // 404'd even though the operator had a valid session + UUID.
+    if (hasInvoiceId) {
+      return generateAuthenticatedPdf({
+        invoiceId: typedBody.invoiceId as string,
+        loadId: hasLoadId ? (typedBody.loadId as string) : undefined,
         renderMode,
         copies,
       })
     }
-    return generateAuthenticatedPdf({
-      invoiceId: typedBody.invoiceId as string,
-      loadId: hasLoadId ? (typedBody.loadId as string) : undefined,
+    return generatePublicPdf({
+      shareToken: typedBody.shareToken as string,
+      password: typeof typedBody.password === 'string' ? typedBody.password : undefined,
+      supabaseUrl,
+      serviceRoleKey,
       renderMode,
       copies,
     })
@@ -318,9 +357,9 @@ async function generateAuthenticatedPdf({
     .eq('id', user.id)
     .maybeSingle()
 
-  // Align PDF access with invoice ownership + explicit staff money/view
-  // permissions. Staff with only section visibility should not print every
-  // invoice in the company by UUID.
+  // Align PDF access with who can open the invoice in the dashboard.
+  // Returning 404 for authz denials made "Preview" look like a missing
+  // document when staff could already see line items on the detail page.
   let canPrint = false
   if (profile) {
     if (profile.role === 'admin' || invoice.created_by === user.id) {
@@ -331,14 +370,14 @@ async function generateAuthenticatedPdf({
       // shell's "no access to prices" contract enforced server-side, the
       // same way it is for drivers below.
       if (renderMode !== 'delivery-note') {
-        return notFound()
+        return forbidden('Pickers can only print delivery notes')
       }
       // A loadId is mandatory: without it the template would receive every
       // invoice line (including other pickers'/drivers' loads). With loadId
       // the item filter + per-picker ownership check below scopes the note
       // to the picker's own load.
       if (!loadId) {
-        return notFound()
+        return badRequest('loadId is required for picker delivery notes')
       }
       const { data: pickerLoad } = await adminClient
         .from('delivery_loads')
@@ -353,12 +392,12 @@ async function generateAuthenticatedPdf({
       // full invoice, regardless of the requested mode. This is the driver
       // shell's "no prices" contract enforced server-side.
       if (renderMode !== 'delivery-note') {
-        return notFound()
+        return forbidden('Drivers can only print delivery notes')
       }
       // A loadId is mandatory so the item filter below scopes the note to
       // the driver's own load (otherwise every invoice line would render).
       if (!loadId) {
-        return notFound()
+        return badRequest('loadId is required for driver delivery notes')
       }
       const { data: driverLoad } = await adminClient
         .from('delivery_loads')
@@ -370,39 +409,65 @@ async function generateAuthenticatedPdf({
       if (driverLoad) canPrint = true
     } else if (profile.role === 'staff') {
       const perms = resolveStaffPermissions(profile.role, profile.permissions)
-      // Staff may print invoices they did not create only when granted
-      // invoices_edit (operate on company docs) or invoices_see_money
-      // (financial document access). see_invoices alone is list-level.
-      if (perms.invoices_edit || perms.invoices_see_money || perms.invoices_add) {
+      // Staff who can open the invoices section may download/print the PDF
+      // for documents they can already see in the UI. Money redaction for
+      // staff without invoices_see_money is handled in the HTML detail view;
+      // the PDF still requires see_invoices (or stronger) so we do not open
+      // a back-door for staff with the section fully disabled.
+      if (
+        perms.see_invoices ||
+        perms.invoices_edit ||
+        perms.invoices_see_money ||
+        perms.invoices_add
+      ) {
         canPrint = true
+      }
+    } else if (profile.role === 'client') {
+      // Portal clients may only print invoices linked to their client_id.
+      const { data: clientProfile } = await serverSupabase
+        .from('profiles')
+        .select('client_id')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (clientProfile?.client_id) {
+        const { data: clientInvoice } = await adminClient
+          .from('invoices')
+          .select('id')
+          .eq('id', invoiceId)
+          .eq('client_id', clientProfile.client_id)
+          .maybeSingle()
+        if (clientInvoice) canPrint = true
       }
     }
   }
 
   if (!canPrint) {
-    return notFound()
+    return forbidden()
   }
 
-  const [invoiceResult, companyResult, companyChannelsResult, bankResult] = await Promise.all([
-    adminClient
+  async function loadFullInvoice(select: string) {
+    return adminClient
       .from('invoices')
-      .select(
-        `id, type, document_number, order_number, account_number, issue_date, issue_time,
-         due_date, expiry_date, operator_name, notes,
-         show_payment_terms, show_watermark, show_paid_watermark, show_partially_paid_watermark, show_overdue_watermark, paid_by, paid_at, overdue_at, status_stamps_enabled, status_stamps_mode, status, updated_at, subtotal, vat_total, total, amount_paid, balance_due,
-         delivery_method, delivery_address_line_1, delivery_address_line_2,
-         delivery_town, delivery_county, delivery_postcode,
-         share_token, public_share_enabled, share_token_expires_at,
-         discount_amount, discount_percent,
-         clients (first_name, last_name, company_name, address_line_1, address_line_2,
-                   town, county, postcode, email, phone),
-         invoice_items (id, product_name, product_code, unit, quantity, price,
-                        vat_rate, vat_amount, line_total, sort_order,
-                        discount_amount, discount_percent)`
-      )
+      .select(select)
       .eq('id', invoiceId)
       .is('deleted_at', null)
-      .maybeSingle(),
+      .maybeSingle()
+  }
+
+  let invoiceResult = await loadFullInvoice(PDF_INVOICE_SELECT_FULL)
+  if (
+    invoiceResult.error &&
+    (isMissingColumnError(invoiceResult.error.message, 'discount_amount') ||
+      isMissingColumnError(invoiceResult.error.message, 'discount_percent'))
+  ) {
+    console.warn(
+      'PDF invoice fetch: discount columns missing; retrying lean select',
+      invoiceResult.error.message
+    )
+    invoiceResult = await loadFullInvoice(PDF_INVOICE_SELECT_LEAN)
+  }
+
+  const [companyResult, companyChannelsResult, bankResult] = await Promise.all([
     withQueryRetry('company_settings (authenticated pdf)', () =>
       adminClient.from('company_settings').select('*').maybeSingle()
     ),
@@ -414,6 +479,10 @@ async function generateAuthenticatedPdf({
 
   if (invoiceResult.error || !invoiceResult.data) {
     console.error('PDF invoice fetch failed (authenticated):', invoiceResult.error)
+    // Schema lag / unexpected select errors should not look like a missing UUID.
+    if (invoiceResult.error) {
+      return serverError('Could not load invoice for PDF. Check server logs.')
+    }
     return notFound()
   }
 
@@ -429,7 +498,14 @@ async function generateAuthenticatedPdf({
     operatorName = operatorProfile?.full_name || undefined
   }
 
-  const fullInvoice = invoiceResult.data
+  // Dynamic select strings are not fully typed by supabase-js; cast once.
+  type PdfInvoiceRow = {
+    document_number: string
+    invoice_items?: unknown[]
+    load_number?: number
+    [key: string]: unknown
+  }
+  const fullInvoice = invoiceResult.data as unknown as PdfInvoiceRow
 
   // If a loadId is provided, filter the invoice items to only those on the load
   // and attach the load number for the delivery note template.
@@ -470,9 +546,7 @@ async function generateAuthenticatedPdf({
         ])
     )
 
-    const filteredItems = (
-      (fullInvoice as { invoice_items?: unknown[] }).invoice_items ?? []
-    )
+    const filteredItems = (fullInvoice.invoice_items ?? [])
       .filter((item: unknown) => {
         const invoiceItemId = (item as { id?: string }).id
         return invoiceItemId && loadedQuantities.has(invoiceItemId)
@@ -485,13 +559,10 @@ async function generateAuthenticatedPdf({
         }
       })
 
-    ;(fullInvoice as { invoice_items: unknown[]; load_number?: number }).invoice_items =
-      sortInvoiceItems(filteredItems)
-    ;(fullInvoice as { load_number?: number }).load_number = load.load_number
-  } else if (Array.isArray((fullInvoice as { invoice_items?: unknown[] }).invoice_items)) {
-    ;(fullInvoice as { invoice_items: unknown[] }).invoice_items = sortInvoiceItems(
-      (fullInvoice as { invoice_items?: unknown[] }).invoice_items ?? []
-    )
+    fullInvoice.invoice_items = sortInvoiceItems(filteredItems)
+    fullInvoice.load_number = load.load_number
+  } else if (Array.isArray(fullInvoice.invoice_items)) {
+    fullInvoice.invoice_items = sortInvoiceItems(fullInvoice.invoice_items ?? [])
   }
 
   const company = {
@@ -512,7 +583,7 @@ async function generateAuthenticatedPdf({
     operatorName,
   }
 
-  return renderAndRespond(props, fullInvoice.document_number as string, renderMode, copies)
+  return renderAndRespond(props, String(fullInvoice.document_number), renderMode, copies)
 }
 async function generatePreviewPdf(
   preview: InvoicePdfProps,
