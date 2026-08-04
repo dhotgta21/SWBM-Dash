@@ -164,22 +164,14 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
   let data: { category: string | null; is_active: boolean }[] | null = null
   let error: { message: string } | null = null
   try {
-    // Prefer soft-delete filter when the column exists. Some demo DBs were
-    // set up from a partial schema without products.deleted_at; fall back.
-    let result = await supabase
+    // Do NOT filter on deleted_at here: many demo DBs were created from a
+    // partial schema without that column, and PostgREST fails the whole query.
+    // Soft-deleted rows should set is_active = false instead.
+    const result = await supabase
       .from('products')
       .select('category, is_active')
-      .is('deleted_at', null)
       .eq('is_active', true)
       .not('category', 'is', null)
-
-    if (result.error && /deleted_at/i.test(result.error.message || '')) {
-      result = await supabase
-        .from('products')
-        .select('category, is_active')
-        .eq('is_active', true)
-        .not('category', 'is', null)
-    }
 
     data = result.data as { category: string | null; is_active: boolean }[] | null
     error = result.error
@@ -187,17 +179,15 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
     console.error('loadCategories: unexpected query failure', err)
     return {
       categories: [],
-      error: 'Unable to load categories (database request failed).',
+      // No hard error banner — homepage falls back to marketing categories
     }
   }
 
   if (error) {
     console.error('loadCategories: database error', error)
-    // Soft message: still allow UI fallback categories below
-    return {
-      categories: [],
-      error: `Unable to load categories: ${error.message}. Run supabase/seed/02_construction_products.sql and ensure products are readable by anon.`,
-    }
+    // Return empty list without a user-facing error when the schema is incomplete.
+    // The landing page still renders category cards from CATEGORY_META.
+    return { categories: [] }
   }
   if (!data) return { categories: [] }
 
@@ -287,29 +277,25 @@ export default async function HomePage() {
       ? vertical.faqs.map((f) => ({ q: f.question, a: f.answer }))
       : DEFAULT_FAQS
 
-  // Build landing grid rows. Prefer DB counts; if empty (no products yet),
-  // still show marketing categories so the homepage is not blank in demos.
-  let orderedCategories: CategoryRow[] =
+  // Build landing grid rows. Always start from the marketing category list
+  // (or active vertical pack), then attach live product counts from the DB.
+  // That way a partial/empty products table never blanks the homepage.
+  const focusNames =
     demo && vertical.categories.length > 0
-      ? [
-          ...vertical.categories
-            .map((name) => categories.find((c) => c.name === name))
-            .filter((c): c is CategoryRow => Boolean(c)),
-          ...categories.filter((c) => !vertical.categories.includes(c.name)),
-        ]
-      : categories
+      ? vertical.categories.filter((name) => CATEGORY_META.some((m) => m.name === name))
+      : CATEGORY_META.map((m) => m.name)
 
-  if (orderedCategories.length === 0) {
-    const focus =
-      demo && vertical.categories.length > 0
-        ? vertical.categories
-        : CATEGORY_META.map((m) => m.name)
-    orderedCategories = focus
-      .filter((name) => CATEGORY_META.some((m) => m.name === name))
-      .map((name) => ({
-        name,
-        productCount: categories.find((c) => c.name === name)?.productCount ?? 0,
-      }))
+  const countByName = new Map(categories.map((c) => [c.name, c.productCount]))
+  let orderedCategories: CategoryRow[] = focusNames.map((name) => ({
+    name,
+    productCount: countByName.get(name) ?? 0,
+  }))
+
+  // Append any extra DB categories that have meta but are not in the focus list
+  for (const c of categories) {
+    if (!focusNames.includes(c.name) && CATEGORY_META.some((m) => m.name === c.name)) {
+      orderedCategories.push(c)
+    }
   }
 
   const homepagePhone =
