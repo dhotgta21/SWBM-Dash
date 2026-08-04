@@ -114,6 +114,24 @@
 -- =============================================================================
 
 -- =============================================================================
+-- 0. SHARED TRIGGER HELPERS (must exist before any trigger that references them)
+-- =============================================================================
+-- touch_updated_at() is used by many BEFORE UPDATE triggers later in this
+-- file (company_integration_secrets, invoices, clients, products, …).
+-- Define it first so a fresh `schema.sql` run does not fail with:
+--   ERROR: 42883: function public.touch_updated_at() does not exist
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+-- =============================================================================
 -- 1. TABLES
 -- =============================================================================
 
@@ -2309,37 +2327,12 @@ DROP POLICY IF EXISTS public_share_views_select ON public.public_share_views;
 CREATE POLICY public_share_views_select ON public.public_share_views
   FOR SELECT TO authenticated USING (public.is_admin());
 
--- quote_requests (admin only; public submissions use the service-role client)
-DROP POLICY IF EXISTS quote_requests_select ON public.quote_requests;
-CREATE POLICY quote_requests_select ON public.quote_requests
-  FOR SELECT TO authenticated USING (public.is_admin());
-DROP POLICY IF EXISTS quote_requests_insert ON public.quote_requests;
-CREATE POLICY quote_requests_insert ON public.quote_requests
-  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
-DROP POLICY IF EXISTS quote_requests_update ON public.quote_requests;
-CREATE POLICY quote_requests_update ON public.quote_requests
-  FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
-DROP POLICY IF EXISTS quote_requests_delete ON public.quote_requests;
-CREATE POLICY quote_requests_delete ON public.quote_requests
-  FOR DELETE TO authenticated USING (public.is_admin());
-
--- quote_request_items (admin only; line items are created with their parent
--- request via the service-role client)
-DROP POLICY IF EXISTS quote_request_items_select ON public.quote_request_items;
-CREATE POLICY quote_request_items_select ON public.quote_request_items
-  FOR SELECT TO authenticated USING (public.is_admin());
-DROP POLICY IF EXISTS quote_request_items_insert ON public.quote_request_items;
-CREATE POLICY quote_request_items_insert ON public.quote_request_items
-  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
-DROP POLICY IF EXISTS quote_request_items_update ON public.quote_request_items;
-CREATE POLICY quote_request_items_update ON public.quote_request_items
-  FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
-DROP POLICY IF EXISTS quote_request_items_delete ON public.quote_request_items;
-CREATE POLICY quote_request_items_delete ON public.quote_request_items
-  FOR DELETE TO authenticated USING (public.is_admin());
+-- NOTE: quote_requests / quote_request_items RLS + GRANTs are applied AFTER
+-- those tables are created (migration 022 block later in this file). Referencing
+-- them here fails on a fresh database with 42P01.
 
 -- =============================================================================
--- 7. GRANTS
+-- 7. GRANTS (core tables only — shop/portal tables granted after CREATE TABLE)
 -- =============================================================================
 -- Tables: SELECT/INSERT/UPDATE/DELETE for authenticated on the business
 -- tables. RLS policies narrow what each role can do per row.
@@ -2354,7 +2347,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
   public.profiles, public.company_settings, public.company_bank_details,
   public.company_phones, public.company_emails,
   public.clients, public.products, public.invoices, public.invoice_items,
-  public.payments, public.quote_requests, public.quote_request_items TO authenticated;
+  public.payments TO authenticated;
 GRANT SELECT ON
   public.invoices, public.invoice_items, public.clients,
   public.payments,
@@ -2363,28 +2356,13 @@ GRANT SELECT ON
 TO service_role;
 GRANT INSERT ON public.public_share_views TO service_role;
 
--- service_role needs full control of client_invitations because all invite
--- writes (send, re-send, revoke, accept-side status flips) are performed by
--- server actions using createAdminClient(). The table deliberately has no
--- INSERT/UPDATE policies; without these GRANTs the service-role queries
--- return 42501 "permission denied" and the admin sees "You are not authorised
--- to perform that action.".
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.client_invitations TO service_role;
-
 -- service_role also needs to read profiles when pre-resolving an auth user by
 -- email during invite send/accept. Profiles are updated through the secure
 -- accept_invitation RPC, so only SELECT is required directly.
 GRANT SELECT ON public.profiles TO service_role;
 
--- Public quote-request submission uses the service-role client because the
--- caller is anonymous. It re-fetches products to validate the cart, then
--- inserts the request + line items. ip_bans is also service-role only (no
--- policies for anon/authenticated) because the admin ban UI and the public
--- submission flow both need to read it without exposing it broadly.
+-- Public quote-request submission re-fetches products via service role.
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.products TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_requests TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_request_items TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.ip_bans TO service_role;
 
 GRANT SELECT ON public.products TO anon;
 GRANT SELECT ON public.audit_logs TO authenticated;
@@ -2605,6 +2583,11 @@ CREATE TABLE IF NOT EXISTS public.client_invitations (
   revoked_at timestamptz,
   last_sent_at timestamptz
 );
+
+-- service_role needs full control of client_invitations (server actions via
+-- createAdminClient). Placed here so a fresh schema run never GRANTs a
+-- missing relation.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.client_invitations TO service_role;
 
 -- Token lookup is the hot path for the public accept page.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_client_invitations_token
@@ -2909,7 +2892,23 @@ CREATE INDEX IF NOT EXISTS idx_quote_requests_status_kind_created
   ON public.quote_requests (status, kind, created_at DESC);
 
 ALTER TABLE public.quote_requests ENABLE ROW LEVEL SECURITY;
--- No policies for anon / authenticated. All access via service role.
+
+-- Admin dashboard policies (public submissions still use service-role).
+DROP POLICY IF EXISTS quote_requests_select ON public.quote_requests;
+CREATE POLICY quote_requests_select ON public.quote_requests
+  FOR SELECT TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS quote_requests_insert ON public.quote_requests;
+CREATE POLICY quote_requests_insert ON public.quote_requests
+  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS quote_requests_update ON public.quote_requests;
+CREATE POLICY quote_requests_update ON public.quote_requests
+  FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS quote_requests_delete ON public.quote_requests;
+CREATE POLICY quote_requests_delete ON public.quote_requests
+  FOR DELETE TO authenticated USING (public.is_admin());
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_requests TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_requests TO service_role;
 
 
 -- =============================================================================
@@ -2938,7 +2937,22 @@ CREATE INDEX IF NOT EXISTS idx_quote_request_items_request
   ON public.quote_request_items (quote_request_id);
 
 ALTER TABLE public.quote_request_items ENABLE ROW LEVEL SECURITY;
--- No policies for anon / authenticated. All access via service role.
+
+DROP POLICY IF EXISTS quote_request_items_select ON public.quote_request_items;
+CREATE POLICY quote_request_items_select ON public.quote_request_items
+  FOR SELECT TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS quote_request_items_insert ON public.quote_request_items;
+CREATE POLICY quote_request_items_insert ON public.quote_request_items
+  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS quote_request_items_update ON public.quote_request_items;
+CREATE POLICY quote_request_items_update ON public.quote_request_items
+  FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS quote_request_items_delete ON public.quote_request_items;
+CREATE POLICY quote_request_items_delete ON public.quote_request_items
+  FOR DELETE TO authenticated USING (public.is_admin());
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_request_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.quote_request_items TO service_role;
 
 
 -- =============================================================================
@@ -3006,6 +3020,7 @@ CREATE INDEX IF NOT EXISTS idx_ip_bans_ip_active
 
 ALTER TABLE public.ip_bans ENABLE ROW LEVEL SECURITY;
 -- No policies for anon / authenticated. All access via service role.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ip_bans TO service_role;
 
 
 -- =============================================================================
