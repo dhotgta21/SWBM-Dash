@@ -11,10 +11,11 @@
 
 import type { Metadata } from 'next'
 import { SITE_URL } from './company-seo'
+import { getDefaultCompanyName } from '@/lib/demo/brand'
 
 // Mirror the company-seo fallback so we don't need to export an extra
 // constant from a heavily-edited module.
-const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Star Hawk Builders Merchant'
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || getDefaultCompanyName()
 
 /**
  * Standard keyword set applied to every public page. Pages with their

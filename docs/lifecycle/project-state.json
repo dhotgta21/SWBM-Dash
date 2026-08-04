@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "SWBM",
-  "updated": "2026-08-04T12:25:22.133Z",
+  "updated": "2026-08-04T16:41:19.248Z",
   "lifecycle": {
     "mode": "build",
     "currentStage": "S11",
@@ -22,47 +22,47 @@
     "stages": {
       "S0": {
         "status": "done",
-        "notes": ""
+        "notes": "Demo campaign codebase report"
       },
       "S1": {
         "status": "done",
-        "notes": ""
+        "notes": "requirements DRAFT for demo"
       },
       "S1.5": {
-        "status": "skipped",
-        "notes": ""
+        "status": "done",
+        "notes": "vertical packs research"
       },
       "S2": {
         "status": "done",
-        "notes": ""
+        "notes": "User approved understanding"
       },
       "S3": {
         "status": "done",
-        "notes": ""
+        "notes": "task-breakdown + decisions + plan DRAFT"
       },
       "S4": {
-        "status": "not_started",
-        "notes": ""
+        "status": "skipped",
+        "notes": "Brownfield; no scaffold"
       },
       "S5": {
-        "status": "not_started",
-        "notes": ""
+        "status": "done",
+        "notes": "product-foundation text"
       },
       "S6": {
-        "status": "not_started",
-        "notes": ""
+        "status": "done",
+        "notes": "Existing shell; brand+packs wired"
       },
       "S7": {
-        "status": "not_started",
-        "notes": ""
+        "status": "done",
+        "notes": "Seed scripts + brand backend"
       },
       "S8": {
         "status": "done",
-        "notes": ""
+        "notes": "Phase A implement"
       },
       "S9": {
         "status": "done",
-        "notes": ""
+        "notes": "vitest brand + typecheck; live DB seed pending operator"
       },
       "S10": {
         "status": "done",
@@ -70,24 +70,24 @@
       },
       "S11": {
         "status": "done",
-        "notes": ""
+        "notes": "Plan complete"
       }
     },
     "blockers": [],
-    "nextAction": "Complete lifecycle stage S4 (not_started)"
+    "nextAction": "No incomplete in-run features; project idle or complete"
   },
   "features": [
     {
       "id": "F-footer",
       "name": "Footer Made by Humnod layout",
       "priority": "P0",
-      "scope": "in",
-      "source": "user",
+      "scope": "out",
+      "source": "code",
       "phase": "P1",
       "surface": "ui",
       "sensitive": false,
       "dependsOn": [],
-      "inRun": true,
+      "inRun": false,
       "impl": {
         "ui": "live",
         "contracts": "honest",
@@ -124,13 +124,13 @@
       "id": "F-guides",
       "name": "Guides detail page load",
       "priority": "P0",
-      "scope": "in",
-      "source": "user",
+      "scope": "out",
+      "source": "code",
       "phase": "P1",
       "surface": "full",
       "sensitive": false,
       "dependsOn": [],
-      "inRun": true,
+      "inRun": false,
       "impl": {
         "ui": "live",
         "contracts": "honest",
@@ -168,13 +168,13 @@
       "id": "F-invoice-pdf",
       "name": "New invoice print/download parity",
       "priority": "P0",
-      "scope": "in",
-      "source": "user",
+      "scope": "out",
+      "source": "code",
       "phase": "P1",
       "surface": "full",
       "sensitive": false,
       "dependsOn": [],
-      "inRun": true,
+      "inRun": false,
       "impl": {
         "ui": "live",
         "contracts": "honest",
@@ -212,13 +212,13 @@
       "id": "F-address",
       "name": "GoAddress postcode autocomplete",
       "priority": "P0",
-      "scope": "in",
-      "source": "user",
+      "scope": "out",
+      "source": "code",
       "phase": "P1",
       "surface": "full",
       "sensitive": false,
       "dependsOn": [],
-      "inRun": true,
+      "inRun": false,
       "impl": {
         "ui": "live",
         "contracts": "honest",
@@ -250,6 +250,301 @@
         "notes": ""
       },
       "rollup": "done"
+    },
+    {
+      "id": "F-demo-brand",
+      "name": "Demo Builder Merchant branding",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "A",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T16:41:00.203Z",
+      "chunks": {
+        "done": [
+          "B1",
+          "B2",
+          "B3",
+          "B-T"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [
+          "R1"
+        ],
+        "contractIds": [],
+        "routes": [],
+        "files": [
+          "lib/demo/brand.ts",
+          "app/layout.tsx",
+          "lib/seo/company-seo.ts"
+        ]
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-demo-seed",
+      "name": "Demo clients + multi-year invoice seed",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "A",
+      "surface": "api",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "none",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "pass"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T16:41:00.473Z",
+      "chunks": {
+        "done": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S-T"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [
+          "R2",
+          "R3",
+          "R4"
+        ],
+        "contractIds": [],
+        "routes": [],
+        "files": [
+          "scripts/seed-demo-history.mjs"
+        ]
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-vertical-packs",
+      "name": "Industry vertical content packs",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "B",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T16:41:01.037Z",
+      "chunks": {
+        "done": [
+          "V1",
+          "V2",
+          "V3",
+          "V-T"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [
+          "R7"
+        ],
+        "contractIds": [],
+        "routes": [],
+        "files": [
+          "lib/demo/verticals/packs.ts",
+          "app/page.tsx"
+        ]
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-demo-runbook",
+      "name": "Demo wipe/reseed runbook + env",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "A",
+      "surface": "api",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "none",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T16:41:00.753Z",
+      "chunks": {
+        "done": [
+          "R1"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [
+          "R5",
+          "R8"
+        ],
+        "contractIds": [],
+        "routes": [],
+        "files": [
+          "docs/demo/RUNBOOK.md"
+        ]
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-vertical-skus",
+      "name": "Sample products per non-construction vertical",
+      "priority": "P1",
+      "scope": "in",
+      "source": "research",
+      "phase": "B",
+      "surface": "api",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T16:41:01.337Z",
+      "chunks": {
+        "done": [
+          "K1",
+          "K2",
+          "K-T"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [
+          "R9"
+        ],
+        "contractIds": [],
+        "routes": [],
+        "files": [
+          "scripts/seed-demo-vertical-products.mjs",
+          "components/landing/category-meta.ts"
+        ]
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-demo-banner",
+      "name": "Optional DEMO environment banner",
+      "priority": "P1",
+      "scope": "later",
+      "source": "inferred",
+      "phase": "C",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": false,
+      "impl": {
+        "ui": "none",
+        "contracts": "none",
+        "backend": "none",
+        "wire": "none",
+        "data": "none",
+        "tests": "none",
+        "archFit": "unknown",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": null,
+      "chunks": {
+        "done": [],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [],
+        "contractIds": [],
+        "routes": [],
+        "files": []
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "not_started"
     }
   ],
   "meta": {

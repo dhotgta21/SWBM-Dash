@@ -9,8 +9,13 @@
 // grid.
 
 import { Clock, Truck, BadgeCheck, ShieldCheck } from 'lucide-react'
+import { getDefaultCompanyName } from '@/lib/demo/brand'
 
-export function TrustStrip() {
+interface TrustStripProps {
+  headline?: string
+}
+
+export function TrustStrip({ headline }: TrustStripProps) {
   const items = [
     { icon: Clock, title: 'Open 7am – 5pm', sub: 'Mon–Fri · 8am–12pm Sat' },
     {
@@ -32,7 +37,7 @@ export function TrustStrip() {
           four cells so they can index it alongside the rest of the
           landing page. */}
       <h2 id="trust-strip-heading" className="sr-only">
-        Why builders choose {`Star Hawk Builders Merchant`}
+        {headline || `Why builders choose ${getDefaultCompanyName()}`}
       </h2>
       <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
         {items.map(({ icon: Icon, title, sub }, idx) => (

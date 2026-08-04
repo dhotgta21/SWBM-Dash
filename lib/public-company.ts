@@ -11,6 +11,7 @@
 // with whatever the operator has typed into Settings.
 
 import { loadCompany, getChannelForContext, type CompanyContactChannel } from '@/lib/company'
+import { getDefaultCompanyName } from '@/lib/demo/brand'
 
 export interface PublicCompanyChrome {
   companyName: string
@@ -47,7 +48,7 @@ export async function loadPublicCompanyChrome(): Promise<PublicCompanyChrome> {
     // DB unreachable in dev/build — fall back to the brand defaults so
     // the page still renders rather than 500s.
     return {
-      companyName: 'Star Hawk Builders Merchant',
+      companyName: getDefaultCompanyName(),
       phone: null,
       email: null,
       phones: [],

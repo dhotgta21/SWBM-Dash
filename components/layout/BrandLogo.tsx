@@ -3,6 +3,10 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { BRAND_LOGO_ASPECT } from '@/lib/brand'
+import {
+  getDefaultLegalName,
+  isDemoMode,
+} from '@/lib/demo/brand'
 
 type BrandVariant = 'horizontal' | 'sidebar' | 'login' | 'mobile' | 'collapsed'
 
@@ -81,6 +85,10 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const resolvedVariant = variant ?? pickVariant(imageSize, showText)
   const SIZES = sizeRecord(logoUrl, logoUpdatedAt)
+  const legalName = getDefaultLegalName()
+  const demo = isDemoMode()
+  const titleLine = demo ? 'DEMO BUILDER' : 'STAR HAWK'
+  const subtitleLine = demo ? 'MERCHANT' : 'BUILDERS MERCHANT LTD.'
 
   if (resolvedVariant === 'horizontal') {
     return (
@@ -91,7 +99,7 @@ export function BrandLogo({
         >
           <Image
             src={SIZES.horizontal.src}
-            alt="Star Hawk Builders Merchant Ltd."
+            alt={legalName}
             fill
             sizes="80px"
             priority
@@ -102,10 +110,10 @@ export function BrandLogo({
         <div aria-hidden className="h-6 w-px bg-border" />
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-extrabold tracking-[0.08em] text-foreground">
-            STAR HAWK
+            {titleLine}
           </span>
           <span className="text-[9px] tracking-[0.18em] text-muted-foreground">
-            BUILDERS MERCHANT LTD.
+            {subtitleLine}
           </span>
         </div>
       </div>
@@ -131,7 +139,7 @@ export function BrandLogo({
       >
         <Image
           src={sizes.src}
-          alt="Star Hawk Builders Merchant Ltd."
+          alt={legalName}
           fill
           sizes="(max-width: 1024px) 60px, 110px"
           priority

@@ -52,12 +52,25 @@ import { cn } from '@/lib/utils'
 interface HeroProps {
   phone: string
   email: string
+  /** Optional vertical-pack override for the H1 lead (before emphasis). */
+  heroLead?: string
+  /** Optional vertical-pack override for the emphasised H1 phrase. */
+  heroEmphasis?: string
+  /** Optional vertical-pack override for the body paragraph. */
+  heroBody?: string
 }
 
 const ROTATION_MS = 7500
 const FADE_MS = 1500
 
-export function Hero({ phone, email }: HeroProps) {
+export function Hero({
+  phone,
+  email,
+  heroLead = 'Builders merchant delivering across',
+  heroEmphasis = 'the South East',
+  heroBody =
+    'Aggregates, bricks, timber, insulation, roofing, drainage and fixings, stocked in depth and priced for trade. Walk in, load up at the trade counter, or have it on your site the same day on our own lorries.',
+}: HeroProps) {
   return (
     <section className="relative overflow-hidden bg-slate-900">
       <HeroSlideshow />
@@ -112,8 +125,8 @@ export function Hero({ phone, email }: HeroProps) {
             visitor scrolled. Pinning the hero to 100vh means the
             next section starts the moment the page scrolls. */}
         <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)] sm:text-5xl lg:text-6xl">
-          Builders merchant delivering across{' '}
-          <span className="text-primary">the South East</span>.
+          {heroLead}{' '}
+          <span className="text-primary">{heroEmphasis}</span>.
         </h1>
 
         {/* Live yard-status cards — moved from the top bar so they sit
@@ -133,10 +146,7 @@ export function Hero({ phone, email }: HeroProps) {
             40-56px spacer + 16px paragraph-margin combo made the gap
             between the live cards and the body copy feel detached. */}
         <p className="mt-6 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
-          Aggregates, bricks, timber, insulation, roofing, drainage
-          and fixings, stocked in depth and priced for trade. Walk in,
-          load up at the trade counter, or have it on your site the
-          same day on our own lorries.
+          {heroBody}
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">

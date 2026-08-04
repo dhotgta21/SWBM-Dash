@@ -43,9 +43,10 @@
 
 import { loadCompany, getChannelForContext } from '@/lib/company'
 import { AuthShell } from '@/components/auth/AuthShell'
+import { getDefaultCompanyName } from '@/lib/demo/brand'
 
 const FALLBACK_PHONE = '01234 567 890'
-const FALLBACK_NAME = 'Star Hawk Builders Merchant'
+const FALLBACK_NAME = getDefaultCompanyName()
 
 /** Per-page brand-panel image. Add a new key here when introducing
  *  a new auth surface. The 'login' and 'register' keys rotate

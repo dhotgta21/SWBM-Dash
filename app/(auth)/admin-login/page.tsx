@@ -10,7 +10,7 @@ import { getTurnstileSiteKey } from '@/lib/turnstile'
 import { getPendingMfaChallenge } from '@/lib/actions/mfa'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Staff sign in | Star Hawk Builders Merchant' },
+  title: { absolute: `Staff sign in | ${process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Star Hawk Builders Merchant'}` },
   description: 'Operator sign-in for the Star Hawk trade counter and dashboard.',
   robots: { index: false, follow: true },
 }

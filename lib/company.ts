@@ -4,6 +4,7 @@
 // and yard details so they stay in sync with the dashboard.
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getDefaultCompanyName } from '@/lib/demo/brand'
 
 // Shape of the company_settings columns we read on every render. Keep
 // this in sync with the migration that added them.
@@ -187,7 +188,7 @@ export async function loadCompany(): Promise<CompanyInfo> {
     console.warn('[company] Could not load company_settings, using fallback company info:', err)
   }
 
-  const fallback = 'Star Hawk Builders Merchant'
+  const fallback = getDefaultCompanyName()
   const company = (settingsRow ?? null) as {
     company_name?: string | null
     address_line_1?: string | null

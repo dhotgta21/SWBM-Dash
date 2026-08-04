@@ -1,0 +1,133 @@
+# Demo Builder Merchant – operator runbook
+
+How to stand up a **client-ready demo** of this product for sales visits.
+
+## What you get
+
+| Piece | Purpose |
+|-------|---------|
+| **Brand** | `Demo Builder Merchant` when demo mode is on |
+| **Vertical packs** | construction, plumbing, electrical, windows, tile landing stories |
+| **History seed** | ~100 clients + multi-year invoices/payments |
+| **Sample SKUs** | Non-construction catalogue lines for pack demos |
+
+## 1. Dedicated environment (recommended)
+
+Use a **separate** Supabase project + Vercel project from production Star Hawk.
+
+1. Create Supabase project; run `supabase/schema.sql` (or full migration chain).
+2. Create Vercel project from this repo; point env at the demo Supabase.
+3. Bootstrap the first admin via `/register` while the DB has zero profiles.
+
+## 2. Environment variables
+
+Copy `.env.example` → `.env.local` (local) or Vercel env (hosted).
+
+**Required for app**
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_SITE_URL` (demo domain)
+- Postgres URL for scripts: `POSTGRES_URL_NON_POOLING` (or `POSTGRES_URL`)
+
+**Demo mode**
+
+```env
+NEXT_PUBLIC_DEMO_MODE=true
+DEMO_MODE=true
+NEXT_PUBLIC_DEMO_VERTICAL=construction
+DEMO_VERTICAL=construction
+```
+
+Valid verticals: `construction` | `plumbing` | `electrical` | `windows` | `tile`
+
+**Seed safety**
+
+```env
+DEMO_SEED_CONFIRM=yes
+```
+
+Only set this when intentionally wiping/seeding a **demo** database.
+
+## 3. Seed the demo database
+
+From the project root (with env loaded):
+
+```bash
+# Optional: clear existing clients + invoices first
+DEMO_SEED_CONFIRM=yes npm run wipe:demo-clients
+
+# ~100 clients + ~30 months history (default)
+DEMO_SEED_CONFIRM=yes npm run seed:demo
+
+# Smaller local smoke seed
+DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 20 --months 12 --wipe-first
+
+# Sample products for plumbing / electrical / windows / tile
+DEMO_SEED_CONFIRM=yes npm run seed:demo:verticals
+```
+
+The history seeder:
+
+- Requires an existing **admin** user (`profiles.role = 'admin'`)
+- Sets `company_settings.company_name` to **Demo Builder Merchant** when `DEMO_MODE` / `NEXT_PUBLIC_DEMO_MODE` is true
+- Inserts clients, invoices, quotations, line items, payments
+- Syncs document number sequences
+
+## 4. Switch industry for a meeting
+
+1. Set `NEXT_PUBLIC_DEMO_VERTICAL` (and optionally `DEMO_VERTICAL`) to the prospect’s trade.
+2. Redeploy or restart `npm run dev` (Next inlines `NEXT_PUBLIC_*` at build).
+3. Open `/` – hero, FAQ (non-construction), and category order follow the pack.
+4. Browse `/catalogue` – construction uses the main catalog; other verticals need `seed:demo:verticals`.
+
+No multi-tenant switcher UI is required; env is intentional for sales control.
+
+## 5. Suggested live demo path (~10 minutes)
+
+1. **Homepage** – vertical hero story, categories, trust strip  
+2. **Catalogue / product** – open a stocked line  
+3. **Quote** – add items to cart (optional)  
+4. **Staff login** – `/admin-login` (or your `ADMIN_LOGIN_PATH`)  
+5. **Dashboard** – KPIs and charts populated by seed  
+6. **Clients** – open a “hot” trade account with long history  
+7. **Invoice** – open a multi-line invoice, show PDF / share if useful  
+8. **Settings → Brand** – show logo/colours are configurable  
+
+## 6. Reset before the next meeting
+
+```bash
+DEMO_SEED_CONFIRM=yes npm run wipe:demo-clients
+DEMO_SEED_CONFIRM=yes npm run seed:demo
+DEMO_SEED_CONFIRM=yes npm run seed:demo:verticals
+```
+
+## 7. Production safety
+
+| Do | Do not |
+|----|--------|
+| Seed only demo Supabase projects | Run wipe/seed against production customer data |
+| Keep `DEMO_SEED_CONFIRM` unset on production | Commit real secrets |
+| Leave `NEXT_PUBLIC_DEMO_MODE` unset on production Star Hawk | Assume multi-tenant isolation (single company row) |
+
+When demo env vars are **unset**, fallbacks remain **Star Hawk Builders Merchant** so the same codebase can serve production.
+
+## 8. Troubleshooting
+
+| Symptom | Check |
+|---------|--------|
+| Seed refuses to run | `DEMO_SEED_CONFIRM=yes` |
+| No admin for seed | Register first admin on empty DB |
+| Landing still construction copy | `NEXT_PUBLIC_DEMO_MODE=true` and rebuild; vertical env |
+| Empty non-construction categories | Run `seed:demo:verticals` |
+| Brand still Star Hawk in chrome | Demo mode env + seed company name; hard refresh |
+| Document number collisions later | Seed updates `document_sequences`; re-seed if you wiped partially |
+
+## 9. Scripts reference
+
+| npm script | Command |
+|------------|---------|
+| `seed:demo` | `node scripts/seed-demo-history.mjs` |
+| `seed:demo:verticals` | `node scripts/seed-demo-vertical-products.mjs` |
+| `wipe:demo-clients` | `node scripts/wipe-invoices-and-clients.mjs` |

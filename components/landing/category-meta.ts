@@ -121,6 +121,127 @@ export const CATEGORY_META: CategoryMeta[] = [
     icon: Wrench,
     blurb: 'Trowels, levels and the everyday kit a bricklayer needs.',
   },
+  // Demo vertical sample categories (plumbing / electrical / windows / tile)
+  {
+    name: 'Copper Tube & Fittings',
+    slug: 'copper-tube-fittings',
+    icon: Pipette,
+    blurb: 'Copper tube, end-feed and press-fit fittings for heating and water.',
+  },
+  {
+    name: 'Plastic Pipe Systems',
+    slug: 'plastic-pipe-systems',
+    icon: Droplets,
+    blurb: 'Push-fit and solvent-weld plastic pipe systems for trade installs.',
+  },
+  {
+    name: 'Valves & Controls',
+    slug: 'valves-controls',
+    icon: Wrench,
+    blurb: 'Isolation valves, TRVs and zone controls for wet systems.',
+  },
+  {
+    name: 'Heating & Cylinders',
+    slug: 'heating-cylinders',
+    icon: Home,
+    blurb: 'Unvented cylinders, pumps and heating accessories.',
+  },
+  {
+    name: 'Sanitaryware Trade',
+    slug: 'sanitaryware-trade',
+    icon: Box,
+    blurb: 'Trade sanitaryware packs for bathroom and WC installs.',
+  },
+  {
+    name: 'Cable & Flex',
+    slug: 'cable-flex',
+    icon: Pin,
+    blurb: 'Twin and earth, flex and armoured cable by the drum or cut.',
+  },
+  {
+    name: 'Containment',
+    slug: 'containment',
+    icon: Layers,
+    blurb: 'Trunking, conduit and cable tray for clean first fix.',
+  },
+  {
+    name: 'Switchgear & Boards',
+    slug: 'switchgear-boards',
+    icon: Construction,
+    blurb: 'Consumer units, breakers and distribution accessories.',
+  },
+  {
+    name: 'Lighting Trade',
+    slug: 'lighting-trade',
+    icon: Home,
+    blurb: 'LED downlights, battens and exterior fittings for trade.',
+  },
+  {
+    name: 'Wiring Accessories',
+    slug: 'wiring-accessories',
+    icon: Pin,
+    blurb: 'Sockets, switches and faceplates in common finishes.',
+  },
+  {
+    name: 'uPVC Frames',
+    slug: 'upvc-frames',
+    icon: PanelsTopLeft,
+    blurb: 'uPVC window and door frames for installer programmes.',
+  },
+  {
+    name: 'Aluminium Systems',
+    slug: 'aluminium-systems',
+    icon: Construction,
+    blurb: 'Aluminium window and door systems for modern builds.',
+  },
+  {
+    name: 'Glass & Glazing',
+    slug: 'glass-glazing',
+    icon: PanelsTopLeft,
+    blurb: 'IGUs and glazing packs matched to frame schedules.',
+  },
+  {
+    name: 'Hardware & Handles',
+    slug: 'hardware-handles',
+    icon: Wrench,
+    blurb: 'Hinges, handles, multipoint locks and keep sets.',
+  },
+  {
+    name: 'Sealants & Fixings',
+    slug: 'sealants-fixings',
+    icon: Pin,
+    blurb: 'Silicone, expanding foam and frame fixings for install day.',
+  },
+  {
+    name: 'Porcelain Tiles',
+    slug: 'porcelain-tiles',
+    icon: Layers,
+    blurb: 'Large-format porcelain for floors and walls.',
+  },
+  {
+    name: 'Ceramic Tiles',
+    slug: 'ceramic-tiles',
+    icon: Box,
+    blurb: 'Wall and floor ceramic ranges for domestic and commercial.',
+  },
+  {
+    name: 'Natural Stone',
+    slug: 'natural-stone',
+    icon: Layers,
+    blurb: 'Travertine, limestone and slate packs for premium finishes.',
+  },
+  {
+    name: 'Adhesives & Grouts',
+    slug: 'adhesives-grouts',
+    icon: Droplets,
+    blurb: 'Flexible adhesives, grouts and primers for wet areas.',
+  },
+  {
+    name: 'Trims & Profiles',
+    slug: 'trims-profiles',
+    icon: Pin,
+    blurb: 'Tile trims, movement joints and edge profiles.',
+  },
 ]
 
 /** Look up the metadata for a category name. Used by the landing page

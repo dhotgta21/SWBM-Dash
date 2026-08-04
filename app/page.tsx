@@ -62,6 +62,8 @@ import { listLocationTowns } from '@/lib/blog/loader'
 import { listGuideHubCards } from '@/lib/guides/loader'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { toOpeningHoursSpecification } from '@/lib/opening-hours'
+import { isDemoMode, getDefaultSiteUrl } from '@/lib/demo/brand'
+import { getActiveVerticalPack } from '@/lib/demo/verticals'
 
 // Force-dynamic rendering so the per-request CSP nonce injected by
 // proxy.ts is applied to Next.js framework scripts and the JSON-LD
@@ -76,20 +78,17 @@ export const dynamic = 'force-dynamic'
 // Primary public site URL. Used to build absolute URLs inside JSON-LD
 // (canonical, schema.org @id, areaServed references, etc.). Falls back
 // to the production domain if no env override is provided.
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') || 'https://www.starhawkbm.com'
+const SITE_URL = getDefaultSiteUrl()
 
-
-// Long-tail FAQs we want to rank for. The Faq component renders these
-// on the page AND emits them as FAQPage JSON-LD so Google can pull
-// them into rich-result snippets.
-const FAQS: FaqItem[] = [
+// Default construction FAQs (production + construction demo pack).
+// Demo vertical packs may replace these at render time.
+const DEFAULT_FAQS: FaqItem[] = [
   {
     q: 'Do you deliver building materials to Slough?',
     a: 'Yes, we run our own delivery lorries across Slough and the rest of the SL postcode area. Stock lines are typically delivered same-day, bulk aggregates within 24 hours. Call the trade counter for a delivery slot.',
   },
   {
-    q: 'What areas does Star Hawk Builders Merchant cover?',
+    q: 'What areas does the merchant cover?',
     a: 'We deliver across Greater London, Berkshire, Buckinghamshire, Surrey, Hampshire, Oxfordshire and Wiltshire. See our delivery area section above for the full town list. Core towns are typically same-day; outlying areas are next-day.',
   },
   {
@@ -240,6 +239,25 @@ export default async function HomePage() {
   const locationSlugs = new Set(listLocationTowns().map((l) => l.slug))
   const { categories, error: categoriesError } = categoriesResult
 
+  // Demo vertical pack drives hero/FAQ/category emphasis when DEMO_MODE is on.
+  // Production keeps the classic construction landing copy.
+  const vertical = getActiveVerticalPack()
+  const demo = isDemoMode()
+  const FAQS: FaqItem[] =
+    demo && vertical.id !== 'construction'
+      ? vertical.faqs.map((f) => ({ q: f.question, a: f.answer }))
+      : DEFAULT_FAQS
+
+  const orderedCategories =
+    demo && vertical.categories.length > 0
+      ? [
+          ...vertical.categories
+            .map((name) => categories.find((c) => c.name === name))
+            .filter((c): c is CategoryRow => Boolean(c)),
+          ...categories.filter((c) => !vertical.categories.includes(c.name)),
+        ]
+      : categories
+
   const homepagePhone =
     getChannelForContext(company.phones, 'homepage')?.value ||
     company.phone ||
@@ -266,7 +284,7 @@ export default async function HomePage() {
   // Total stock-line count across every category. Used by the About
   // section stats row so the "Stock lines under one roof" figure stays
   // in lock-step with the categories rendered in the grid above.
-  const totalProducts = categories.reduce(
+  const totalProducts = orderedCategories.reduce(
     (sum, c) => sum + c.productCount,
     0,
   )
@@ -443,8 +461,14 @@ export default async function HomePage() {
         <SiteHeader phone={headerPhone} />
 
         <main className="flex-1">
-          <Hero phone={homepagePhone} email={homepageEmail} />
-          <TrustStrip />
+          <Hero
+            phone={homepagePhone}
+            email={homepageEmail}
+            heroLead={demo ? vertical.heroLead : undefined}
+            heroEmphasis={demo ? vertical.heroEmphasis : undefined}
+            heroBody={demo ? vertical.heroBody : undefined}
+          />
+          <TrustStrip headline={demo ? vertical.trustHeadline : undefined} />
 
           <section
             id="categories"
@@ -484,7 +508,7 @@ export default async function HomePage() {
               )}
 
               <div className="mt-10">
-                <CategoryGrid rows={categories} />
+                <CategoryGrid rows={orderedCategories} />
               </div>
             </div>
           </section>

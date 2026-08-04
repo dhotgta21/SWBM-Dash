@@ -1,23 +1,33 @@
-# TRACKING: SWBM bugfix campaign
+# TRACKING: Demo Builder Merchant campaign
 
 ## Intent
-Fix four user-reported issues: footer Made by Humnod layout, guides detail load, new-invoice print/download parity, GoAddress autocomplete.
+Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade vertical packs, dense SQL seed (~100 clients, ~2.5 years history).
 
-## Status (2026-08-04)
-All four P0 features implemented; smoke verification done.
+## Active execution plan
+- None (completed: `docs/plans/demo-builder-merchant-2026-08-04.md` – file removed at plan complete)
+- Status: **COMPLETED** 2026-08-04
 
-| ID | Feature | Root cause | Fix | Evidence |
-|----|---------|------------|-----|----------|
-| F-address | GoAddress | Guard checked non-existent `data.addresses` | Map `new_address_res` / `results` | vitest postcode.test.ts 3/3 pass |
-| F-invoice-pdf | New invoice PDF | Preview Zod stripped company/bank | Prefer `invoiceId` after create; preview loads company/bank server-side | code review + path parity with InvoicePdf |
-| F-footer | Made by Humnod | Cramped into right legal nav | 3-column bottom bar (left / center / right) | SiteFooter, BlogFooter, ShopFooter |
-| F-guides | Guide detail | Fragile tracing glob + static params under force-dynamic | Explicit tracing includes; remove generateStaticParams; layout/loader harden | HTTP 200 on hub + 3 detail slugs |
+## Features
 
-## Commands
-- `npx vitest run lib/actions/postcode.test.ts` → 3 passed
+| ID | Phase | Status | Evidence |
+|----|-------|--------|----------|
+| F-demo-brand | A | done | `lib/demo/brand.ts`, layout/SEO/wordmarks; vitest 2/2; tsc 0 |
+| F-demo-seed | A | done | `scripts/seed-demo-history.mjs` + confirm guard + flags |
+| F-demo-runbook | A | done | `docs/demo/RUNBOOK.md` + npm scripts |
+| F-vertical-packs | B | done | `lib/demo/verticals/*`, Hero/FAQ/category order on homepage |
+| F-vertical-skus | B | done | `scripts/seed-demo-vertical-products.mjs` + category-meta + image placeholders |
+| F-demo-banner | C | later | out of this plan |
+
+## Verification
 - `npx tsc --noEmit` → exit 0
-- Dev smoke: `/guides`, `/guides/building-a-block-wall`, `/guides/laying-a-patio`, `/guides/mix-concrete` → 200 with body content
+- `npx vitest run lib/demo/brand.test.ts` → 2 passed
+- Live Postgres seed **not run** in this environment (no `.env.local`); operator runs per RUNBOOK
 
 ## Residual
-- Production redeploy required for Vercel file-tracing change to take effect.
-- Live GoAddress call still needs a valid stored token + ENCRYPTION_KEY; mapping bug was independent of the key.
+1. Operator must seed a **dedicated demo** Supabase with `DEMO_SEED_CONFIRM=yes`.
+2. Some marketing MD/content may still mention Star Hawk (P2).
+3. Category images for new verticals are placeholders (copied tools.webp).
+4. Optional DEMO banner (F-demo-banner) not built.
+
+## Decisions
+See `docs/lifecycle/decisions.md` D-001–D-005.

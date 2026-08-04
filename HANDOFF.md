@@ -1,21 +1,25 @@
 # HANDOFF
 
 ## Mode
-Brownfield bugfix campaign - complete pending final commit/report.
+Demo Builder Merchant campaign – **complete**. Residual is operator deploy/seed.
 
 ## Stage
-S8/S11 wrap: four P0 fixes landed. Next session: redeploy and spot-check production guides + address lookup with rotated key.
+S11 done. Plan removed.
 
-## Active paths
-- `docs/lifecycle/requirements.md`
-- `docs/lifecycle/understanding.md`
-- `docs/lifecycle/task-breakdown.md`
-- `docs/lifecycle/project-state.json`
+## What shipped
+- Demo-aware brand (`NEXT_PUBLIC_DEMO_MODE`)
+- Vertical packs (`NEXT_PUBLIC_DEMO_VERTICAL`)
+- Seed scripts: history + vertical SKUs
+- Runbook: `docs/demo/RUNBOOK.md`
 
-## Next action
-1. Confirm production deploy after merge.
-2. On live site: open a guide detail; create invoice and print; type a postcode on new invoice.
+## Next action (operator)
+1. Create/use demo Supabase + Vercel.
+2. Set demo env vars (see RUNBOOK).
+3. Bootstrap admin via `/register`.
+4. `DEMO_SEED_CONFIRM=yes npm run seed:demo -- --wipe-first` (or with flags).
+5. `DEMO_SEED_CONFIRM=yes npm run seed:demo:verticals`.
+6. Walk the demo script in the runbook before the client visit.
 
 ## Do not
-- Re-bootstrap full greenfield lifecycle.
-- Revert invoice preview path without checking `invoiceId` preference first.
+- Wipe production customer data.
+- Expect multi-tenant isolation (single company row).

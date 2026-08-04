@@ -6,30 +6,32 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/database.types'
+import {
+  getDefaultCompanyName,
+  getDefaultHomeDescription,
+  getDefaultHomeTitle,
+  getDefaultSiteUrl,
+} from '@/lib/demo/brand'
 
 type CompanySettingsRow = Database['public']['Tables']['company_settings']['Row']
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') || 'https://www.starhawkbm.com'
+export const SITE_URL = getDefaultSiteUrl()
 
-const DEFAULT_SITE_NAME = 'Star Hawk Builders Merchant'
+const DEFAULT_SITE_NAME = getDefaultCompanyName()
 
-// Home page metadata — optimised for local search. Kept hard-coded so the
-// title/description/keywords cannot be accidentally weakened from Settings.
+// Home page metadata — optimised for local search. Demo-aware defaults so
+// DEMO_MODE deployments do not leak production Star Hawk SEO strings.
 //
 // Title is intentionally kept under Google's ~60-character desktop display
 // limit. Anything longer gets truncated or rewritten to the brand name
 // alone, which is what was happening before this change.
-const DEFAULT_HOME_TITLE =
-  'Star Hawk Builders Merchant | Building Materials & Timber'
+const DEFAULT_HOME_TITLE = getDefaultHomeTitle()
 
 // Description is targeted to ~155 chars so it doesn't show the trailing
 // "…" in the SERP snippet.
-const DEFAULT_HOME_DESCRIPTION =
-  'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.'
+const DEFAULT_HOME_DESCRIPTION = getDefaultHomeDescription()
 
-const DEFAULT_OG_TITLE =
-  'Star Hawk Builders Merchant | Building Materials & Timber'
+const DEFAULT_OG_TITLE = getDefaultHomeTitle()
 
 const DEFAULT_SHOP_TITLE = 'Get a Trade Quote'
 const DEFAULT_SHOP_DESCRIPTION =
@@ -41,7 +43,7 @@ const DEFAULT_CART_DESCRIPTION =
 
 const DEFAULT_CATALOG_TITLE_FALLBACK = 'Full Product Catalogue'
 const DEFAULT_CATALOG_DESCRIPTION_FALLBACK =
-  'Browse the complete Star Hawk Builders Merchant catalogue. Request a trade quote on aggregates, cement, bricks, blocks, timber, insulation, roofing, steel and more.'
+  `Browse the complete ${DEFAULT_SITE_NAME} catalogue. Request a trade quote on aggregates, cement, bricks, blocks, timber, insulation, roofing, steel and more.`
 
 // Category and product page templates. Operators can no longer override
 // these; the defaults are already tuned for local SEO.

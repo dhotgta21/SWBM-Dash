@@ -1,11 +1,15 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  getDefaultCompanyName,
+  getDefaultHomeDescription,
+  getDefaultShortName,
+} from '@/lib/demo/brand'
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  let companyName = 'Star Hawk Builders Merchant'
+  let companyName = getDefaultCompanyName()
   // Hard-coded, optimised description so it cannot be overridden accidentally.
-  const description =
-    'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.'
+  const description = getDefaultHomeDescription()
 
   try {
     const admin = createAdminClient()
@@ -23,7 +27,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
 
   return {
     name: companyName,
-    short_name: 'Star Hawk',
+    short_name: getDefaultShortName(),
     description,
     start_url: '/',
     display: 'standalone',

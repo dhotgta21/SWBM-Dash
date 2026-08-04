@@ -60,6 +60,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Clock, Phone, ShieldCheck, Truck } from 'lucide-react'
 import { BrandLogo } from '@/components/layout/BrandLogo'
+import { getDefaultCompanyName, getDefaultHomeDescription } from '@/lib/demo/brand'
 
 interface AuthShellProps {
   children: React.ReactNode
@@ -80,10 +81,9 @@ interface AuthShellProps {
 }
 
 const FALLBACK_PHONE = '01234 567 890'
-const FALLBACK_NAME = 'Star Hawk Builders Merchant'
+const FALLBACK_NAME = getDefaultCompanyName()
 const FALLBACK_IMAGE = '/hero-1-4kgen.webp'
-const FALLBACK_IMAGE_ALT =
-  'Star Hawk Builders Merchant yard exterior at golden hour with stacked timber, blocks and cement bags'
+const FALLBACK_IMAGE_ALT = getDefaultHomeDescription()
 
 export function AuthShell({
   children,

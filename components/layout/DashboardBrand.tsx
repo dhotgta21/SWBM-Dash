@@ -3,6 +3,11 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { BRAND_LOGO_ASPECT } from '@/lib/brand'
+import {
+  DEMO_COMPANY_NAME,
+  getDefaultCompanyName,
+  useStarHawkWordmark,
+} from '@/lib/demo/brand'
 
 type DashboardBrandVariant = 'horizontal' | 'mobile' | 'collapsed'
 
@@ -15,9 +20,11 @@ interface DashboardBrandProps {
 }
 
 const DEFAULT_LOGO = '/Logo.webp'
-const DEFAULT_NAME = 'Star Hawk Builders Merchant'
+const DEFAULT_NAME = getDefaultCompanyName()
 const OFFICIAL_TITLE = 'STAR HAWK'
 const OFFICIAL_SUBTITLE = 'BUILDERS MERCHANT LTD.'
+const DEMO_TITLE = 'DEMO BUILDER'
+const DEMO_SUBTITLE = 'MERCHANT'
 
 // Aspect ratio of public/Logo.png — single source of truth in lib/brand.ts.
 const LOGO_ASPECT = BRAND_LOGO_ASPECT
@@ -37,14 +44,20 @@ export function DashboardBrand({
 }: DashboardBrandProps) {
   const resolvedName = companyName || DEFAULT_NAME
   const resolvedLogo = buildLogoSrc(logoUrl, logoUpdatedAt)
-  const isOfficialBrand = !companyName || companyName === DEFAULT_NAME
+  const isStarHawkWordmark = useStarHawkWordmark(companyName)
+  const isDemoWordmark =
+    !isStarHawkWordmark &&
+    (!companyName || companyName === DEMO_COMPANY_NAME || companyName === DEFAULT_NAME)
+  const isOfficialBrand = isStarHawkWordmark || isDemoWordmark
+  const wordmarkTitle = isStarHawkWordmark ? OFFICIAL_TITLE : DEMO_TITLE
+  const wordmarkSubtitle = isStarHawkWordmark ? OFFICIAL_SUBTITLE : DEMO_SUBTITLE
 
   if (variant === 'collapsed') {
     return (
       <div className={cn('relative h-9 w-9 shrink-0', className)}>
         <Image
           src={resolvedLogo}
-          alt={isOfficialBrand ? `${OFFICIAL_TITLE} ${OFFICIAL_SUBTITLE}` : resolvedName}
+          alt={isOfficialBrand ? `${wordmarkTitle} ${wordmarkSubtitle}` : resolvedName}
           fill
           sizes="40px"
           priority
@@ -67,7 +80,7 @@ export function DashboardBrand({
       >
         <Image
           src={resolvedLogo}
-          alt={isOfficialBrand ? `${OFFICIAL_TITLE} ${OFFICIAL_SUBTITLE}` : resolvedName}
+          alt={isOfficialBrand ? `${wordmarkTitle} ${wordmarkSubtitle}` : resolvedName}
           fill
           sizes="80px"
           priority
@@ -86,7 +99,7 @@ export function DashboardBrand({
                 isMobile ? 'text-sm' : 'text-base'
               )}
             >
-              {OFFICIAL_TITLE}
+              {wordmarkTitle}
             </span>
             <span
               className={cn(
@@ -94,7 +107,7 @@ export function DashboardBrand({
                 isMobile ? 'text-[10px]' : 'text-[11px]'
               )}
             >
-              {OFFICIAL_SUBTITLE}
+              {wordmarkSubtitle}
             </span>
           </div>
         </>

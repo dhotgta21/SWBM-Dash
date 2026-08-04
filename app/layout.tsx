@@ -6,6 +6,12 @@ import './globals.css'
 import { Providers } from './providers'
 import { GlobalJsonLd } from '@/components/seo/GlobalJsonLd'
 import { AppearanceStyles } from '@/components/server/AppearanceStyles'
+import {
+  getDefaultCompanyName,
+  getDefaultHomeDescription,
+  getDefaultSiteUrl,
+  getDefaultTagline,
+} from '@/lib/demo/brand'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,10 +25,9 @@ const geistMono = Geist_Mono({
 
 // Public site URL — used for canonical URLs, OG tags and the sitemap.
 // Override via NEXT_PUBLIC_SITE_URL when deploying to a real domain.
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') || 'https://www.starhawkbm.com'
+const SITE_URL = getDefaultSiteUrl()
 
-const SITE_NAME = 'Star Hawk Builders Merchant'
+const SITE_NAME = getDefaultCompanyName()
 
 // Optimised home-page metadata. These defaults are kept in sync with
 // lib/seo/company-seo.ts so the root layout and the home page emit the
@@ -41,11 +46,11 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 // Short label used in the browser tab and in the default/template titles
 // for sub-pages. Keep this in sync with the favicon (Logo.png) so the
 // tab looks consistent at a glance.
-const TAB_TITLE = 'Star Hawk Builders Merchant'
+const TAB_TITLE = getDefaultCompanyName()
 
 // Tagline used in OG/Twitter cards and as the suffix on sub-page titles.
 // Kept under 60 chars so Google doesn't truncate/rewrite the SERP title.
-const TAGLINE = 'Building Materials & Timber'
+const TAGLINE = getDefaultTagline()
 
 // Site-wide SEO defaults. Per-page metadata in app/page.tsx overrides
 // these for the home page. Other public routes (e.g. /quote) can layer
@@ -56,8 +61,7 @@ export const metadata: Metadata = {
     default: TAB_TITLE,
     template: `%s | ${TAB_TITLE}`,
   },
-  description:
-    'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.',
+  description: getDefaultHomeDescription(),
   applicationName: SITE_NAME,
   keywords: [
     'builders merchant',
@@ -134,13 +138,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} | ${TAGLINE}`,
     description:
-      'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.',
+      getDefaultHomeDescription(),
   },
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} | ${TAGLINE}`,
     description:
-      'Building materials, aggregates, bricks, timber, blocks & more from Star Hawk Builders Merchant. Same-day delivery across Greater London & the Home Counties.',
+      getDefaultHomeDescription(),
   },
   robots: {
     index: true,

@@ -222,7 +222,7 @@ export function InvoiceDocument({ invoice, company, bankDetails, logoSrc, classN
     invoice.delivery_postcode,
   )
 
-  const companyName = company?.company_name || 'Star Hawk Builders Merchant'
+  const companyName = company?.company_name || (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo Builder Merchant' : 'Star Hawk Builders Merchant')
 
   // Header contact info
   const invoicePhones = filterChannelsByContext(company?.phones ?? [], 'invoice')
