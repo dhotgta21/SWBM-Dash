@@ -35,7 +35,14 @@ export async function changeClientAccountPassword(currentPassword: string, newPa
 
   if (error) {
     console.error('changeClientAccountPassword RPC error:', error)
-    return { error: 'Could not change the password. Please try again.' }
+    const msg = (error as { message?: string }).message || ''
+    if (/does not exist|Could not find the function|schema cache/i.test(msg)) {
+      return {
+        error:
+          'Client account password is not available on this database yet (missing user_security RPCs). Ask an operator to run supabase/seed/07_fix_user_security_passwords.sql.',
+      }
+    }
+    return { error: `Could not change the password. ${msg || 'Please try again.'}` }
   }
 
   if (!result?.success) {

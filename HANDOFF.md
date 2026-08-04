@@ -54,6 +54,16 @@ Staff password logins verified via Supabase `signInWithPassword`.
    `supabase/seed/00f_fix_clients_columns.sql` (or `node scripts/apply-00f-clients.mjs`).
    Already applied on the current demo Supabase project (2026-08-04).
 
+## Security passwords (Settings → Security)
+
+If Payments / Client Account / Data Deletion cannot be set:
+
+```bash
+node scripts/apply-07-user-security.mjs
+```
+
+Demo admin action password (all three): `A1b2c3d4@`
+
 ## Data fix status (2026-08-04)
 
 | Issue | Status |
