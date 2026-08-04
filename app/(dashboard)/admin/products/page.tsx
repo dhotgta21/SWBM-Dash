@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getOperatorContext } from '@/lib/auth/context'
 import { ADMIN_LOGIN_PATH } from '@/lib/auth/login-paths'
 import { Button } from '@/components/ui/button'
@@ -125,7 +126,7 @@ function isMissingColumnError(error: { message?: string; code?: string } | null,
   )
 }
 
-type SupabaseLike = Awaited<ReturnType<typeof createClient>>
+type SupabaseLike = ReturnType<typeof createAdminClient>
 
 /**
  * Count permanent vs temporary products. Retries without deleted_at /
@@ -281,7 +282,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const canDelete = ctx.isAdmin || ctx.permissions.products_delete
   const canShowPrices = ctx.isAdmin || ctx.permissions.products_see_prices
 
-  const supabase = await createClient()
+  // Auth cookie client is only needed if we later touch session-bound APIs.
+  // Product list data uses the service-role client so broken SELECT RLS cannot
+  // hide rows from operators who already passed getOperatorContext().
+  await createClient()
+  const supabase = createAdminClient()
 
   const { q = '', view: rawView, tab, filter } = await searchParams
   const query = q

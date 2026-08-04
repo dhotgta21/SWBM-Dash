@@ -74,16 +74,18 @@ confirmed (`05_demo_admin.sql` sets `email_confirmed_at`).
 
 **Products not showing (homepage / catalogue / admin):**
 
-Almost always schema + RLS, not “empty marketing UI”:
+**Fastest fix (one SQL file):** open Supabase → **SQL Editor** → paste and run:
 
-1. Run `supabase/seed/00b_fix_products_columns_and_rls.sql` (adds `deleted_at`,
-   `is_temporary`, fixes anon SELECT policies).
-2. Run `supabase/seed/02_construction_products.sql` (sample SKUs + grants).
-3. Confirm the diagnostic query at the end of `00b` shows
-   `public_catalogue_count > 0`.
+`supabase/seed/00_ALL_IN_ONE_fix_products.sql`
 
-Without `deleted_at` / `is_temporary`, `/admin/products` filters fail and the
-list looks empty even when rows exist.
+You must see `public_visible` **> 0** in the result. Then hard-refresh the site
+(and redeploy if you have not pulled the latest app code).
+
+Also ensure Vercel has **`SUPABASE_SERVICE_ROLE_KEY`** set (same project as the
+anon URL/key). The app now reads the catalogue with the service role so broken
+anon RLS cannot hide products.
+
+Without that env key, only anon RLS works and empty lists are common on partial schemas.
 
 **Seed safety**
 

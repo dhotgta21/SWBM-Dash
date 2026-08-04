@@ -17,11 +17,11 @@ S11 residual fixes (demo campaign already complete).
    - Fix: clearer diagnostics; demo fallback that verifies password via Postgres (`crypt`) then mints a session with admin `generateLink` + `verifyOtp` when CAPTCHA-shaped errors occur (needs `POSTGRES_URL*`).
 
 ## Operator next steps (required on live Supabase)
-1. SQL Editor: run **`00b_fix_products_columns_and_rls.sql`**, then **`02_construction_products.sql`** (if catalogue empty).
-2. Auth → Attack Protection → **CAPTCHA OFF** (recommended).
-3. Ensure Vercel has `POSTGRES_URL` or `POSTGRES_URL_NON_POOLING` if CAPTCHA cannot be turned off (enables demo password bypass).
-4. Run **`05_demo_admin.sql`** if staff login user missing: `dhotgta@gmail.com` / `A1b2c3d4@`.
-5. Redeploy app so auth + products code ships.
+1. **Products still empty?** SQL Editor: run **`supabase/seed/00_ALL_IN_ONE_fix_products.sql`** once. Result must show `public_visible > 0`.
+2. Vercel env: **`SUPABASE_SERVICE_ROLE_KEY`** must match the same project as `NEXT_PUBLIC_SUPABASE_URL` (app reads products via service role).
+3. Redeploy after pulling latest (service-role product reader).
+4. Auth → Attack Protection → **CAPTCHA OFF** (recommended).
+5. Run **`05_demo_admin.sql`** if staff login user missing: `dhotgta@gmail.com` / `A1b2c3d4@`.
 
 ## Do not
 - Wipe production customer data.

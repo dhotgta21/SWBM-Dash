@@ -1,14 +1,12 @@
 // lib/public-products.ts
 // Server-side helpers for fetching products for the public shop.
-// Uses the public/anon client so the pages work for anonymous visitors.
-// The `products` RLS policy must allow `anon` SELECT access for these
-// helpers to function.
 //
-// Returned rows include only what the public needs to see:
-// productId, code, name, unit, price, category, description, imageUrl, etc.
-// We deliberately do NOT expose cost prices, internal notes, or supplier
-// metadata.
+// Prefer the service-role client (createProductReader) so catalogue pages
+// still work when anon RLS is broken or missing on a demo DB. Only
+// public-safe columns are selected; cost/internal fields are never returned.
+// Falls back to the anon key when the service role is not configured.
 
+import { createProductReader } from '@/lib/supabase/product-reader'
 import { createPublicClient } from '@/lib/supabase/public'
 import { sanitizeLikeTerm } from '@/lib/search'
 
@@ -156,7 +154,7 @@ async function getActiveCampaignsForProducts(
 ): Promise<Map<string, { discountPercent: number; label: string | null }>> {
   if (productIds.length === 0) return new Map()
 
-  const supabase = createPublicClient()
+  const { client: supabase } = createProductReader()
   const { data: memberships, error } = await supabase
     .from('campaign_products')
     .select('product_id, campaigns(id, discount_percent, starts_at, ends_at, label, is_paused, deleted_at)')
@@ -395,64 +393,81 @@ function rowToProduct(row: {
  * hundred lines max) that one round-trip is fine. If we ever cross a
  * few thousand products, switch to a keyset-paginated API and a
  * client-side infinite list.
+ *
+ * Uses the service-role reader when available so broken anon RLS cannot
+ * blank the shop. Application filters still enforce is_active + permanent.
  */
 export async function listPublicProducts(): Promise<PublicProduct[]> {
   try {
-    const supabase = createPublicClient()
-    // Prefer permanent catalogue only. Fall back when is_temporary is missing
-    // on partial demo schemas (RLS may still hide temps when 00b has been run).
-    let fullResult = await withRetry(() =>
-      supabase
-        .from('products')
-        .select(PUBLIC_PRODUCT_COLUMNS)
-        .eq('is_active', true)
-        .eq('is_temporary', false)
-        .order('category', { ascending: true })
-        .order('name', { ascending: true })
-    )
+    const { client: supabase, mode } = createProductReader()
 
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'is_temporary')) {
-      console.warn('listPublicProducts: is_temporary missing; loading without that filter')
-      fullResult = await withRetry(() =>
-        supabase
-          .from('products')
-          .select(PUBLIC_PRODUCT_COLUMNS)
-          .eq('is_active', true)
-          .order('category', { ascending: true })
-          .order('name', { ascending: true })
-      )
+    const columnSets = [
+      PUBLIC_PRODUCT_COLUMNS,
+      PUBLIC_PRODUCT_COLUMNS_NO_SALE,
+      PUBLIC_PRODUCT_COLUMNS_FALLBACK,
+      PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY,
+      'id, code, name, description, unit, default_price, category, image_url, updated_at',
+    ]
+
+    let lastError: string | null = null
+
+    for (const columns of columnSets) {
+      // Try with is_temporary filter first, then without if column missing.
+      for (const useTempFilter of [true, false] as const) {
+        const result = await withRetry(() => {
+          let q = supabase
+            .from('products')
+            .select(columns)
+            .eq('is_active', true)
+            .order('category', { ascending: true })
+            .order('name', { ascending: true })
+          if (useTempFilter) {
+            q = q.eq('is_temporary', false)
+          }
+          return q
+        })
+
+        if (result.error && useTempFilter && isMissingColumnError(result.error, 'is_temporary')) {
+          continue
+        }
+
+        if (
+          result.error &&
+          (isMissingColumnError(result.error, 'sale_price') ||
+            isMissingColumnError(result.error, 'price_includes_vat') ||
+            isMissingColumnError(result.error, 'price_from') ||
+            /column .* does not exist/i.test(result.error.message ?? ''))
+        ) {
+          lastError = formatSupabaseError(result)
+          break // next column set
+        }
+
+        if (result.error) {
+          lastError = formatSupabaseError(result)
+          break
+        }
+
+        const rows = result.data ?? []
+        if (rows.length === 0) {
+          const { count, error: countErr } = await supabase
+            .from('products')
+            .select('id', { count: 'exact', head: true })
+          console.warn('listPublicProducts: 0 active products', {
+            mode,
+            totalRows: countErr ? 'count-error' : count ?? 0,
+            countErr: countErr?.message,
+          })
+          return []
+        }
+
+        const products = (rows as unknown as Parameters<typeof rowToProduct>[0][]).map(rowToProduct)
+        await applyActiveCampaignsToProducts(products)
+        return products
+      }
     }
 
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'sale_price')) {
-      console.warn('listPublicProducts: sale_price missing, falling back to legacy columns')
-      return selectWithFallback(supabase, PUBLIC_PRODUCT_COLUMNS_NO_SALE)
-    }
-
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'price_includes_vat')) {
-      console.warn(
-        'listPublicProducts: price_includes_vat missing, falling back to pre-094 columns'
-      )
-      return selectWithFallback(supabase, PUBLIC_PRODUCT_COLUMNS_FALLBACK)
-    }
-
-    if (fullResult.error && isMissingColumnError(fullResult.error, 'price_from')) {
-      console.warn('listPublicProducts: price_from missing, falling back to legacy columns')
-      return selectWithFallback(supabase, PUBLIC_PRODUCT_COLUMNS_FALLBACK_LEGACY)
-    }
-
-    if (fullResult.error) {
-      console.error('listPublicProducts: database error', formatSupabaseError(fullResult))
-      return []
-    }
-
-    if (!fullResult.data) {
-      console.warn('listPublicProducts: no data returned')
-      return []
-    }
-
-    const products = fullResult.data.map(rowToProduct)
-    await applyActiveCampaignsToProducts(products)
-    return products
+    console.error('listPublicProducts: all column sets failed', { mode, lastError })
+    return []
   } catch (err) {
     console.error('listPublicProducts: unexpected error', err)
     return []
@@ -462,20 +477,38 @@ export async function listPublicProducts(): Promise<PublicProduct[]> {
 /** Summary list for category navigation / landing-page cross-sell. */
 export async function listPublicCategories(): Promise<PublicCategorySummary[]> {
   try {
-    const supabase = createPublicClient()
-    const { data, error } = await supabase
+    const { client: supabase, mode } = createProductReader()
+    let data: Array<{ category: string | null; image_url: string | null }> | null = null
+    let error: { message?: string; code?: string } | null = null
+
+    // Prefer excluding walk-in temps when the column exists.
+    const withTemp = await supabase
       .from('products')
       .select('category, image_url')
       .eq('is_active', true)
+      .eq('is_temporary', false)
       .not('category', 'is', null)
 
+    if (withTemp.error && isMissingColumnError(withTemp.error, 'is_temporary')) {
+      const retry = await supabase
+        .from('products')
+        .select('category, image_url')
+        .eq('is_active', true)
+        .not('category', 'is', null)
+      data = retry.data as typeof data
+      error = retry.error
+    } else {
+      data = withTemp.data as typeof data
+      error = withTemp.error
+    }
+
     if (error) {
-      console.error('listPublicCategories: database error', error)
+      console.error('listPublicCategories: database error', { mode, error })
       return []
     }
 
     if (!data) {
-      console.warn('listPublicCategories: no data returned')
+      console.warn('listPublicCategories: no data returned', { mode })
       return []
     }
 
@@ -508,7 +541,7 @@ export async function listPublicCategories(): Promise<PublicCategorySummary[]> {
  */
 export async function getRedirectedProductCode(code: string): Promise<string | null> {
   try {
-    const supabase = createPublicClient()
+    const { client: supabase } = createProductReader()
     const { data, error } = await supabase
       .from('product_redirects')
       .select('new_code')
@@ -532,7 +565,7 @@ export async function getRedirectedProductCode(code: string): Promise<string | n
 /** Fetch a single active product by its product code. */
 export async function getPublicProductByCode(code: string): Promise<PublicProduct | null> {
   try {
-    const supabase = createPublicClient()
+    const { client: supabase } = createProductReader()
     const fullResult = await withRetry(() =>
       supabase
         .from('products')

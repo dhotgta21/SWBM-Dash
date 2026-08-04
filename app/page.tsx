@@ -37,7 +37,7 @@
 import type { Metadata } from 'next'
 import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
-import { createPublicClient } from '@/lib/supabase/public'
+import { createProductReader } from '@/lib/supabase/product-reader'
 import { CartProvider } from '@/lib/cart/cart-context'
 import { loadSeoConfig, canonical as canonicalUrl } from '@/lib/seo/company-seo'
 import { SiteHeader } from '@/components/landing/SiteHeader'
@@ -147,17 +147,20 @@ interface CategoriesLoadResult {
 }
 
 async function loadCategories(): Promise<CategoriesLoadResult> {
-  // Public (anon) client reads the product catalogue. RLS now allows
-  // public SELECT on products, so this works without a user session.
+  // Prefer service role so broken anon RLS cannot blank category counts.
+  // Falls back to anon when SUPABASE_SERVICE_ROLE_KEY is missing.
   let supabase
+  let mode: 'service_role' | 'anon' = 'anon'
   try {
-    supabase = createPublicClient()
+    const reader = createProductReader()
+    supabase = reader.client
+    mode = reader.mode
   } catch (err) {
-    console.error('loadCategories: missing public Supabase credentials', err)
+    console.error('loadCategories: missing Supabase credentials', err)
     return {
       categories: [],
       error:
-        'Supabase public credentials are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY on Vercel.',
+        'Supabase credentials are not configured. Set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY on Vercel.',
     }
   }
 
@@ -184,7 +187,7 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
   }
 
   if (error) {
-    console.error('loadCategories: database error', error)
+    console.error('loadCategories: database error', { mode, error })
     // Return empty list without a user-facing error when the schema is incomplete.
     // The landing page still renders category cards from CATEGORY_META.
     return { categories: [] }
@@ -202,15 +205,14 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
     .sort((a, b) => a.name.localeCompare(b.name))
 
   if (categories.length === 0) {
-    // Diagnostics: if the filtered query returned nothing, log the raw
-    // product state so we can tell whether the table is empty, products
-    // are inactive, or categories are missing.
+    // Diagnostics: is the table empty, or are products inactive / uncategorised?
     const { count, error: countErr } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
     const total = countErr ? 'count-error' : count ?? 0
     console.warn(
       'loadCategories: no categories returned.',
+      'mode:', mode,
       'filtered rows:', data.length,
       'total products:', total,
       countErr ?? ''
@@ -219,6 +221,13 @@ async function loadCategories(): Promise<CategoriesLoadResult> {
       return {
         categories: [],
         error: `${total} product(s) exist but none are active with a category. Check the products table for is_active = true and a non-empty category.`,
+      }
+    }
+    if (total === 0) {
+      return {
+        categories: [],
+        error:
+          'No products in the database. Run supabase/seed/02_construction_products.sql (after 00b_fix_products_columns_and_rls.sql) in the Supabase SQL Editor.',
       }
     }
   }
