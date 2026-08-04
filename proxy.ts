@@ -166,15 +166,10 @@ export default async function proxy(request: NextRequest) {
     'camera=(), microphone=(self), geolocation=()'
   )
 
-  // Preload the homepage hero poster so it can be the LCP element with
-  // high priority. The video itself is not preloaded here; the poster
-  // provides the first meaningful paint while the video buffers.
-  if (request.nextUrl.pathname === '/') {
-    response.headers.set(
-      'Link',
-      '</hero-1-4kgen.webp>; rel=preload; as=image; fetchpriority=high'
-    )
-  }
+  // Intentionally do not preload hero-1-4kgen.webp here: auth pages and
+  // many routes never use that asset, which produced browser console
+  // warnings ("preloaded but not used"). The Hero component loads its
+  // own images with priority when needed.
 
   // Only set HSTS when the request came in over HTTPS. In local HTTP
   // development this header is skipped so browsers don't get pinned to

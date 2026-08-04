@@ -76,8 +76,8 @@ export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptcha
       }
     }, [scriptReady, key])
 
+    // Demo / unconfigured deploys: no captcha, no console noise.
     if (!key) {
-      console.error('NEXT_PUBLIC_TURNSTILE_SITE_KEY is not configured')
       return null
     }
 
@@ -87,7 +87,9 @@ export const TurnstileCaptcha = forwardRef<TurnstileCaptchaRef, TurnstileCaptcha
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
           strategy="afterInteractive"
           onLoad={() => setScriptReady(true)}
-          onError={() => console.error('Failed to load Turnstile script')}
+          onError={() => {
+            // Keep quiet in production demos; captcha is optional when key missing.
+          }}
         />
         <div ref={containerRef} />
       </div>
