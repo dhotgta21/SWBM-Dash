@@ -56,7 +56,13 @@ When demo mode is on, the app **does not require**:
 | **GoAddress / Integrations UI** | Settings → Integrations is hidden. Postcode lookup does not call GoAddress (manual address entry; free postcodes.io only). |
 | **Invoice “email PDF”** | Returns a clear demo message; use download / share link. |
 
-**Supabase Auth tip:** In the Supabase project, leave **CAPTCHA protection off** (or demo sign-in can still fail at the Auth API even though our forms skip Turnstile).
+**Supabase CAPTCHA (required for admin login without Turnstile):**
+
+1. Supabase Dashboard → **Authentication** → **Attack Protection** (or Bot and Abuse Protection)  
+2. **Turn CAPTCHA / Cloudflare Turnstile OFF** for this demo project  
+3. Save  
+
+If CAPTCHA stays on, staff sign-in fails with a red `{}` (or a clearer message after the latest deploy).
 
 **Seed safety**
 
