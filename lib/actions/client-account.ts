@@ -254,7 +254,20 @@ export async function depositToClientAccount(data: ClientDepositData) {
   })
 
   if (error) {
-    return { error: safeActionError('clientAccount.depositToClientAccount', error, 'Could not record the deposit.') }
+    const msg = (error as { message?: string }).message || ''
+    if (/does not exist|Could not find the function|schema cache/i.test(msg)) {
+      return {
+        error:
+          'Client wallet is not available on this database yet (missing deposit_to_client_account). Run supabase/seed/08_fix_client_wallet.sql (or node scripts/apply-08-client-wallet.mjs).',
+      }
+    }
+    return {
+      error: safeActionError(
+        'clientAccount.depositToClientAccount',
+        error,
+        msg ? `Could not record the deposit: ${msg}` : 'Could not record the deposit.'
+      ),
+    }
   }
 
   await auditClientAccountAction(supabase, 'deposit', {
