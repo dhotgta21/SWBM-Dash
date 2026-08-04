@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
 import { getTurnstileToken } from '@/lib/turnstile'
 import { getClientIp } from '@/lib/ip'
+import { shouldBypassCaptcha } from '@/lib/demo/mode'
 
 const FIRST_ADMIN_IP_LIMIT_MAX = 5
 const FIRST_ADMIN_IP_LIMIT_WINDOW_MS = 15 * 60_000
@@ -36,6 +37,69 @@ export async function registerFirstAdmin(
   }
   if (password !== confirmPassword) {
     return { error: 'Passwords do not match.' }
+  }
+
+  // Demo mode: no captcha, no confirmation email. Create a confirmed admin
+  // via service role so the sales demo only needs Supabase.
+  if (shouldBypassCaptcha()) {
+    const headersList = await headers()
+    const ip = getClientIp(headersList)
+    const supabase = await createClient()
+
+    const rl = await rateLimit(
+      supabase,
+      `register-first-admin-ip:${ip}`,
+      FIRST_ADMIN_IP_LIMIT_MAX,
+      FIRST_ADMIN_IP_LIMIT_WINDOW_MS,
+      { failOpen: false }
+    )
+    if (!rl.allowed) {
+      return { error: 'Too many attempts. Please try again later.' }
+    }
+
+    const adminClient = createAdminClient()
+    const { count, error: countError } = await adminClient
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('registerFirstAdmin: profile count error:', countError)
+      return { error: 'Could not verify registration status. Please try again later.' }
+    }
+    if ((count ?? 0) > 0) {
+      return { error: 'An admin already exists. Please ask them to promote you in Settings.' }
+    }
+
+    const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    })
+    if (createErr || !created.user) {
+      console.error('registerFirstAdmin (demo): createUser error:', createErr)
+      return { error: 'Could not create account. Please try again later.' }
+    }
+
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInErr) {
+      console.error('registerFirstAdmin (demo): sign-in error:', signInErr)
+      return {
+        error:
+          'Account was created but automatic sign-in failed. Sign in with the same email and password.',
+      }
+    }
+
+    const claimResult = await claimFirstAdminForUser(created.user.id)
+    if (claimResult.error) {
+      try {
+        await adminClient.auth.admin.deleteUser(created.user.id)
+      } catch (cleanupErr) {
+        console.error('registerFirstAdmin (demo): failed to clean up unclaimed account:', cleanupErr)
+      }
+      return claimResult
+    }
+    return claimResult
   }
 
   // Pass the Turnstile token to Supabase Auth so Attack Protection can verify
@@ -109,8 +173,8 @@ export async function registerFirstAdmin(
     // bootstrap race), the just-created account must not persist as a
     // default-role staff user. Best-effort cleanup; ignore failures.
     try {
-      const adminClient = await createAdminClient()
-      await adminClient.auth.admin.deleteUser(user.id)
+      const cleanupClient = await createAdminClient()
+      await cleanupClient.auth.admin.deleteUser(user.id)
     } catch (cleanupErr) {
       console.error('registerFirstAdmin: failed to clean up unclaimed account:', cleanupErr)
     }

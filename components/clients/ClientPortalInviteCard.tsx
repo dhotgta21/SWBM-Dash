@@ -97,7 +97,13 @@ export function ClientPortalInviteCard({
         setError(result.error)
         return
       }
-      setSuccess(`Invite sent to ${clientEmail}.`)
+      if (result.data?.demoInviteUrl) {
+        setSuccess(
+          `Demo mode: invite created without email. Copy this link:\n${result.data.demoInviteUrl}`
+        )
+      } else {
+        setSuccess(`Invite sent to ${clientEmail}.`)
+      }
       router.refresh()
     })
   }
@@ -132,7 +138,15 @@ export function ClientPortalInviteCard({
         return
       }
       const email = result.data?.targetEmail ?? clientEmail
-      setSuccess(`Password reset email sent to ${email}. They have one hour to click the link before it expires.`)
+      if (result.data?.demoResetUrl) {
+        setSuccess(
+          `Demo mode: password reset created without email for ${email}. Copy this link:\n${result.data.demoResetUrl}`
+        )
+      } else {
+        setSuccess(
+          `Password reset email sent to ${email}. They have one hour to click the link before it expires.`
+        )
+      }
       router.refresh()
     })
   }
@@ -168,7 +182,7 @@ export function ClientPortalInviteCard({
         )}
         {success && (
           <Alert variant="success">
-            <AlertDescription>{success}</AlertDescription>
+            <AlertDescription className="whitespace-pre-wrap break-all">{success}</AlertDescription>
           </Alert>
         )}
 

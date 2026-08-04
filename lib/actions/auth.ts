@@ -11,6 +11,7 @@ import { ADMIN_LOGIN_PATH } from '@/lib/auth/login-paths'
 import { getTurnstileToken } from '@/lib/turnstile'
 import { getClientIp } from '@/lib/ip'
 import { safeActionError } from '@/lib/errors'
+import { shouldBypassCaptcha } from '@/lib/demo/mode'
 import { Client as PostgresClient } from 'pg'
 
 // Two-tier rate limiting:
@@ -220,10 +221,11 @@ export async function signIn(formData: FormData) {
 
   // When Supabase Auth Attack Protection is enabled, the Turnstile token must
   // be passed directly to Supabase Auth so it can verify it at the auth API
-  // level. Do not verify it ourselves here — that would consume the single-use
+  // level. Do not verify it ourselves here - that would consume the single-use
   // token and cause Supabase to reject it as a duplicate.
+  // Demo mode skips captcha entirely (Turnstile is not configured).
   const captchaToken = getTurnstileToken(formData)
-  if (!captchaToken) {
+  if (!shouldBypassCaptcha() && !captchaToken) {
     return { error: 'Please complete the security check.' }
   }
 
@@ -272,7 +274,7 @@ export async function signIn(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
-    options: { captchaToken },
+    ...(captchaToken ? { options: { captchaToken } } : {}),
   })
 
   if (error) {
@@ -451,9 +453,9 @@ export async function resetPassword(formData: FormData) {
   }
 
   // Pass the Turnstile token to Supabase Auth so Attack Protection can verify
-  // it at the auth API level.
+  // it at the auth API level. Demo mode skips captcha.
   const captchaToken = getTurnstileToken(formData)
-  if (!captchaToken) {
+  if (!shouldBypassCaptcha() && !captchaToken) {
     return { error: 'Please complete the security check.' }
   }
 
@@ -477,7 +479,7 @@ export async function resetPassword(formData: FormData) {
   }
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/callback?next=/update-password`,
-    captchaToken,
+    ...(captchaToken ? { captchaToken } : {}),
   })
 
   if (error) {

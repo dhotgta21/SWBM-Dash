@@ -58,6 +58,7 @@ import {
 } from '@/lib/email/password-reset-template'
 import { buildEmailFromHeader } from '@/lib/email/from-header'
 import { getResendApiKey, getResendFromAddress } from '@/lib/resend'
+import { shouldBypassOutboundEmail } from '@/lib/demo/mode'
 
 interface ActionSuccess<T = undefined> {
   ok: true
@@ -167,7 +168,11 @@ async function sendResetEmail(opts: {
   resetUrl: string
   inviterName: string | null
   baseUrl: string | null
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
+  if (shouldBypassOutboundEmail()) {
+    return { ok: true, skipped: true }
+  }
+
   const apiKey = await getResendApiKey()
   const envFrom = await getResendFromAddress()
   if (!apiKey || !envFrom) {
@@ -241,7 +246,7 @@ function rateLimitMessage(retryAfter: number): string {
  */
 export async function adminSendStaffPasswordReset(
   formData: FormData
-): Promise<ActionResult<{ targetEmail: string }>> {
+): Promise<ActionResult<{ targetEmail: string; demoResetUrl?: string }>> {
   // Server-side config guard. Fail-fast with the precise missing env so
   // the operator isn't guessing what to set on Vercel.
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SECRET_KEY) {
@@ -251,13 +256,15 @@ export async function adminSendStaffPasswordReset(
         'Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to .env.local / Vercel env, then retry.',
     }
   }
-  const resendApiKey = await getResendApiKey()
-  const resendFromAddress = await getResendFromAddress()
-  if (!resendApiKey || !resendFromAddress) {
-    return {
-      ok: false,
-      error:
-        'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+  if (!shouldBypassOutboundEmail()) {
+    const resendApiKey = await getResendApiKey()
+    const resendFromAddress = await getResendFromAddress()
+    if (!resendApiKey || !resendFromAddress) {
+      return {
+        ok: false,
+        error:
+          'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+      }
     }
   }
 
@@ -376,11 +383,12 @@ export async function adminSendStaffPasswordReset(
     }
   }
 
+  const resetUrl = linkData.properties.action_link
   const emailResult = await sendResetEmail({
     to: profile.email,
     recipientName: profile.full_name ?? null,
     portalLabel: profile.role === 'picker' ? 'warehouse picking app' : 'operator dashboard',
-    resetUrl: linkData.properties.action_link,
+    resetUrl,
     inviterName: inviterProfile?.full_name ?? null,
     baseUrl,
   })
@@ -393,7 +401,13 @@ export async function adminSendStaffPasswordReset(
   // is_active row alone — the admin's intent here is "let them back in",
   // and toggling is_active automatically would be scope creep.
   revalidatePath('/settings')
-  return { ok: true, data: { targetEmail: profile.email } }
+  return {
+    ok: true,
+    data: {
+      targetEmail: profile.email,
+      ...(emailResult.skipped ? { demoResetUrl: resetUrl } : {}),
+    },
+  }
 }
 
 /**
@@ -404,7 +418,7 @@ export async function adminSendStaffPasswordReset(
  */
 export async function adminSendClientPasswordReset(
   clientIdInput: string
-): Promise<ActionResult<{ targetEmail: string }>> {
+): Promise<ActionResult<{ targetEmail: string; demoResetUrl?: string }>> {
   // Server-side config guard.
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SECRET_KEY) {
     return {
@@ -413,13 +427,15 @@ export async function adminSendClientPasswordReset(
         'Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to .env.local / Vercel env, then retry.',
     }
   }
-  const resendApiKey = await getResendApiKey()
-  const resendFromAddress = await getResendFromAddress()
-  if (!resendApiKey || !resendFromAddress) {
-    return {
-      ok: false,
-      error:
-        'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+  if (!shouldBypassOutboundEmail()) {
+    const resendApiKey = await getResendApiKey()
+    const resendFromAddress = await getResendFromAddress()
+    if (!resendApiKey || !resendFromAddress) {
+      return {
+        ok: false,
+        error:
+          'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+      }
     }
   }
 
@@ -529,11 +545,12 @@ export async function adminSendClientPasswordReset(
   const recipientName =
     [clientRow.first_name, clientRow.last_name].filter(Boolean).join(' ').trim() || null
 
+  const resetUrl = linkData.properties.action_link
   const emailResult = await sendResetEmail({
     to: profile.email ?? clientRow.email,
     recipientName,
     portalLabel: 'client portal',
-    resetUrl: linkData.properties.action_link,
+    resetUrl,
     inviterName: inviterProfile?.full_name ?? null,
     baseUrl,
   })
@@ -545,6 +562,9 @@ export async function adminSendClientPasswordReset(
   revalidatePath(`/clients/${clientId}`)
   return {
     ok: true,
-    data: { targetEmail: profile.email ?? clientRow.email },
+    data: {
+      targetEmail: profile.email ?? clientRow.email,
+      ...(emailResult.skipped ? { demoResetUrl: resetUrl } : {}),
+    },
   }
 }

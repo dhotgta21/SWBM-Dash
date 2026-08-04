@@ -15,6 +15,7 @@ import {
   normalizeGoAddressToken,
   type PostcodeLookupResult,
 } from '@/lib/postcode/goaddress-map'
+import { shouldDisableExternalApis } from '@/lib/demo/mode'
 
 // Do NOT re-export types from this 'use server' file. Next.js treats every
 // export as a Server Action entry and fails the build for non-async exports
@@ -311,6 +312,25 @@ export async function lookupPostcode(
     const compact = compactPostcode(normalized)
     if (compact.length < 5) {
       return { error: 'Please enter a full UK postcode' }
+    }
+  }
+
+  // Demo mode: never call GoAddress. Use free postcodes.io for basic
+  // postcode validation / area only; addresses are entered manually.
+  if (shouldDisableExternalApis()) {
+    const free = await lookupPostcodesIO(normalized)
+    if (!('error' in free)) {
+      return {
+        ...free,
+        suggestions: [],
+        provider: 'postcodes.io',
+        softError:
+          'Demo mode: enter the address manually. Paid postcode lookup is disabled.',
+      }
+    }
+    return {
+      error:
+        'Enter the address manually (demo mode does not use GoAddress).',
     }
   }
 

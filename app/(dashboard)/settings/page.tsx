@@ -3,6 +3,7 @@ import { UserCircle, Building2, Palette, Users, ShieldCheck, Plug } from 'lucide
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SettingsCategoryCard } from '@/components/settings/SettingsCategoryCard'
 import { resolveSettingsAccess } from '@/lib/auth/settings-access'
+import { shouldHideIntegrations } from '@/lib/demo/mode'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,7 @@ const TAB_REDIRECTS: Record<string, string> = {
   permissions: '/settings/team?tab=permissions',
   access: '/settings/team?tab=access',
   'data-protection': '/settings/security',
+  // Integrations only in non-demo; demo redirects to settings hub
   ai: '/settings/integrations',
 }
 
@@ -29,10 +31,15 @@ interface SettingsPageProps {
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const access = await resolveSettingsAccess()
+  const hideIntegrations = shouldHideIntegrations()
 
   const { tab } = await searchParams
   if (tab && TAB_REDIRECTS[tab]) {
-    redirect(TAB_REDIRECTS[tab])
+    if (tab === 'ai' && hideIntegrations) {
+      // stay on hub
+    } else {
+      redirect(TAB_REDIRECTS[tab])
+    }
   }
 
   // Account (profile / password / 2FA) and Security (action passwords) are
@@ -88,7 +95,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           title="Security"
           description="Set your personal passwords for client account actions and data deletion."
         />
-        {showAdminOnly && (
+        {showAdminOnly && !hideIntegrations && (
           <SettingsCategoryCard
             href="/settings/integrations"
             icon={Plug}

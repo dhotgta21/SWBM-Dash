@@ -346,7 +346,13 @@ export function TeamManagement({
       const result = await inviteStaffUser(formData)
       if (result.error) setError(result.error)
       else {
-        setSuccess('Invite sent. The user will receive an email to register their account.')
+        if ('demoInviteUrl' in result && result.demoInviteUrl) {
+          setSuccess(
+            `Demo mode: user created without email. Copy this invite link and open it to set their password:\n${result.demoInviteUrl}`
+          )
+        } else {
+          setSuccess('Invite sent. The user will receive an email to register their account.')
+        }
         setInviteName('')
         setInviteEmail('')
         setInviteRole('staff')
@@ -406,9 +412,15 @@ export function TeamManagement({
         return
       }
       const email = result.data?.targetEmail ?? member.email
-      setSuccess(
-        `Password reset email sent to ${email}. The link expires in one hour and can be used once.`
-      )
+      if (result.data?.demoResetUrl) {
+        setSuccess(
+          `Demo mode: password reset created without email for ${email}. Copy this link:\n${result.data.demoResetUrl}`
+        )
+      } else {
+        setSuccess(
+          `Password reset email sent to ${email}. The link expires in one hour and can be used once.`
+        )
+      }
       router.refresh()
     })
   }
@@ -422,7 +434,7 @@ export function TeamManagement({
       )}
       {success && (
         <Alert variant="success">
-          <AlertDescription>{success}</AlertDescription>
+          <AlertDescription className="whitespace-pre-wrap break-all">{success}</AlertDescription>
         </Alert>
       )}
 

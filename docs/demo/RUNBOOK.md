@@ -42,6 +42,17 @@ DEMO_VERTICAL=construction
 
 Valid verticals: `construction` | `plumbing` | `electrical` | `windows` | `tile`
 
+When demo mode is on, the app **does not require**:
+
+| Service | Demo behaviour |
+|---------|----------------|
+| **Resend** | No outbound email. Staff/client invites and password resets show a **copyable link** in the UI instead. |
+| **Cloudflare Turnstile** | Captcha hidden and skipped on login / register / public forms. |
+| **GoAddress / Integrations UI** | Settings → Integrations is hidden. Postcode lookup does not call GoAddress (manual address entry; free postcodes.io only). |
+| **Invoice “email PDF”** | Returns a clear demo message; use download / share link. |
+
+**Supabase Auth tip:** In the Supabase project, leave **CAPTCHA protection off** (or demo sign-in can still fail at the Auth API even though our forms skip Turnstile).
+
 **Seed safety**
 
 ```env
@@ -89,11 +100,18 @@ No multi-tenant switcher UI is required; env is intentional for sales control.
 1. **Homepage** – vertical hero story, categories, trust strip  
 2. **Catalogue / product** – open a stocked line  
 3. **Quote** – add items to cart (optional)  
-4. **Staff login** – `/admin-login` (or your `ADMIN_LOGIN_PATH`)  
+4. **Staff login** – `/admin-login` (no captcha in demo mode)  
 5. **Dashboard** – KPIs and charts populated by seed  
 6. **Clients** – open a “hot” trade account with long history  
 7. **Invoice** – open a multi-line invoice, show PDF / share if useful  
-8. **Settings → Brand** – show logo/colours are configurable  
+8. **Settings → Team** – invite staff / picker / driver (copy invite link; no Resend)  
+9. **Settings → Brand** – show logo/colours are configurable  
+
+### Creating team members in demo (no email)
+
+1. Settings → Team → invite with role `staff` | `admin` | `picker` | `driver`.  
+2. Success message includes a **one-time invite URL**.  
+3. Open that URL (incognito if needed) → set password → sign in as that role.
 
 ## 6. Reset before the next meeting
 

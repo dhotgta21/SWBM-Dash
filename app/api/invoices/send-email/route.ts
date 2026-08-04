@@ -34,6 +34,7 @@ import { renderInvoicePdf } from '@/lib/invoices/render-pdf'
 import { getLogoDataUrl } from '@/lib/logo'
 import { type InvoicePdfProps } from '@/components/invoices/InvoicePdfTemplate'
 import { previewInvoiceSchema } from '@/lib/invoices/preview-schema'
+import { shouldBypassOutboundEmail } from '@/lib/demo/mode'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -266,6 +267,16 @@ export async function POST(request: NextRequest) {
   const fromName =
     companyRow?.email_from_name || companyRow?.company_name || 'Star Hawk Builders Merchant'
   const replyTo = (companyRow?.email_reply_to || companyRow?.email || '').trim() || undefined
+
+  if (shouldBypassOutboundEmail()) {
+    return NextResponse.json(
+      {
+        error:
+          'Demo mode: outbound email is disabled. Download the PDF or use share link instead.',
+      },
+      { status: 400 }
+    )
+  }
 
   const apiKey = await getResendApiKey()
   const envFrom = await getResendFromAddress()

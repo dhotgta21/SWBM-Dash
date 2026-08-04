@@ -21,6 +21,7 @@ import {
 } from '@/lib/email/staff-invite-template'
 import { buildEmailFromHeader } from '@/lib/email/from-header'
 import { getResendApiKey, getResendFromAddress } from '@/lib/resend'
+import { shouldBypassOutboundEmail } from '@/lib/demo/mode'
 
 const InviteSchema = z.object({
   fullName: z
@@ -43,7 +44,8 @@ async function resolveBaseUrlAsync(): Promise<string | null> {
  * link and sends a branded email via Resend. Upon accepting, the requested
  * role is assigned by the handle_new_user() trigger.
  *
- * Returns `{ ok: true }` on success, or `{ error: string }` on failure.
+ * Returns `{ ok: true, demoInviteUrl? }` on success, or `{ error: string }` on failure.
+ * In demo mode email is skipped and `demoInviteUrl` is returned for the operator to copy.
  */
 export async function inviteStaffUser(formData: FormData) {
   try {
@@ -56,12 +58,17 @@ export async function inviteStaffUser(formData: FormData) {
           'Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to .env.local / Vercel env, then retry.',
       }
     }
-    const resendApiKey = await getResendApiKey()
-    const resendFromAddress = await getResendFromAddress()
-    if (!resendApiKey || !resendFromAddress) {
-      return {
-        error:
-          'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations, then retry.',
+    const demoNoEmail = shouldBypassOutboundEmail()
+    let resendApiKey: string | null = null
+    let resendFromAddress: string | null = null
+    if (!demoNoEmail) {
+      resendApiKey = await getResendApiKey()
+      resendFromAddress = await getResendFromAddress()
+      if (!resendApiKey || !resendFromAddress) {
+        return {
+          error:
+            'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations, then retry.',
+        }
       }
     }
 
@@ -309,10 +316,18 @@ export async function inviteStaffUser(formData: FormData) {
       otpToken
     )}&type=invite&next=${encodeURIComponent('/invite/set-password')}`
 
+    // Demo mode: account + invite link exist; operator copies the link
+    // instead of sending email through Resend.
+    if (demoNoEmail) {
+      revalidatePath('/settings')
+      revalidatePath('/settings/team')
+      return { ok: true, demoInviteUrl: inviteUrl }
+    }
+
     // Send the branded invitation email via Resend.
-    const resend = new Resend(resendApiKey)
+    const resend = new Resend(resendApiKey!)
     const friendlyFromName = emailFromName ?? companyName
-    const fromResult = buildEmailFromHeader(resendFromAddress, friendlyFromName)
+    const fromResult = buildEmailFromHeader(resendFromAddress!, friendlyFromName)
     if (!fromResult.ok) {
       return { error: fromResult.error }
     }

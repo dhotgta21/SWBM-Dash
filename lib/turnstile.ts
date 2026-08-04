@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decryptSecret, isEncryptedSecret } from '@/lib/encryption/api-keys'
+import { shouldBypassCaptcha } from '@/lib/demo/mode'
 
 export const TURNSTILE_INPUT_NAME = 'cf-turnstile-response'
 
@@ -63,6 +64,8 @@ export async function getTurnstileSecretKey(): Promise<string | null> {
  *   2. NEXT_PUBLIC_TURNSTILE_SITE_KEY environment variable.
  */
 export async function getTurnstileSiteKey(): Promise<string | null> {
+  // Demo deployments do not use Cloudflare Turnstile.
+  if (shouldBypassCaptcha()) return null
   const stored = await loadStoredCredentials()
   return stored.siteKey ?? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null
 }
@@ -102,6 +105,10 @@ interface TurnstileVerifyResponse {
  * Returns null on success, or an error string on failure.
  */
 export async function verifyTurnstileToken(token: string): Promise<string | null> {
+  if (shouldBypassCaptcha()) {
+    return null
+  }
+
   if (!token || typeof token !== 'string') {
     return 'Please complete the security check.'
   }
@@ -164,13 +171,17 @@ function isTestKey(key: string): boolean {
  * always verified.
  */
 export async function verifyTurnstileFormField(formData: FormData): Promise<string | null> {
+  if (shouldBypassCaptcha()) {
+    return null
+  }
+
   const secretKey = await getTurnstileSecretKey()
   if (
     process.env.NODE_ENV === 'development' &&
     secretKey &&
     isTestKey(secretKey)
   ) {
-    console.warn('[Turnstile] Test secret key detected in development — skipping verification.')
+    console.warn('[Turnstile] Test secret key detected in development - skipping verification.')
     return null
   }
 

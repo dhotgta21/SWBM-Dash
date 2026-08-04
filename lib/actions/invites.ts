@@ -38,6 +38,7 @@ import {
 } from '@/lib/email/client-invite-template'
 import { buildEmailFromHeader } from '@/lib/email/from-header'
 import { getResendApiKey, getResendFromAddress } from '@/lib/resend'
+import { shouldBypassOutboundEmail } from '@/lib/demo/mode'
 
 // 7-day invite lifetime. Long enough for a customer to spot the email in
 // their inbox, short enough that a stale invite can't be used to claim
@@ -95,7 +96,12 @@ async function sendInviteEmail(opts: {
   clientName: string
   inviteUrl: string
   inviterName: string | null
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
+  // Demo mode never sends real email; caller surfaces the invite URL instead.
+  if (shouldBypassOutboundEmail()) {
+    return { ok: true, skipped: true }
+  }
+
   const apiKey = await getResendApiKey()
   const envFrom = await getResendFromAddress()
   if (!apiKey || !envFrom) {
@@ -215,7 +221,9 @@ async function sendInviteEmail(opts: {
  * This keeps the audit trail clean and stops "did the second click
  * count?" confusion.
  */
-export async function sendClientInvite(clientId: string): Promise<ActionResult<{ invitationId: string }>> {
+export async function sendClientInvite(
+  clientId: string
+): Promise<ActionResult<{ invitationId: string; demoInviteUrl?: string }>> {
   // Fail-fast on missing server config — surface the precise missing env
   // var instead of letting createAdminClient() throw a stack trace that the
   // operator can't act on.
@@ -226,13 +234,15 @@ export async function sendClientInvite(clientId: string): Promise<ActionResult<{
         'Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to .env.local / Vercel env, then retry.',
     }
   }
-  const resendApiKey = await getResendApiKey()
-  const resendFromAddress = await getResendFromAddress()
-  if (!resendApiKey || !resendFromAddress) {
-    return {
-      ok: false,
-      error:
-        'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+  if (!shouldBypassOutboundEmail()) {
+    const resendApiKey = await getResendApiKey()
+    const resendFromAddress = await getResendFromAddress()
+    if (!resendApiKey || !resendFromAddress) {
+      return {
+        ok: false,
+        error:
+          'Outbound email is not configured. Set RESEND_API_KEY and RESEND_FROM_ADDRESS in .env.local / Vercel env, or save them in Settings → Integrations.',
+      }
     }
   }
 
@@ -524,7 +534,7 @@ export async function sendClientInvite(clientId: string): Promise<ActionResult<{
     return { ok: false, error: emailResult.error ?? 'Could not send the invite email.' }
   }
 
-  // Email succeeded: stamp send metadata (email already synced above).
+  // Email succeeded (or demo skip): stamp send metadata (email already synced above).
   const updateFields: {
     last_sent_at: string
     expires_at: string
@@ -553,7 +563,13 @@ export async function sendClientInvite(clientId: string): Promise<ActionResult<{
   }
 
   revalidatePath(`/clients/${clientId}`)
-  return { ok: true, data: { invitationId } }
+  return {
+    ok: true,
+    data: {
+      invitationId,
+      ...(emailResult.skipped ? { demoInviteUrl: inviteUrl } : {}),
+    },
+  }
 }
 
 /**

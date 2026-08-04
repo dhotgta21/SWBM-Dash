@@ -1,8 +1,10 @@
+import { redirect } from 'next/navigation'
 import { SettingsCategoryShell } from '@/components/settings/SettingsCategoryShell'
 import { IntegrationSecretsForm } from '@/components/settings/IntegrationSecretsForm'
 import { getInvoiceAssistantSettings } from '@/lib/actions/invoice-assistant-settings'
 import { getIntegrationSecrets } from '@/lib/actions/integration-secrets'
 import { resolveSettingsAccess, requireAdmin } from '@/lib/auth/settings-access'
+import { shouldHideIntegrations } from '@/lib/demo/mode'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +13,11 @@ export const metadata = {
 }
 
 export default async function IntegrationsSettingsPage() {
+  // Demo deployments skip third-party API setup (Resend, Turnstile, GoAddress).
+  if (shouldHideIntegrations()) {
+    redirect('/settings')
+  }
+
   const access = await resolveSettingsAccess()
   requireAdmin(access)
 
