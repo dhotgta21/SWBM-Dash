@@ -10,9 +10,21 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
+  // Without public Supabase env the edge/middleware layer cannot refresh
+  // sessions. Fail open so public marketing pages still render instead of
+  // a bare 500 Internal Server Error on Vercel.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnon) {
+    console.error(
+      '[middleware] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY'
+    )
+    return response
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnon,
     {
       cookies: {
         get(name: string) {

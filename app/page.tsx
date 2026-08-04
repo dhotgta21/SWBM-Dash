@@ -148,13 +148,36 @@ interface CategoriesLoadResult {
 async function loadCategories(): Promise<CategoriesLoadResult> {
   // Public (anon) client reads the product catalogue. RLS now allows
   // public SELECT on products, so this works without a user session.
-  const supabase = createPublicClient()
-  const { data, error } = await supabase
-    .from('products')
-    .select('category, is_active')
-    .is('deleted_at', null)
-    .eq('is_active', true)
-    .not('category', 'is', null)
+  let supabase
+  try {
+    supabase = createPublicClient()
+  } catch (err) {
+    console.error('loadCategories: missing public Supabase credentials', err)
+    return {
+      categories: [],
+      error:
+        'Supabase public credentials are not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY on Vercel.',
+    }
+  }
+
+  let data: { category: string | null; is_active: boolean }[] | null = null
+  let error: { message: string } | null = null
+  try {
+    const result = await supabase
+      .from('products')
+      .select('category, is_active')
+      .is('deleted_at', null)
+      .eq('is_active', true)
+      .not('category', 'is', null)
+    data = result.data as { category: string | null; is_active: boolean }[] | null
+    error = result.error
+  } catch (err) {
+    console.error('loadCategories: unexpected query failure', err)
+    return {
+      categories: [],
+      error: 'Unable to load categories (database request failed).',
+    }
+  }
 
   if (error) {
     console.error('loadCategories: database error', error)

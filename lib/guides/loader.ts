@@ -64,59 +64,69 @@ function readAll(): GuidePost[] {
   if (cachedPosts) return cachedPosts
   if (!fs.existsSync(CONTENT_DIR)) return []
 
-  const files = fs
-    .readdirSync(CONTENT_DIR)
-    .filter((f) => f.endsWith('.md') || f.endsWith('.mdx'))
+  try {
+    const files = fs
+      .readdirSync(CONTENT_DIR)
+      .filter((f) => f.endsWith('.md') || f.endsWith('.mdx'))
 
-  const posts: GuidePost[] = files.map((file) => {
-    const full = path.join(CONTENT_DIR, file)
-    const raw = fs.readFileSync(full, 'utf-8')
-    const { data, content } = matter(raw)
-    const fm = data as Partial<GuideFrontmatter>
+    const posts: GuidePost[] = []
+    for (const file of files) {
+      try {
+        const full = path.join(CONTENT_DIR, file)
+        const raw = fs.readFileSync(full, 'utf-8')
+        const { data, content } = matter(raw)
+        const fm = data as Partial<GuideFrontmatter>
 
-    const required: (keyof GuideFrontmatter)[] = [
-      'title',
-      'description',
-      'slug',
-      'date',
-      'heroImage',
-      'heroAlt',
-      'excerpt',
-      'category',
-      'duration',
-      'difficulty',
-      'cost',
-      'faqs',
-      'related',
-      'tags',
-    ]
-    for (const k of required) {
-      if (fm[k] === undefined || fm[k] === null) {
-        throw new Error(`[guides] ${file}: missing frontmatter field "${k}"`)
+        const required: (keyof GuideFrontmatter)[] = [
+          'title',
+          'description',
+          'slug',
+          'date',
+          'heroImage',
+          'heroAlt',
+          'excerpt',
+          'category',
+          'duration',
+          'difficulty',
+          'cost',
+          'faqs',
+          'related',
+          'tags',
+        ]
+        let valid = true
+        for (const k of required) {
+          if (fm[k] === undefined || fm[k] === null) {
+            console.error(`[guides] ${file}: missing frontmatter field "${k}"`)
+            valid = false
+            break
+          }
+        }
+        if (!valid) continue
+        // Arrays must be real arrays so detail-page .map / .join never throw.
+        if (!Array.isArray(fm.faqs) || !Array.isArray(fm.related) || !Array.isArray(fm.tags)) {
+          console.error(`[guides] ${file}: faqs/related/tags must be arrays`)
+          continue
+        }
+
+        posts.push({
+          ...(fm as GuideFrontmatter),
+          author: fm.author?.trim() || 'Star Hawk Builders Merchant',
+          body: content,
+        })
+      } catch (err) {
+        console.error(`[guides] skipped ${file}:`, err)
       }
     }
-    // Arrays must be real arrays so detail-page .map / .join never throw.
-    if (!Array.isArray(fm.faqs)) {
-      throw new Error(`[guides] ${file}: "faqs" must be an array`)
-    }
-    if (!Array.isArray(fm.related)) {
-      throw new Error(`[guides] ${file}: "related" must be an array`)
-    }
-    if (!Array.isArray(fm.tags)) {
-      throw new Error(`[guides] ${file}: "tags" must be an array`)
-    }
 
-    return {
-      ...(fm as GuideFrontmatter),
-      author: fm.author?.trim() || 'Star Hawk Builders Merchant',
-      body: content,
-    }
-  })
-
-  // Newest first — keeps the hub recent at the top.
-  posts.sort((a, b) => (a.date < b.date ? 1 : -1))
-  cachedPosts = posts
-  return posts
+    // Newest first — keeps the hub recent at the top.
+    posts.sort((a, b) => (a.date < b.date ? 1 : -1))
+    cachedPosts = posts
+    return posts
+  } catch (err) {
+    console.error('[guides] readAll failed:', err)
+    cachedPosts = []
+    return []
+  }
 }
 
 /** All guides, newest first. */
