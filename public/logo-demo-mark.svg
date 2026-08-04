@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Demo Builder Merchant">
+  <!-- Clean monogram mark: DB -->
+  <rect width="512" height="512" fill="#ffffff"/>
+  <rect x="48" y="48" width="416" height="416" rx="72" fill="#b91c1c"/>
+  <text
+    x="256"
+    y="286"
+    text-anchor="middle"
+    font-family="Arial Black, Arial, Helvetica, sans-serif"
+    font-size="210"
+    font-weight="900"
+    letter-spacing="-8"
+    fill="#ffffff"
+  >DB</text>
+</svg>
