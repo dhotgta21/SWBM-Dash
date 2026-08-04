@@ -47,10 +47,14 @@ function loadEnvFile(filePath) {
   }
 }
 
+// Prefer .env.local overrides; also load .env for local demo work.
+loadEnvFile(join(__dirname, '..', '.env'))
 loadEnvFile(join(__dirname, '..', '.env.local'))
 
 const migrationFile = process.argv[2] || '055_product_seasonality.sql'
-const migrationPath = join(__dirname, '..', 'supabase', 'migrations', migrationFile)
+const migrationPath = migrationFile.includes('/') || migrationFile.includes('\\')
+  ? join(__dirname, '..', migrationFile)
+  : join(__dirname, '..', 'supabase', 'migrations', migrationFile)
 
 const connectionString =
   process.env.POSTGRES_URL_NON_POOLING ||
@@ -59,7 +63,7 @@ const connectionString =
 
 if (!connectionString) {
   console.error(
-    'No Postgres connection string found. Set POSTGRES_URL_NON_POOLING, POSTGRES_URL, or POSTGRES_PRISMA_URL in .env.local'
+    'No Postgres connection string found. Set POSTGRES_URL_NON_POOLING, POSTGRES_URL, or POSTGRES_PRISMA_URL in .env or .env.local'
   )
   process.exit(1)
 }
