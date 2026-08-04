@@ -1,35 +1,61 @@
 # HANDOFF
 
 ## Mode
-Bugfix: **Analytics dashboard blank** + **public product detail 404**.
+Demo data seed complete on live Supabase (plus prior Analytics/product-detail code fixes).
 
 ## Stage
-S11 residual fixes (demo campaign already complete).
+S11 residual / demo readiness.
 
-## What was fixed (this session)
-1. **Analytics: "Unable to load dashboard data"**
-   - Root cause: live Supabase missing `invoices.deleted_at` and `payments.deleted_at`. Dashboard queries filtered on those columns and threw.
-   - Fix: retry without soft-delete filters in `lib/dashboard.ts` and `lib/money-collection.ts` when the column is missing.
+## Live database (verified 2026-08-04)
 
-2. **Product detail "Product not found" (category list still worked)**
-   - Root cause: live DB missing `products.materials` (and related variant columns). List used multi-column fallbacks; get-by-code did not.
-   - Fix: shared `PUBLIC_PRODUCT_COLUMN_SETS` walk in `getPublicProductByCode` (same resilience as list), plus a CORE column set with sale/SEO fields but no materials pack.
+| Metric | Value |
+|--------|------:|
+| Active products | **356** (≥250) |
+| Clients | **100** |
+| Invoices | **4184** |
+| Quotations | **581** |
+| Payments | **3666** |
+| Client portal profiles | **100** |
+| Invoice span | **2022-08-01 → 2026-08-04** (~4 years) |
+| Client tenure mix | 25 short (&lt;18m) / 35 mid / 25 long / 15 very long (≥42m) |
+| Seasonality | Peak/trough sales ratio ~170x; monthly invoice counts vary strongly |
 
-3. **Operator SQL (permanent schema parity)**
-   - `supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql` adds the missing columns safely (`IF NOT EXISTS`).
+Company brand row: **Demo Builder Merchant**.
 
-## Operator next steps (required for production)
-1. **Deploy** this branch to Vercel (app-side fix is enough for both bugs).
-2. **Optional but recommended:** Supabase SQL Editor → run **`supabase/seed/00e_fix_dashboard_deleted_at_and_product_variants.sql`** once.
-3. Hard-refresh Analytics and open e.g. https://swbm-dash.vercel.app/products/ENG-CLAS (from Bricks category).
-4. If products list empty again: still run `00_ALL_IN_ONE_fix_products.sql` / `00b` as before.
-5. Auth CAPTCHA still recommended OFF on the demo project (prior incident).
+### Logins
+| Who | Path | Creds |
+|-----|------|--------|
+| Staff admin | `/admin-login` | `dhotgta@gmail.com` / `A1b2c3d4@` (if set via 05_demo_admin) |
+| Client portal | `/login` | any client email (`*.@demo-trade.example`) / `DemoClient1!` |
 
-## Verify after deploy
-- `/dashboard` (admin) shows Money collection + charts (not the red error banner).
-- `/quote/bricks` → click a product → product page loads with name/price/Add to quote.
-- Direct: `/products/ENG-CLAS` and `/products/WIRE-FN` are not "Product not found".
+### What was run on live Supabase
+1. `00e_fix_dashboard_deleted_at_and_product_variants.sql` (soft-delete + product variant columns)
+2. `00a_add_picking_columns.sql`
+3. `DEMO_SEED_CONFIRM=yes node scripts/seed-demo-catalog.mjs --target 280` → 356 active
+4. `DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 100 --months 48 --wipe-first`
+5. `04_demo_company_brand.sql`
+6. `node scripts/seed-portal-accounts.mjs` (100 portal users)
+
+### App code (previous session, commit `3eb36cd`)
+- Dashboard resilient to missing `deleted_at` (columns now present live too)
+- Product detail column-set fallbacks
+- **Deploy still recommended** if that commit is not on Vercel yet
+
+### Scripts added
+- `scripts/seed-demo-catalog.mjs` + npm `seed:demo:catalog`
+- History seeder: default 48 months, mixed client tenure, seasonal volume
+
+## Operator next steps
+1. **Hard-refresh** Analytics after login: should show multi-year KPIs/charts.
+2. **Catalogue /quote/bricks** and product detail URLs (live check already showed product titles loading).
+3. **Deploy** local commit(s) if Vercel is behind `main`.
+4. Optional reseed:
+   ```bash
+   DEMO_SEED_CONFIRM=yes npm run seed:demo:catalog
+   DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 100 --months 48 --wipe-first
+   node scripts/seed-portal-accounts.mjs
+   ```
 
 ## Do not
-- Wipe production customer data.
-- Force-push or amend published history without explicit request.
+- Run wipe/seed against a real customer production project.
+- Wipe products when only refreshing invoices (history wipe keeps products).

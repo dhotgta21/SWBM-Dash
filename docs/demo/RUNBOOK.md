@@ -152,13 +152,18 @@ From the project root (with `.env.local` loaded):
 # Optional: clear existing clients + invoices first
 DEMO_SEED_CONFIRM=yes npm run wipe:demo-clients
 
-# ~100 clients + ~30 months history (default)
+# Dense catalogue (≥250 SKUs across construction + trade verticals)
+DEMO_SEED_CONFIRM=yes npm run seed:demo:catalog
+
+# ~100 clients + multi-year invoices (default 48 months, mixed tenure 1–4y)
 DEMO_SEED_CONFIRM=yes npm run seed:demo
+# Equivalent explicit:
+# DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 100 --months 48 --wipe-first
 
 # Smaller local smoke seed
 DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs --clients 20 --months 12 --wipe-first
 
-# Sample products for plumbing / electrical / windows / tile
+# Extra sample products for plumbing / electrical / windows / tile (optional)
 DEMO_SEED_CONFIRM=yes npm run seed:demo:verticals
 ```
 

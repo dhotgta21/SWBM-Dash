@@ -52,20 +52,20 @@ loadEnvFile(join(root, '.env'))
 function parseArgs(argv) {
   const out = {
     clients: 100,
-    months: 30,
+    months: 48,
     wipeFirst: false,
     dryRun: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--clients' && argv[i + 1]) out.clients = Math.max(1, parseInt(argv[++i], 10) || 100)
-    else if (a === '--months' && argv[i + 1]) out.months = Math.max(1, parseInt(argv[++i], 10) || 30)
+    else if (a === '--months' && argv[i + 1]) out.months = Math.max(1, parseInt(argv[++i], 10) || 48)
     else if (a === '--wipe-first') out.wipeFirst = true
     else if (a === '--dry-run') out.dryRun = true
     else if (a === '--help' || a === '-h') {
       console.log(`Usage: DEMO_SEED_CONFIRM=yes node scripts/seed-demo-history.mjs [options]
   --clients N     Number of clients (default 100)
-  --months N      History window in months (default 30)
+  --months N      Max history window in months (default 48; clients get varied tenure)
   --wipe-first    Run wipe-invoices-and-clients.sql first
   --dry-run       Print plan only, no writes`)
       process.exit(0)
@@ -198,6 +198,43 @@ const TIER_RATE = { hot: 6, steady: 2.2, quiet: 0.7 }
 
 const PAYMENT_METHODS = ['bank_transfer', 'card', 'cash', 'cheque', 'ecod']
 
+/**
+ * UK builders-merchant seasonality (1.0 = average month).
+ * Peaks Mar–Jun / Sep; quieter Dec–Jan and mid-winter freeze.
+ */
+function seasonalMultiplier(monthIndex0) {
+  // monthIndex0: 0=Jan … 11=Dec
+  const factors = [
+    0.55, // Jan
+    0.7, // Feb
+    1.15, // Mar
+    1.35, // Apr
+    1.4, // May
+    1.3, // Jun
+    1.15, // Jul
+    1.1, // Aug
+    1.25, // Sep
+    1.05, // Oct
+    0.85, // Nov
+    0.5, // Dec
+  ]
+  return factors[monthIndex0] ?? 1
+}
+
+/**
+ * Assign client tenure in months so demos show mix of new vs long accounts.
+ * ~25% ~12m, ~35% ~24m, ~25% ~36m, ~15% full window (up to 48m).
+ */
+function tenureMonthsForIndex(i, total, maxMonths) {
+  const r = i / Math.max(1, total)
+  let tenure
+  if (r < 0.25) tenure = 12
+  else if (r < 0.6) tenure = 24
+  else if (r < 0.85) tenure = 36
+  else tenure = maxMonths
+  return Math.min(maxMonths, Math.max(6, tenure))
+}
+
 async function main() {
   const rng = mulberry32(20260804)
   const end = new Date()
@@ -317,6 +354,8 @@ async function main() {
       }
       usedAccounts.add(account)
       const tier = tierForIndex(i, args.clients)
+      const tenureMonths = tenureMonthsForIndex(i, args.clients, args.months)
+      const clientStart = monthsAgo(end, tenureMonths)
       clients.push({
         id: randomUUID(),
         first_name: first,
@@ -332,7 +371,9 @@ async function main() {
         payment_terms_days: pick(rng, [14, 30, 30, 30, 45]),
         credit_limit: tier === 'hot' ? 25000 : tier === 'steady' ? 10000 : 5000,
         tier,
-        notes: `Demo ${tier} account · ${trade}`,
+        tenureMonths,
+        clientStart,
+        notes: `Demo ${tier} account · ${trade} · ${tenureMonths}m history`,
       })
     }
 
@@ -392,14 +433,17 @@ async function main() {
 
     for (const c of clients) {
       const rate = TIER_RATE[c.tier]
-      const expected = Math.max(1, Math.round(rate * args.months))
-      // Spread issue dates across window with jitter
+      const clientStart = c.clientStart || start
+      const tenureMonths = c.tenureMonths || args.months
+      // Base volume from tenure + tier, then seasonality scales per document.
+      const expected = Math.max(2, Math.round(rate * tenureMonths))
+      // Spread issue dates across THIS client's tenure (not always full window)
       for (let n = 0; n < expected; n++) {
         const t = n / Math.max(1, expected - 1)
-        const baseMs = start.getTime() + t * (end.getTime() - start.getTime())
+        const baseMs = clientStart.getTime() + t * (end.getTime() - clientStart.getTime())
         const jitter = (rng() - 0.5) * 10 * 86400000
         let issue = new Date(baseMs + jitter)
-        if (issue < start) issue = start
+        if (issue < clientStart) issue = clientStart
         if (issue > end) issue = end
         // Prefer weekdays
         while (issue.getUTCDay() === 0 || issue.getUTCDay() === 6) {
@@ -408,6 +452,12 @@ async function main() {
             issue = addDays(end, -1)
             break
           }
+        }
+
+        const season = seasonalMultiplier(issue.getUTCMonth())
+        // Skip some docs in quiet months so charts show real seasonality
+        if (rng() > Math.min(1, 0.55 + season * 0.4)) {
+          continue
         }
 
         const isQuote = rng() < 0.12
@@ -419,16 +469,16 @@ async function main() {
         const order_number = String(orderNext++)
         const invoiceId = randomUUID()
 
-        // Line items 2–15
-        const lineCount = 2 + Math.floor(rng() * 14)
+        // Line items 2–15; more lines in peak season for larger ticket
+        const lineCount = 2 + Math.floor(rng() * (season > 1.1 ? 16 : 12))
         const lines = []
         for (let li = 0; li < lineCount; li++) {
           const prod = pick(rng, products)
-          const qtyBase = 1 + Math.floor(rng() * 40)
+          const qtyBase = 1 + Math.floor(rng() * 40 * season)
           const qty =
-            prod.unit === 'T' || prod.unit === 'M'
-              ? roundPence(0.5 + rng() * 12)
-              : qtyBase
+            prod.unit === 'T' || prod.unit === 'M' || prod.unit === 'TON'
+              ? roundPence(0.5 + rng() * 12 * season)
+              : Math.max(1, qtyBase)
           const price = roundPence(Number(prod.default_price) * (0.92 + rng() * 0.16))
           const lineNet = roundPence(qty * price)
           const lineVat = roundPence(lineNet * (vatRate / 100))

@@ -14,6 +14,7 @@
     "test": "vitest run",
     "seed": "node scripts/seed-dpc-products.mjs",
     "seed:demo": "node scripts/seed-demo-history.mjs",
+    "seed:demo:catalog": "node scripts/seed-demo-catalog.mjs",
     "seed:demo:verticals": "node scripts/seed-demo-vertical-products.mjs",
     "wipe:demo-clients": "node scripts/wipe-invoices-and-clients.mjs",
     "migrate": "node scripts/apply-migration.mjs",

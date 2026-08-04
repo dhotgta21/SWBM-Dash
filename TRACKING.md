@@ -39,6 +39,18 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 | **Proof** | `npx tsc --noEmit` exit 0; vitest brand + public-products 10/10 |
 | **Operator** | Run `00b` + `02` SQL; CAPTCHA OFF; redeploy |
 
+## Incident: dense demo seed (2026-08-04)
+| Item | Detail |
+|------|--------|
+| **Goal** | ≥250 products, multi-year clients/invoices for Analytics seasonality demos |
+| **Products** | `seed-demo-catalog.mjs` → **356** active SKUs / 42 categories |
+| **History** | wipe + `seed-demo-history.mjs --clients 100 --months 48` → **4184** invoices, **3666** payments, span 2022-08 → 2026-08 |
+| **Tenure** | mixed 12/24/36/48m buckets (25/35/25/15 clients) |
+| **Seasonality** | monthly sales peak/trough ratio ~170; spring peaks in generator |
+| **Portal** | 100 client portal accounts, password `DemoClient1!` |
+| **Schema** | applied `00e` + `00a` on live |
+| **Proof** | status/tenure verify scripts; live `/products/ENG-CLAS` title OK |
+
 ## Incident: Analytics blank + product detail 404 (2026-08-04)
 | Item | Detail |
 |------|--------|
