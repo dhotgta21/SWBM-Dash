@@ -1,0 +1,3 @@
+// Add case-study .md files here. See lib/blog/loader.ts for the frontmatter schema.
+// Hero images should be placed in /public/case-studies/ and referenced as
+// /case-studies/{filename}.{ext} in the frontmatter.

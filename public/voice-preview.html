@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Voice button preview — floating FAB</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f8f9fb;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 28px;
+    text-align: center;
+    position: relative;
+  }
+  .card h3 {
+    margin: 0 0 22px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+  }
+
+  /* Status pills */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 4px;
+  }
+  .pill-idle     { background: #f1f5f9; color: #64748b; }
+  .pill-listen   { background: #fef2f2; color: #b91c1c; box-shadow: inset 0 0 0 1px #fecaca; }
+  .pill-speak    { background: #eff6ff; color: #2563eb; box-shadow: inset 0 0 0 1px #bfdbfe; }
+
+  /* Floating mic button — new FAB layout */
+  .fab-stage {
+    position: relative;
+    display: inline-block;
+    padding: 36px 24px 28px;
+  }
+  .status-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .echo {
+    background: rgba(255,255,255,0.92);
+    padding: 4px 10px;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e2e8f0;
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    font-style: italic;
+    color: #64748b;
+    max-width: 260px;
+  }
+
+  .mic-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .mic-wrap .halo {
+    position: absolute;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(185, 28, 28, 0.22);
+  }
+  .mic-wrap .halo-slow { background: rgba(185, 28, 28, 0.16); }
+
+  .mic-btn {
+    position: relative;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: white;
+    box-shadow: 0 14px 30px -10px rgba(185, 28, 28, 0.45), 0 8px 16px -8px rgba(15, 23, 42, 0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .mic-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 18px 40px -12px rgba(185, 28, 28, 0.55), 0 10px 20px -8px rgba(15, 23, 42, 0.18);
+  }
+  .mic-btn:active { transform: scale(0.95); }
+  .mic-btn .ring-inset {
+    position: absolute; inset: 2px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+    pointer-events: none;
+  }
+  .mic-btn .glow {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.22) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .mic-btn .inner {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .bars { display: inline-flex; align-items: end; gap: 2px; opacity: 0.7; }
+  .bars.active { opacity: 1; }
+  .bars span {
+    display: block;
+    width: 2.5px;
+    border-radius: 2px;
+    background: white;
+    height: 40%;
+  }
+  .bars.active span {
+    animation: waveBar 0.85s ease-in-out infinite;
+    height: 100%;
+  }
+  @keyframes waveBar {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.6; }
+    50%      { transform: scaleY(1);   opacity: 1; }
+  }
+  .live-dot {
+    position: absolute; right: -2px; top: -2px;
+    width: 10px; height: 10px;
+  }
+  .live-dot .ping {
+    position: absolute; inset: 0;
+    border-radius: 50%; background: white; opacity: 0.7;
+    animation: ping 1.4s cubic-bezier(0,0,0.2,1) infinite;
+  }
+  @keyframes ping {
+    0% { transform: scale(1); opacity: 0.7; }
+    75%, 100% { transform: scale(2); opacity: 0; }
+  }
+  .live-dot .dot {
+    position: relative;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 0 2px #b91c1c;
+  }
+  .mic-btn.ring-active {
+    box-shadow: 0 0 0 4px rgba(185,28,28,0.25), 0 14px 30px -10px rgba(185, 28, 28, 0.45);
+  }
+
+  .halo-anim        { animation: haloOut 1.6s cubic-bezier(0.22,1,0.36,1) infinite; }
+  .halo-anim-slow   { animation: haloOut 2.4s cubic-bezier(0.22,1,0.36,1) infinite; }
+  @keyframes haloOut {
+    0%   { transform: scale(1);   opacity: 0.55; }
+    100% { transform: scale(1.9); opacity: 0; }
+  }
+
+  .helper {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+  }
+
+  /* Demo of "floating" — content card with button overlaid */
+  .demo-stage {
+    position: relative;
+    height: 320px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    overflow: hidden;
+  }
+  .demo-stage .scrollable {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    box-sizing: border-box;
+    padding-bottom: 140px; /* room for FAB */
+  }
+  .demo-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .demo-card .icon-bubble {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #64748b;
+  }
+  .demo-card .meta { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; font-weight: 600; }
+  .demo-card .value { font-size: 14px; font-weight: 600; margin-top: 2px; color: #0f172a; }
+  .demo-card.active { border-color: rgba(185, 28, 28, 0.3); box-shadow: inset 0 0 0 2px rgba(185, 28, 28, 0.1); }
+  .demo-card.active .icon-bubble { background: #fef2f2; color: #b91c1c; }
+
+  .fab-anchor {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 20px 0;
+    display: flex; justify-content: center;
+    pointer-events: none;
+  }
+  .fab-anchor > div { pointer-events: auto; }
+</style>
+</head>
+<body>
+
+<div class="grid">
+
+  <!-- State 1: Idle -->
+  <div class="card">
+    <h3>Idle — no halo, no live dot</h3>
+    <div class="fab-stage">
+      <div class="status-stack" style="opacity:0.35">
+        <span class="pill pill-idle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+          Ready
+        </span>
+      </div>
+      <div class="mic-wrap">
+        <button class="mic-btn" type="button" aria-label="Start voice input">
+          <span class="ring-inset"></span>
+          <span class="glow"></span>
+          <span class="inner">
+            <span class="bars">
+              <span style="animation-delay:0ms"></span>
+              <span style="animation-delay:110ms"></span>
+              <span style="animation-delay:220ms"></span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="13" rx="3"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <path d="M12 19v3"/>
+            </svg>
+            <span class="bars">
+              <span style="animation-delay:330ms"></span>
+              <span style="animation-delay:440ms"></span>
+              <span style="animation-delay:550ms"></span>
+            </span>
+          </span>
+        </button>
+      </div>
+      <p class="helper">Tap and speak.</p>
+    </div>
+  </div>
+
+  <!-- State 2: Listening -->
+  <div class="card">
+    <h3>Listening — halos + animated bars + live dot</h3>
+    <div class="fab-stage">
+      <div class="status-stack">
+        <span class="pill pill-listen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+          Listening
+        </span>
+        <div class="echo">&ldquo;two pallets of Hanson Cement&rdquo;</div>
+      </div>
+      <div class="mic-wrap">
+        <span class="halo halo-anim"></span>
+        <span class="halo halo-slow halo-anim-slow"></span>
+        <button class="mic-btn ring-active" type="button" aria-label="Stop listening">
+          <span class="ring-inset"></span>
+          <span class="glow"></span>
+          <span class="inner">
+            <span class="bars active">
+              <span style="animation-delay:0ms"></span>
+              <span style="animation-delay:110ms"></span>
+              <span style="animation-delay:220ms"></span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="13" rx="3"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <path d="M12 19v3"/>
+            </svg>
+            <span class="bars active">
+              <span style="animation-delay:330ms"></span>
+              <span style="animation-delay:440ms"></span>
+              <span style="animation-delay:550ms"></span>
+            </span>
+            <span class="live-dot">
+              <span class="ping"></span>
+              <span class="dot"></span>
+            </span>
+          </span>
+        </button>
+      </div>
+      <p class="helper">Listening — pause to send.</p>
+    </div>
+  </div>
+
+  <!-- State 3: Speaking (assistant reply) -->
+  <div class="card">
+    <h3>Speaking — blue halos + bars</h3>
+    <div class="fab-stage">
+      <div class="status-stack">
+        <span class="pill pill-speak">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Speaking
+        </span>
+      </div>
+      <div class="mic-wrap">
+        <span class="halo halo-anim" style="background:rgba(37,99,235,0.22)"></span>
+        <span class="halo halo-slow halo-anim-slow" style="background:rgba(37,99,235,0.16)"></span>
+        <button class="mic-btn ring-active" type="button" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);box-shadow:0 0 0 4px rgba(37,99,235,0.25), 0 14px 30px -10px rgba(37,99,235,0.45);">
+          <span class="ring-inset"></span>
+          <span class="glow"></span>
+          <span class="inner">
+            <span class="bars active">
+              <span style="animation-delay:0ms"></span>
+              <span style="animation-delay:110ms"></span>
+              <span style="animation-delay:220ms"></span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="13" rx="3"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <path d="M12 19v3"/>
+            </svg>
+            <span class="bars active">
+              <span style="animation-delay:330ms"></span>
+              <span style="animation-delay:440ms"></span>
+              <span style="animation-delay:550ms"></span>
+            </span>
+          </span>
+        </button>
+      </div>
+      <p class="helper">Assistant is speaking…</p>
+    </div>
+  </div>
+
+  <!-- State 4: Real layout — button floats over scrollable content -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <h3 style="padding: 18px 18px 0; margin: 0; text-align:left;">In-context — button overlays scroll content</h3>
+    <div class="demo-stage" style="border:none;border-radius:0;">
+      <div class="scrollable">
+        <div class="demo-card active">
+          <span class="icon-bubble"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <div><div class="meta">Client</div><div class="value">Star Hawk Builders Ltd.</div></div>
+        </div>
+        <div class="demo-card">
+          <span class="icon-bubble"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+          <div><div class="meta">Items</div><div class="value">3× Hanson Cement · 2× Sand</div></div>
+        </div>
+        <div class="demo-card">
+          <span class="icon-bubble"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <div><div class="meta">Delivery address</div><div class="value">12 High Street, Manchester M1 2AB</div></div>
+        </div>
+        <div class="demo-card">
+          <span class="icon-bubble"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <div><div class="meta">Total</div><div class="value">£1,247.50</div></div>
+        </div>
+      </div>
+      <div class="fab-anchor">
+        <div>
+          <div class="status-stack">
+            <span class="pill pill-listen">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+              Listening
+            </span>
+          </div>
+          <div class="mic-wrap">
+            <span class="halo halo-anim"></span>
+            <span class="halo halo-slow halo-anim-slow"></span>
+            <button class="mic-btn ring-active" type="button">
+              <span class="ring-inset"></span>
+              <span class="glow"></span>
+              <span class="inner">
+                <span class="bars active">
+                  <span style="animation-delay:0ms"></span>
+                  <span style="animation-delay:110ms"></span>
+                  <span style="animation-delay:220ms"></span>
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="2" width="6" height="13" rx="3"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <path d="M12 19v3"/>
+                </svg>
+                <span class="bars active">
+                  <span style="animation-delay:330ms"></span>
+                  <span style="animation-delay:440ms"></span>
+                  <span style="animation-delay:550ms"></span>
+                </span>
+                <span class="live-dot">
+                  <span class="ping"></span>
+                  <span class="dot"></span>
+                </span>
+              </span>
+            </button>
+          </div>
+          <p class="helper">Listening — pause to send.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

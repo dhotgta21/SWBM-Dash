@@ -1,0 +1,497 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #f8f9fb;
+  --foreground: #0f172a;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #b91c1c;
+  --primary-foreground: #ffffff;
+  --primary-hover: #991b1b;
+  --primary-muted: #fef2f2;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --secondary-hover: #e2e8f0;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  /* Placeholder text — clearly softer than --muted-foreground so example
+     values inside form fields don't read as real data. WCAG: 4.57:1 on
+     white (#94a3b8) is the lightest slate that still passes AA contrast
+     for the typical 14px field text. */
+  --placeholder: #94a3b8;
+
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --destructive-muted: #fef2f2;
+
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --success-muted: #f0fdf4;
+
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --warning-muted: #fffbeb;
+
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+  --info-muted: #eff6ff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: rgba(185, 28, 28, 0.2);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-muted: var(--primary-muted);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder: var(--placeholder);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-muted: var(--destructive-muted);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+
+/* Safe-area insets for fixed-position elements on phones with notches */
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility mr-safe {
+  margin-right: env(safe-area-inset-right, 0px);
+}
+@utility ml-safe {
+  margin-left: env(safe-area-inset-left, 0px);
+}
+@utility mt-safe {
+  margin-top: env(safe-area-inset-top, 0px);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+@utility pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Number input hygiene
+   Hides the ugly native spinner buttons (▲▼) so the items table and other
+   numeric fields look uniform across browsers. Users still get arrow-key
+   stepping inside the field.
+   ───────────────────────────────────────────────────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Date picker calendar icon — color it consistently with our brand */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Focus rings — subtle, brand-tinted, uniform across the app
+   ───────────────────────────────────────────────────────────────────────── */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="switch"] {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="switch"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* Reduce motion when the user prefers it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Reusable skeleton shimmer for loading states
+   ───────────────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.6) 0%,
+    rgba(241, 245, 249, 0.9) 50%,
+    rgba(226, 232, 240, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dashboard motion language
+   Subtle, brand-aligned micro-interactions used across the dashboard.
+   ───────────────────────────────────────────────────────────────────────── */
+@keyframes dashboard-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboard-fade-in-soft {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboard-pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+}
+
+@utility animate-dashboard-fade {
+  animation: dashboard-fade-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-dashboard-fade-soft {
+  animation: dashboard-fade-in-soft 260ms ease-out both;
+}
+
+@utility animate-pulse-dot {
+  animation: dashboard-pulse-dot 1.8s ease-in-out infinite;
+}
+
+/* Staggered fade-in for groups of children */
+.stagger-children > * {
+  animation: dashboard-fade-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 90ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 140ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 190ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 290ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 340ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 390ms; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dashboard surface helpers
+   Gradient accent strip used by KPI cards to make each metric feel distinct
+   without breaking the existing palette.
+   ───────────────────────────────────────────────────────────────────────── */
+@utility surface-accent-primary {
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-hover) 100%);
+}
+@utility surface-accent-success {
+  background: linear-gradient(180deg, var(--success) 0%, #15803d 100%);
+}
+@utility surface-accent-warning {
+  background: linear-gradient(180deg, var(--warning) 0%, #b45309 100%);
+}
+@utility surface-accent-destructive {
+  background: linear-gradient(180deg, var(--destructive) 0%, #b91c1c 100%);
+}
+@utility surface-accent-info {
+  background: linear-gradient(180deg, var(--info) 0%, #1d4ed8 100%);
+}
+
+@utility surface-soft-primary {
+  background: linear-gradient(135deg, var(--primary-muted) 0%, color-mix(in srgb, var(--primary-muted) 60%, transparent) 100%);
+}
+@utility surface-soft-success {
+  background: linear-gradient(135deg, var(--success-muted) 0%, color-mix(in srgb, var(--success-muted) 60%, transparent) 100%);
+}
+@utility surface-soft-warning {
+  background: linear-gradient(135deg, var(--warning-muted) 0%, color-mix(in srgb, var(--warning-muted) 60%, transparent) 100%);
+}
+@utility surface-soft-destructive {
+  background: linear-gradient(135deg, var(--destructive-muted) 0%, color-mix(in srgb, var(--destructive-muted) 60%, transparent) 100%);
+}
+@utility surface-soft-info {
+  background: linear-gradient(135deg, var(--info-muted) 0%, color-mix(in srgb, var(--info-muted) 60%, transparent) 100%);
+}
+
+/* Polished scrollbars for chart and table containers */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--border) 70%, var(--muted-foreground) 30%);
+}
+
+/* Decorative dotted background used in hero panels */
+@utility bg-dot-grid {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--foreground) 14%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Hero photo banner motion — the active photo now stays put for the
+   whole day instead of cycling every 8s, so the keyframes below have
+   to keep the image subtly alive across the long visit instead of
+   running once. The 60s looping breath (1.00 ↔ 1.04) reads as a
+   natural, subliminal motion, not as a slideshow.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Slow gentle breath on the active slide. The 1.04 ceiling keeps the
+   image safely inside the section's overflow:hidden on every
+   viewport, and ease-in-out + alternating direction makes the
+   motion feel like air moving, not a scripted zoom. */
+@keyframes ken-burns {
+  0%   { transform: scale(1)    translate3d(0,    0,   0); }
+  50%  { transform: scale(1.04) translate3d(-1%, -0.5%, 0); }
+  100% { transform: scale(1)    translate3d(0,    0,   0); }
+}
+@utility animate-ken-burns {
+  animation: ken-burns 60s ease-in-out infinite;
+}
+
+/* Two mesh layers drift on slightly different cadences so the colour
+   never repeats visibly. transform-only animation → GPU composited. */
+@keyframes mesh-drift-a {
+  0%   { transform: translate3d(-6%, -4%, 0) scale(1);    }
+  50%  { transform: translate3d(6%,  5%,  0) scale(1.06);  }
+  100% { transform: translate3d(-6%, -4%, 0) scale(1);    }
+}
+@utility animate-mesh-drift-a {
+  animation: mesh-drift-a 28s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes mesh-drift-b {
+  0%   { transform: translate3d(5%,  3%,  0) scale(1.04); }
+  50%  { transform: translate3d(-7%, -2%, 0) scale(1);    }
+  100% { transform: translate3d(5%,  3%,  0) scale(1.04); }
+}
+@utility animate-mesh-drift-b {
+  animation: mesh-drift-b 42s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Diagonal light ray sweeps across the frame. Long delay so the two
+   rays we render never line up; mix-blend-screen keeps it additive. */
+@keyframes light-ray-sweep {
+  0%   { transform: translate3d(-30%, 0, 0); opacity: 0;    }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.55; }
+  100% { transform: translate3d(130%, 0, 0); opacity: 0;    }
+}
+@utility animate-light-ray {
+  animation: light-ray-sweep 14s ease-in-out infinite;
+}
+
+/* Ticker marquee. The rendered DOM duplicates the message list, so
+   translating the strip by -50% lands seamlessly on the second copy. */
+@keyframes ticker-scroll {
+  0%   { transform: translate3d(0,    0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+@utility animate-ticker-scroll {
+  animation: ticker-scroll 48s linear infinite;
+  will-change: transform;
+}
+
+/* Live status dot — slow heartbeat. Paired with a soft expanding ring
+   in the DOM for a "transmitting" feel. */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1);   }
+  50%      { opacity: 0.55; transform: scale(0.9); }
+}
+@utility animate-live-pulse {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse-ring {
+  0%   { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0;   }
+}
+@utility animate-live-pulse-ring {
+  animation: live-pulse-ring 1.8s ease-out infinite;
+}
+
+/* Soft inner glow used on hero surfaces */
+@utility ring-glow-primary {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 40%, transparent),
+    0 1px 0 color-mix(in srgb, var(--primary) 8%, transparent),
+    0 24px 48px -28px color-mix(in srgb, var(--primary) 38%, transparent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Voice assistant motion language
+   Used by the AI invoice assistant — keeps the voice-first feel alive
+   without being noisy. All animations respect prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@keyframes wave-bar {
+  0%, 100% { transform: scaleY(0.28); opacity: 0.55; }
+  50%      { transform: scaleY(1);    opacity: 1; }
+}
+@utility animate-wave-bar {
+  animation: wave-bar 0.9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes mic-halo {
+  0%   { transform: scale(1);    opacity: 0.55; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+@utility animate-mic-halo {
+  animation: mic-halo 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes mic-halo-slow {
+  0%   { transform: scale(1);    opacity: 0.4; }
+  100% { transform: scale(1.6);  opacity: 0; }
+}
+@utility animate-mic-halo-slow {
+  animation: mic-halo-slow 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes assistant-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@utility animate-assistant-fade-up {
+  animation: assistant-fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}

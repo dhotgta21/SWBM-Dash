@@ -1,0 +1,66 @@
+{
+  "name": "starhawk-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed": "node scripts/seed-dpc-products.mjs",
+    "migrate": "node scripts/apply-migration.mjs",
+    "validate-case-studies": "node scripts/validate-case-studies.mjs"
+  },
+  "dependencies": {
+    "@next/third-parties": "^16.2.10",
+    "@radix-ui/react-slider": "^1.4.2",
+    "@radix-ui/react-tabs": "^1.1.15",
+    "@react-pdf/renderer": "^4.5.1",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tanstack/react-query": "^5.101.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "gray-matter": "^4.0.3",
+    "isomorphic-dompurify": "^3.18.0",
+    "lucide-react": "^1.20.0",
+    "marked": "^18.0.5",
+    "next": "^16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
+    "resend": "^6.14.0",
+    "sharp": "^0.35.3",
+    "sonner": "^2.0.7",
+    "speak-tts": "^2.0.8",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.10",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.10",
+    "pg": "^8.21.0",
+    "playwright": "^1.61.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vite": "^8.1.3",
+    "vitest": "^4.1.10",
+    "ws": "^8.21.0"
+  },
+  "overrides": {
+    "postcss": ">=8.5.10"
+  }
+}

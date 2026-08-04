@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="HumNod">
+  <title>HumNod</title>
+  <defs>
+    <linearGradient id="hn" x1="24" y1="20" x2="104" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0A5C5F"/>
+      <stop offset="55%" stop-color="#0D7377"/>
+      <stop offset="100%" stop-color="#1AA3AE"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#hn)" stroke-width="2.85" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <circle cx="64" cy="64" r="44"/>
+    <path d="M64 64 L64 28"/>
+    <path d="M64 64 L95.18 82"/>
+    <path d="M64 64 L32.82 82"/>
+  </g>
+  <g fill="url(#hn)">
+    <circle cx="64" cy="64" r="8"/>
+    <circle cx="64" cy="28" r="6.75"/>
+    <circle cx="95.18" cy="82" r="6.75"/>
+    <circle cx="32.82" cy="82" r="6.75"/>
+  </g>
+  <g fill="#fff" fill-opacity="0.3">
+    <circle cx="61.6" cy="61.4" r="2.1"/>
+    <circle cx="62.5" cy="26.4" r="1.45"/>
+    <circle cx="93.68" cy="80.4" r="1.45"/>
+    <circle cx="31.32" cy="80.4" r="1.45"/>
+  </g>
+</svg>

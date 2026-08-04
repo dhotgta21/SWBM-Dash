@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "project": "SWBM",
+  "updated": "2026-08-04T12:25:22.133Z",
+  "lifecycle": {
+    "mode": "build",
+    "currentStage": "S11",
+    "stageStatus": "done",
+    "platform": "web",
+    "stack": [
+      "Next.js",
+      "TypeScript",
+      "Supabase",
+      "Tailwind"
+    ],
+    "approvals": {
+      "understanding": "CONFIRMED",
+      "plan": "APPROVED"
+    },
+    "activePlan": null,
+    "activeTestRun": null,
+    "stages": {
+      "S0": {
+        "status": "done",
+        "notes": ""
+      },
+      "S1": {
+        "status": "done",
+        "notes": ""
+      },
+      "S1.5": {
+        "status": "skipped",
+        "notes": ""
+      },
+      "S2": {
+        "status": "done",
+        "notes": ""
+      },
+      "S3": {
+        "status": "done",
+        "notes": ""
+      },
+      "S4": {
+        "status": "not_started",
+        "notes": ""
+      },
+      "S5": {
+        "status": "not_started",
+        "notes": ""
+      },
+      "S6": {
+        "status": "not_started",
+        "notes": ""
+      },
+      "S7": {
+        "status": "not_started",
+        "notes": ""
+      },
+      "S8": {
+        "status": "done",
+        "notes": ""
+      },
+      "S9": {
+        "status": "done",
+        "notes": ""
+      },
+      "S10": {
+        "status": "done",
+        "notes": ""
+      },
+      "S11": {
+        "status": "done",
+        "notes": ""
+      }
+    },
+    "blockers": [],
+    "nextAction": "Complete lifecycle stage S4 (not_started)"
+  },
+  "features": [
+    {
+      "id": "F-footer",
+      "name": "Footer Made by Humnod layout",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "P1",
+      "surface": "ui",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "none",
+        "wire": "live",
+        "data": "none",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T12:25:21.229Z",
+      "chunks": {
+        "done": [
+          "C1"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [],
+        "contractIds": [],
+        "routes": [],
+        "files": []
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-guides",
+      "name": "Guides detail page load",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "P1",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T12:25:21.415Z",
+      "chunks": {
+        "done": [
+          "C1",
+          "C2"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [],
+        "contractIds": [],
+        "routes": [],
+        "files": []
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-invoice-pdf",
+      "name": "New invoice print/download parity",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "P1",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T12:25:21.023Z",
+      "chunks": {
+        "done": [
+          "C1",
+          "C2"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [],
+        "contractIds": [],
+        "routes": [],
+        "files": []
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    },
+    {
+      "id": "F-address",
+      "name": "GoAddress postcode autocomplete",
+      "priority": "P0",
+      "scope": "in",
+      "source": "user",
+      "phase": "P1",
+      "surface": "full",
+      "sensitive": false,
+      "dependsOn": [],
+      "inRun": true,
+      "impl": {
+        "ui": "live",
+        "contracts": "honest",
+        "backend": "live",
+        "wire": "live",
+        "data": "real",
+        "tests": "panel",
+        "archFit": "fit",
+        "security": "na"
+      },
+      "deferred": null,
+      "markedDoneAt": "2026-08-04T12:25:20.812Z",
+      "chunks": {
+        "done": [
+          "C1"
+        ],
+        "active": null,
+        "pending": []
+      },
+      "links": {
+        "requirementIds": [],
+        "contractIds": [],
+        "routes": [],
+        "files": []
+      },
+      "evidence": {
+        "lastPanel": null,
+        "lastCommit": null,
+        "notes": ""
+      },
+      "rollup": "done"
+    }
+  ],
+  "meta": {
+    "schemaVersion": 1,
+    "codeGraphPath": "docs/lifecycle/code-graph/graph.json",
+    "lastGraphSync": null
+  }
+}

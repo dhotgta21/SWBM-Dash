@@ -1,0 +1,362 @@
+[
+  {
+    "slug": "guildford-high-street",
+    "category": "town",
+    "baseAlt": "Guildford High Street at golden hour with the Guildhall tower",
+    "prompt": "Guildford's cobbled High Street climbing the hill at golden hour, the iconic Guildford Guildhall red-brick Tudor building and Holy Trinity Church tower visible in warm amber light. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the stone paving, slight haze in the distance, warm amber and honey colour palette with deep teal shadows, shot on 35mm anamorphic lens with shallow depth, photorealistic architectural photography, no people in focus, no text no logos no watermarks no UI overlays, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "reading-town-centre",
+    "category": "town",
+    "baseAlt": "Reading town centre at golden hour",
+    "prompt": "Reading town centre at golden hour showing the modern Broad Street shopping area with the iconic town hall clock tower in the background and Forbury Gardens trees framing the view. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "basingstoke-town-centre",
+    "category": "town",
+    "baseAlt": "Basingstoke town centre at golden hour with the Market Place",
+    "prompt": "Basingstoke town centre at golden hour, Market Place with the iconic Willis Museum red-brick Tudor hall and the modern Festival Place shopping centre glass canopy behind, golden side light catching the historic brickwork. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "oxford-cornmarket",
+    "category": "town",
+    "baseAlt": "Oxford Cornmarket Street at golden hour with college spires above",
+    "prompt": "Oxford's Cornmarket Street pedestrianised shopping area at golden hour, framed by historic colleges with honey-coloured Cotswold stone facades and spires visible above the rooftops. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stone, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "maidstone-high-street",
+    "category": "town",
+    "baseAlt": "Maidstone High Street at golden hour",
+    "prompt": "Maidstone High Street at golden hour with the medieval Archbishop's Palace stone archway and the tower of All Saints Church visible, Kent ragstone walls glowing in the low sun. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "brighton-seafront",
+    "category": "town",
+    "baseAlt": "Brighton seafront and pier at golden hour",
+    "prompt": "Brighton seafront at golden hour with the Victorian Brighton Palace Pier ironwork silhouetted against a glowing orange sky, the Regency seafront terraces curving away into the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the pebbles, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "southampton-city-centre",
+    "category": "town",
+    "baseAlt": "Southampton city centre at golden hour with the Bargate",
+    "prompt": "Southampton city centre at golden hour, the medieval Bargate stone arch in the foreground with the spires of the old town churches behind and modern office towers catching the last warm sun. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on ancient stone, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "portsmouth-dockyard",
+    "category": "town",
+    "baseAlt": "Portsmouth Historic Dockyard at golden hour with HMS Warrior",
+    "prompt": "Portsmouth Historic Dockyard at golden hour, the masts and rigging of HMS Warrior wooden warship with the white Spinnaker Tower rising in the background across the harbour. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the timber hull, slight haze over the harbour, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "luton-town-centre",
+    "category": "town",
+    "baseAlt": "Luton town centre at golden hour",
+    "prompt": "Luton town centre at golden hour, the modern glass Luton Mall with the historic St Mary's church spire framed against a warm orange sky, an English market town centre feel. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "chelmsford-high-street",
+    "category": "town",
+    "baseAlt": "Chelmsford High Street at golden hour",
+    "prompt": "Chelmsford High Street at golden hour with the stone facade of Chelmsford Cathedral and its spire framed by trees, the high street shops in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "slough-town-centre",
+    "category": "town",
+    "baseAlt": "Slough town centre at golden hour",
+    "prompt": "Slough town centre at golden hour, the modern glass Curve performing arts building facade catching the warm low sun, with the historic High Street clock tower visible behind. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "high-wycombe-town",
+    "category": "town",
+    "baseAlt": "High Wycombe town centre at golden hour",
+    "prompt": "High Wycombe town centre at golden hour, the historic red-brick Guildhall and parish church tower framed by the High Street with the Chiltern Hills visible in the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the brick, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "windsor-castle",
+    "category": "landmark",
+    "baseAlt": "Windsor Castle at golden hour, Round Tower silhouetted",
+    "prompt": "Windsor Castle at golden hour, the Round Tower silhouetted against a glowing amber sky with the River Thames winding below and the stone battlements catching the warm side light. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the ancient stonework, slight haze over the Thames valley, warm amber and honey palette with deep teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "tower-bridge-london",
+    "category": "landmark",
+    "baseAlt": "Tower Bridge London at golden hour",
+    "prompt": "Tower Bridge London at golden hour, the twin Gothic stone towers and blue suspension chains framing the Thames, the bridge illuminated from the side by warm low sunlight. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stonework, slight haze over the river, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "canterbury-cathedral",
+    "category": "landmark",
+    "baseAlt": "Canterbury Cathedral at golden hour",
+    "prompt": "Canterbury Cathedral at golden hour, the central Bell Harry Tower and the perpendicular Gothic arches catching the warm side light, medieval stone glowing amber, ancient city rooftops in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the cathedral stone, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "hampton-court-palace",
+    "category": "landmark",
+    "baseAlt": "Hampton Court Palace at golden hour",
+    "prompt": "Hampton Court Palace at golden hour, the Tudor red-brick gatehouse towers and Tudor chimneys silhouetted against a glowing amber sky, the River Thames in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the red brick, slight haze over the river, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "blenheim-palace",
+    "category": "landmark",
+    "baseAlt": "Blenheim Palace at golden hour",
+    "prompt": "Blenheim Palace at golden hour, the baroque stone facade of this English stately home glowing amber in the low sun, the Column of Victory rising above Capability Brown parkland, the lake in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the baroque stone, slight haze over the lake, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "leeds-castle-kent",
+    "category": "landmark",
+    "baseAlt": "Leeds Castle in Kent at golden hour",
+    "prompt": "Leeds Castle in Kent at golden hour, the medieval stone keep on its twin islands in the lake glowing warm amber, the Gloriette and wooden bridge connecting to the shore, still water reflecting the warm sky. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stone keep, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "arundel-castle",
+    "category": "landmark",
+    "baseAlt": "Arundel Castle at golden hour",
+    "prompt": "Arundel Castle at golden hour, the Norman stone keep and round tower rising above the town with the spire of the cathedral visible alongside, the River Arun valley below. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the castle stone, slight haze over the valley, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "rochester-castle",
+    "category": "landmark",
+    "baseAlt": "Rochester Castle at golden hour",
+    "prompt": "Rochester Castle at golden hour, the Norman keep's crumbling stone walls and tower silhouetted against a glowing amber sky with Rochester Cathedral and bridge visible across the River Medway. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the ancient stonework, slight haze over the river, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "dover-white-cliffs",
+    "category": "landmark",
+    "baseAlt": "The White Cliffs of Dover at golden hour",
+    "prompt": "The White Cliffs of Dover at golden hour, the towering chalk cliffs glowing warm amber in the low sun, the iconic lighthouse on the cliff edge, the English Channel sparkling below. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the chalk face, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "st-pauls-cathedral",
+    "category": "landmark",
+    "baseAlt": "St Paul's Cathedral London at golden hour",
+    "prompt": "St Paul's Cathedral London at golden hour, Sir Christopher Wren's iconic dome and twin western towers catching the warm amber sun, the City of London skyline and River Thames in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the Portland stone, slight haze over the river, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "box-hill-surrey",
+    "category": "landmark",
+    "baseAlt": "Box Hill Surrey Hills at golden hour",
+    "prompt": "Box Hill in the Surrey Hills at golden hour, the famous viewpoint over the North Downs with the zigzag chalk path descending to the River Mole below, the rolling chalk grassland glowing amber. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the hills, slight haze over the valley, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "seven-sisters-cliffs",
+    "category": "landmark",
+    "baseAlt": "Seven Sisters chalk cliffs at golden hour",
+    "prompt": "The Seven Sisters chalk cliffs on the Sussex coast at golden hour, the seven undulating chalk peaks dropping to the sea, Belle Tout lighthouse on the headland, the English Channel glowing amber below. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the chalk faces, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "south-downs-hillside",
+    "category": "scenery",
+    "baseAlt": "South Downs hillside with sheep at golden hour",
+    "prompt": "The South Downs hillside at golden hour, rolling chalk grassland with the famous South Downs Way footpath winding across the ridge, a small flock of sheep grazing on the slope, the Weald valley stretching to the horizon. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the grass, slight haze in the valley, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "north-downs-chalk",
+    "category": "scenery",
+    "baseAlt": "North Downs chalk escarpment at golden hour",
+    "prompt": "The North Downs Way at golden hour, the chalk escarpment with its yew trees and chalk grassland glowing amber, the dry valley cutting through, the Kent countryside stretching out below. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the chalk, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "chilterns-beech-woods",
+    "category": "scenery",
+    "baseAlt": "Chiltern Hills beech woodland at golden hour",
+    "prompt": "The Chiltern Hills at golden hour, an avenue of mature beech trees in full copper-green leaf along a country lane, dappled sunlight filtering through the canopy. Cinematic golden hour photography, low warm sunlight filtering through the beech canopy, long golden shadows across the lane, slight haze in the distance, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "cotswolds-stone-village",
+    "category": "scenery",
+    "baseAlt": "Cotswolds stone village at golden hour",
+    "prompt": "A classic Cotswolds village at golden hour, honey-coloured Cotswold stone cottages with mullioned windows and stone-tiled roofs, the village church spire rising behind, an ancient stone bridge over a stream in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the limestone, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "thames-goring",
+    "category": "scenery",
+    "baseAlt": "River Thames at Goring at golden hour",
+    "prompt": "The River Thames at Goring at golden hour, the river curving past wooded hills with a chalk cliff on one side and beech woodland on the other, a traditional wooden rowing boat pulled up on the bank. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the water, slight haze over the hills, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "kent-orchard-blossom",
+    "category": "scenery",
+    "baseAlt": "Kent cherry orchard in blossom at golden hour",
+    "prompt": "A traditional Kent cherry orchard in full spring blossom at golden hour, rows of flowering cherry trees stretching into the distance, pink and white petals glowing in the warm side light. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows between the rows, slight haze, warm amber and honey palette with soft pink highlights, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "surrey-heathland",
+    "category": "scenery",
+    "baseAlt": "Surrey heathland at golden hour",
+    "prompt": "Surrey heathland at golden hour, a sandy path winding through purple heather and gorse on a clear sandy ridge, pine and birch trees framing the view, the rolling heath stretching into the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the heather, slight haze, warm amber and honey palette with deep teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "test-valley-meadow",
+    "category": "scenery",
+    "baseAlt": "Hampshire Test Valley water meadow at golden hour",
+    "prompt": "The Hampshire Test Valley at golden hour, a water meadow with the chalk stream winding through lush green grass, pollarded willows along the bank, the chalk downs rising in the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the meadow, slight haze over the downs, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "new-forest-ponies",
+    "category": "scenery",
+    "baseAlt": "New Forest wild ponies at golden hour",
+    "prompt": "The New Forest at golden hour, a small group of wild New Forest ponies grazing under ancient oak and beech trees on open heathland, sunlight filtering through the canopy. Cinematic golden hour photography, low warm sunlight filtering through the trees, long golden shadows across the grass, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "oxfordshire-village-green",
+    "category": "scenery",
+    "baseAlt": "Oxfordshire village green at golden hour",
+    "prompt": "An Oxfordshire village green at golden hour, thatched-roof cottages framing a wide village green, an ancient stone church tower behind, ducks on the village pond in the foreground. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the green, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "buckinghamshire-village",
+    "category": "scenery",
+    "baseAlt": "Buckinghamshire village at golden hour",
+    "prompt": "A Buckinghamshire village at golden hour, brick-and-flint cottages with tiled roofs along a quiet lane, the village church spire rising behind, the Chiltern beechwoods on the hillside above. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the lane, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "berkshire-downland",
+    "category": "scenery",
+    "baseAlt": "Berkshire downland at golden hour",
+    "prompt": "Berkshire downland at golden hour, the rolling chalk downs with their characteristic rounded summits and dry valleys, the Ridgeway footpath winding along the ridge, the Kennet valley stretching away. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the downland, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "west-sussex-vineyard",
+    "category": "scenery",
+    "baseAlt": "West Sussex vineyard at golden hour",
+    "prompt": "A West Sussex vineyard at golden hour, neat rows of grapevines stretching down a gentle south-facing slope, the South Downs rising in the background, golden late-summer light on the leaves. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows between the rows, slight haze over the downs, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "rye-cobbled-streets",
+    "category": "scenery",
+    "baseAlt": "Rye cobbled streets at golden hour",
+    "prompt": "The medieval town of Rye at golden hour, narrow cobbled Mermaid Street climbing past half-timbered houses and ancient doorways, St Mary's church tower above, the Romney Marsh stretching into the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the cobbles, slight haze over the marsh, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "kent-hop-field",
+    "category": "scenery",
+    "baseAlt": "Kent hop field with oast houses at golden hour",
+    "prompt": "A traditional Kent hop garden at golden hour, tall wooden hop poles with bines climbing towards the sky in neat rows, oast houses with their conical cowls in the distance, late summer evening light. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows between the rows, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "hampshire-chalk-stream",
+    "category": "scenery",
+    "baseAlt": "Hampshire chalk stream at golden hour",
+    "prompt": "A Hampshire chalk stream at golden hour, crystal-clear water flowing over a gravel bed with water crowfoot and starwort, a heron standing motionless in the shallows, alder trees lining the bank. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the water, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic nature photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "cotswold-stone-cottage",
+    "category": "character",
+    "baseAlt": "Cotswold stone cottage at golden hour",
+    "prompt": "A quintessential Cotswold stone cottage at golden hour, warm honey-coloured limestone walls with a stone-tiled roof, climbing wisteria around the door, mullioned stone windows glowing in the side light. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stone walls, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "kentish-ragstone-wall",
+    "category": "character",
+    "baseAlt": "Kentish ragstone wall at golden hour",
+    "prompt": "A traditional Kentish ragstone wall at golden hour, rough irregular blocks of grey-brown Kentish ragstone laid in courses with lime mortar, weathering and lichen glowing in the warm side light, a country lane stretching behind. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the stone face, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide close-up, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "tudor-timber-frame",
+    "category": "character",
+    "baseAlt": "Tudor timber-frame house at golden hour",
+    "prompt": "A historic Tudor timber-frame house at golden hour, the dark oak timber framing and white limewashed wattle-and-daub panels glowing warm, exposed beams and overhanging upper storey characteristic of 16th-century English vernacular architecture. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the facade, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "sussex-tile-hung-cottage",
+    "category": "character",
+    "baseAlt": "Sussex tile-hung cottage at golden hour",
+    "prompt": "A traditional Sussex tile-hung cottage at golden hour, the south facade clad in dark clay mathematical tiles, dormer windows in a steep tiled roof, climbing roses around the door, a country lane in front. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the tile-hung facade, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "georgian-terrace",
+    "category": "character",
+    "baseAlt": "Georgian terraced street at golden hour",
+    "prompt": "A Georgian terraced street at golden hour, a row of pale Bath-stone townhouses with classical proportions, sash windows, and wrought-iron railings, the warm side light catching the honey-coloured facades. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows along the terrace, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "victorian-terrace-london",
+    "category": "character",
+    "baseAlt": "Victorian London terraced street at golden hour",
+    "prompt": "A Victorian London terraced street at golden hour, a row of red-brick terraced houses with stucco ground-floor bay windows, ornamental ironwork, and painted front doors along a quiet residential street. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows along the terrace, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "modern-extension-build",
+    "category": "character",
+    "baseAlt": "Modern extension under construction at golden hour",
+    "prompt": "A modern architect-designed rear extension under construction on a period home at golden hour, scaffolding and exposed oak framing, large glass openings being installed, building materials stacked on the drive, golden side light catching the timber frame. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the building site, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "oak-frame-barn",
+    "category": "character",
+    "baseAlt": "Traditional oak-frame barn at golden hour",
+    "prompt": "A traditional English oak-frame barn at golden hour, the green-oak timber framing and weatherboard cladding glowing in the warm side light, the timber structure showing the joints and braces of a classic English barn. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the timber frame, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "brickworks-heritage",
+    "category": "character",
+    "baseAlt": "Historic brickworks kiln at golden hour",
+    "prompt": "A historic brickworks kiln at golden hour, the tall brick chimney stack and Hoffman kiln glowing in the warm low sun, weathered handmade bricks stacked nearby, an industrial heritage scene with warm light on the brick. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the brickwork, slight haze, warm amber and honey palette with deep teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "stone-bridge-river",
+    "category": "character",
+    "baseAlt": "Ancient stone bridge over river at golden hour",
+    "prompt": "An ancient stone packhorse bridge at golden hour, weathered limestone arches reflected in the still water of a slow-moving river, overhanging willow trees framing the view, summer evening light catching the stonework. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stone arches, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "whitstable-harbour",
+    "category": "town",
+    "baseAlt": "Whitstable harbour and beach huts at golden hour",
+    "prompt": "Whitstable harbour on the Kent coast at golden hour, the shingle beach with traditional colourful wooden beach huts in the foreground, fishing boats moored at the wooden jetty, the low sun catching the sea spray. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the pebbles, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "margate-seafront",
+    "category": "town",
+    "baseAlt": "Margate seafront and harbour arm at golden hour",
+    "prompt": "Margate seafront on the Kent coast at golden hour, the Victorian harbour arm curving out to sea with the Turner Contemporary art gallery and old town skyline behind, the golden low sun catching the stonework. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the seafront, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "ramsgate-harbour",
+    "category": "town",
+    "baseAlt": "Ramsgate royal harbour at golden hour",
+    "prompt": "Ramsgate Royal Harbour on the Kent coast at golden hour, the sweeping arc of the Victorian harbour wall with its clock tower, sailboats moored in the still water, the golden sun catching the Regency terrace above. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the harbour stonework, slight haze over the marina, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "broadstairs-victorian",
+    "category": "town",
+    "baseAlt": "Broadstairs Victorian seafront at golden hour",
+    "prompt": "Broadstairs Victorian seafront on the Kent coast at golden hour, the chalk cliffs of the North Foreland behind the town, the picturesque harbour with its stone jetty and fishing boats, the golden low sun catching the whitewashed clapboard cottages on the clifftop. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the chalk, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "deal-pier",
+    "category": "town",
+    "baseAlt": "Deal pier and seafront at golden hour",
+    "prompt": "Deal seafront on the Kent coast at golden hour, the long Victorian pier stretching out into the English Channel, the Georgian seafront terraces and the famous Deal Castle walls visible, the golden low sun catching the sea. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the pier, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "newport-iow",
+    "category": "town",
+    "baseAlt": "Newport town centre Isle of Wight at golden hour",
+    "prompt": "Newport town centre on the Isle of Wight at golden hour, the medieval quay with Carisbrooke Castle on the hill above the town, the River Medina winding through the valley, the golden low sun catching the historic stone facades. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the stone, slight haze over the valley, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "ryde-seafront-iow",
+    "category": "town",
+    "baseAlt": "Ryde esplanade Isle of Wight at golden hour",
+    "prompt": "Ryde seafront on the Isle of Wight at golden hour, the long Victorian esplanade stretching into the distance, the pier and hovercraft terminal visible, the wide sandy beach and Solent beyond, the golden low sun catching the painted Regency facades. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows along the esplanade, slight haze over the Solent, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "sandown-bay-iow",
+    "category": "town",
+    "baseAlt": "Sandown Bay Isle of Wight at golden hour",
+    "prompt": "Sandown Bay on the Isle of Wight at golden hour, the long sandy beach curving along the south coast of the island, the Victorian seafront hotels and pleasure pier silhouetted against the golden sky, the white chalk cliffs of Culver Down in the distance. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the sand, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "shanklin-old-village",
+    "category": "town",
+    "baseAlt": "Shanklin Old Village Isle of Wight at golden hour",
+    "prompt": "Shanklin Old Village on the Isle of Wight at golden hour, the picturesque thatched-roof cottage tearooms along the cobbled village street, the famous Shanklin Chine wooded gorge cutting down to the sea in the background, the golden low sun catching the thatch. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows on the cobbles, slight haze, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic architectural photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  },
+  {
+    "slug": "ventnor-botanic",
+    "category": "town",
+    "baseAlt": "Ventnor seaside and Undercliff Isle of Wight at golden hour",
+    "prompt": "Ventnor on the Isle of Wight at golden hour, the Victorian seaside town built into the steep southern slopes of the island, the famous Ventnor Botanic Garden's sub-tropical plants catching the warm low sun, the English Channel glittering below, the golden light catching the whitewashed facades. Cinematic golden hour photography, low warm sunlight from the side, long golden shadows across the steep terraced gardens, slight haze over the sea, warm amber and honey palette with teal shadows, 35mm anamorphic lens, photorealistic landscape photography, no people in focus, no text no logos no watermarks, wide establishing shot, 21:9 cinematic aspect ratio"
+  }
+]

@@ -1,0 +1,21 @@
+-- =============================================================================
+-- Star Hawk Builders Merchant — 066_drop_old_search_products_overload.sql
+-- =============================================================================
+-- Migration 065 used CREATE OR REPLACE FUNCTION with an extra parameter
+-- (p_exclude_temporary). PG semantics: if the parameter list changes (different
+-- number of args, types, or defaults), CREATE OR REPLACE creates a *new
+-- overload* alongside the existing one rather than replacing it. We ended up
+-- with:
+--
+--   search_products(p_query, p_limit, p_active_only)            ← original
+--   search_products(p_query, p_limit, p_active_only, p_exclude_temporary)
+--                                                                  ← from 065
+--
+-- Callers that pass 3 args get the OLD overload, which doesn't filter
+-- is_temporary — temp products still leak to the public /quote catalogue
+-- and the dashboard search. Drop the old one so all callers bind to the
+-- 4-arg version (p_exclude_temporary defaults to true for existing callers,
+-- to false when the internal ProductSearch explicitly opts in).
+-- =============================================================================
+
+DROP FUNCTION IF EXISTS public.search_products(p_query text, p_limit integer, p_active_only boolean);
