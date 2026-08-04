@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient, getSupabaseProjectHost } from '@/lib/supabase/admin'
 import { rateLimit, type RateLimitResult } from '@/lib/rate-limit'
 import { createMemoryRateLimiter } from '@/lib/rate-limit/memory'
 import { ADMIN_LOGIN_PATH } from '@/lib/auth/login-paths'
@@ -81,13 +81,13 @@ function sanitizeAuthError(error: { message?: string; code?: string; status?: nu
 }
 
 /**
- * Demo sign-in: never uses password grant (Supabase CAPTCHA) and never uses
- * Turnstile. Flow:
- *   1. Confirm the user exists (admin list / generateLink)
- *   2. Sync password via service role so SQL-seeded hashes cannot block login
- *   3. Mint a session with generateLink + verifyOtp (cookie client)
+ * Demo sign-in: never uses Turnstile / CAPTCHA widgets.
+ * Steps:
+ *   1. Find auth user by email (service role)
+ *   2. Write the submitted password onto that user (fixes SQL seed hashes)
+ *   3. Create a browser session via password grant OR magic-link verifyOtp
  *
- * This package is a sales demo: reliability over lock-down auth.
+ * Errors include a short detail string so the UI can show what failed.
  */
 async function establishDemoSession(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -95,114 +95,173 @@ async function establishDemoSession(
   password: string
 ): Promise<
   | { ok: true; user: { id: string; email?: string | null } }
-  | { ok: false; reason: 'bad_password' | 'no_user' | 'session_failed'; detail?: string }
+  | { ok: false; reason: 'bad_password' | 'no_user' | 'session_failed' | 'config'; detail?: string }
 > {
+  const host = getSupabaseProjectHost()
+  let admin
   try {
-    const admin = createAdminClient()
+    admin = createAdminClient()
+  } catch (err) {
+    return {
+      ok: false,
+      reason: 'config',
+      detail: err instanceof Error ? err.message : String(err),
+    }
+  }
 
-    // Resolve the auth user by email (service role; no captcha).
+  try {
+    // --- Find user ----------------------------------------------------------
     let userId: string | null = null
-    try {
-      // Prefer the dedicated lookup when available (supabase-js v2).
-      const byEmail = await (
-        admin.auth.admin as unknown as {
-          getUserByEmail?: (
-            e: string
-          ) => Promise<{ data: { user: { id: string } | null }; error: { message: string } | null }>
-        }
-      ).getUserByEmail?.(email)
-      if (byEmail?.data?.user?.id) {
-        userId = byEmail.data.user.id
+    const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    if (listed.error) {
+      console.error('signIn: listUsers failed', listed.error)
+      // Wrong service role key usually surfaces here.
+      return {
+        ok: false,
+        reason: 'config',
+        detail: `listUsers failed on ${host}: ${listed.error.message}. SUPABASE_SERVICE_ROLE_KEY may not match NEXT_PUBLIC_SUPABASE_URL.`,
       }
-    } catch {
-      // fall through to listUsers / generateLink
     }
+    const match = listed.data.users.find(
+      (u) => (u.email ?? '').toLowerCase() === email.toLowerCase()
+    )
+    userId = match?.id ?? null
 
     if (!userId) {
-      // Paginate a small list and match email (fine for demo user counts).
-      const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-      if (listed.error) {
-        console.error('signIn: listUsers failed', listed.error)
-      } else {
-        const match = listed.data.users.find(
-          (u) => (u.email ?? '').toLowerCase() === email.toLowerCase()
-        )
-        userId = match?.id ?? null
+      const known = listed.data.users
+        .map((u) => u.email)
+        .filter(Boolean)
+        .slice(0, 5)
+        .join(', ')
+      return {
+        ok: false,
+        reason: 'no_user',
+        detail: `No auth user "${email}" on ${host}. Known: ${known || '(none)'}.`,
       }
     }
 
-    if (!userId) {
-      // Last check: generateLink only works for existing users.
-      const probe = await admin.auth.admin.generateLink({ type: 'magiclink', email })
-      if (probe.error || !probe.data?.user?.id) {
-        console.error('signIn: user not found', probe.error)
-        return { ok: false, reason: 'no_user', detail: probe.error?.message }
-      }
-      userId = probe.data.user.id
-    }
-
-    // Demo: force the submitted password onto the account so SQL-seeded
-    // bcrypt / mismatched hashes never block staff login. Service role only.
+    // --- Sync password + unlock --------------------------------------------
     const { error: pwdError } = await admin.auth.admin.updateUserById(userId, {
       password,
       email_confirm: true,
+      user_metadata: { demo_admin: true },
     })
     if (pwdError) {
-      console.warn('signIn: could not sync password (continuing to mint):', pwdError.message)
+      console.warn('signIn: updateUserById password:', pwdError.message)
     }
 
-    // Clear lockout on the profile row if present.
-    try {
-      await admin
-        .from('profiles')
-        .update({
-          failed_sign_in_attempts: 0,
-          locked_until: null,
-          is_active: true,
-        })
-        .eq('id', userId)
-    } catch {
-      // ignore
+    await admin
+      .from('profiles')
+      .update({
+        failed_sign_in_attempts: 0,
+        locked_until: null,
+        is_active: true,
+        email,
+      })
+      .eq('id', userId)
+
+    // --- Session path A: password grant (works when CAPTCHA is off) --------
+    {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (!error && data.user) {
+        return { ok: true, user: data.user }
+      }
+      if (error) {
+        console.warn('signIn: password grant failed (will try magic link):', error.message, error.code)
+      }
     }
 
+    // --- Session path B: magic link token_hash -----------------------------
     const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email,
     })
-    const tokenHash = linkData?.properties?.hashed_token
-    if (linkError || !tokenHash) {
+    if (linkError) {
       console.error('signIn: generateLink failed', linkError)
       return {
         ok: false,
         reason: 'session_failed',
-        detail: linkError?.message ?? 'no token',
+        detail: `generateLink failed: ${linkError.message}`,
       }
     }
 
-    const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'magiclink',
-    })
-    if (!verifyError && verified.user) {
-      return { ok: true, user: verified.user }
-    }
+    const props = linkData?.properties as
+      | {
+          hashed_token?: string
+          email_otp?: string
+          action_link?: string
+        }
+      | undefined
+    const tokenHash = props?.hashed_token
+    const emailOtp = props?.email_otp
+    const actionLink = props?.action_link
 
-    const retry = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'email',
-    })
-    if (retry.error || !retry.data.user) {
-      console.error('signIn: verifyOtp failed', verifyError ?? retry.error)
-      return {
-        ok: false,
-        reason: 'session_failed',
-        detail: (verifyError ?? retry.error)?.message,
+    if (tokenHash) {
+      for (const type of ['magiclink', 'email'] as const) {
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type,
+        })
+        if (!error && data.user) {
+          return { ok: true, user: data.user }
+        }
+        if (error) {
+          console.warn(`signIn: verifyOtp(${type}) failed:`, error.message)
+        }
       }
     }
-    return { ok: true, user: retry.data.user }
+
+    // --- Session path C: OTP token from action_link query ------------------
+    if (actionLink) {
+      try {
+        const u = new URL(actionLink)
+        const token = u.searchParams.get('token')
+        const typeParam = (u.searchParams.get('type') || 'magiclink') as 'magiclink' | 'email'
+        if (token) {
+          const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: typeParam === 'email' ? 'email' : 'magiclink',
+          })
+          if (!error && data.user) {
+            return { ok: true, user: data.user }
+          }
+          if (error) {
+            console.warn('signIn: verifyOtp(action_link token) failed:', error.message)
+          }
+        }
+      } catch (parseErr) {
+        console.warn('signIn: action_link parse failed', parseErr)
+      }
+    }
+
+    // --- Session path D: email_otp field -----------------------------------
+    if (emailOtp) {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: emailOtp,
+        type: 'magiclink',
+      })
+      if (!error && data.user) {
+        return { ok: true, user: data.user }
+      }
+      if (error) {
+        console.warn('signIn: verifyOtp(email_otp) failed:', error.message)
+      }
+    }
+
+    return {
+      ok: false,
+      reason: 'session_failed',
+      detail: `Found user ${userId} on ${host} but could not create a browser session (password grant + magic link both failed).`,
+    }
   } catch (err) {
     console.error('signIn: session mint unexpected error', err)
-    return { ok: false, reason: 'session_failed', detail: String(err) }
+    return {
+      ok: false,
+      reason: 'session_failed',
+      detail: err instanceof Error ? err.message : String(err),
+    }
   }
 }
 
@@ -420,16 +479,30 @@ export async function signIn(formData: FormData) {
   const sessionResult = await establishDemoSession(supabase, email, password)
   if (!sessionResult.ok) {
     await recordFailedSignIn(email)
+    console.error('signIn: failed', sessionResult.reason, sessionResult.detail)
+    // Demo: surface the real reason so setup issues are fixable without logs.
+    const detail = sessionResult.detail?.trim()
+    if (sessionResult.reason === 'config') {
+      return {
+        error: detail || 'Server is missing Supabase service-role credentials.',
+      }
+    }
     if (sessionResult.reason === 'session_failed') {
-      console.error('signIn: session mint failed', sessionResult.detail)
       return {
         error:
-          'Could not start a session. Check SUPABASE_SERVICE_ROLE_KEY on Vercel matches this project, then try again.',
+          detail ||
+          'Could not start a session. Check SUPABASE_SERVICE_ROLE_KEY matches this Supabase project.',
+      }
+    }
+    if (sessionResult.reason === 'no_user') {
+      return {
+        error:
+          detail ||
+          'No account with that email in Supabase Auth. Use dhotgta@gmail.com (or create the user in Supabase → Authentication → Users).',
       }
     }
     return {
-      error:
-        'Invalid email or password. Use a user that exists in Supabase Auth (e.g. dhotgta@gmail.com) with any password for this demo.',
+      error: detail || 'Invalid email or password.',
     }
   }
 
