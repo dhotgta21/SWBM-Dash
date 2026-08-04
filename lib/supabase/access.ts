@@ -25,7 +25,7 @@ export async function isAdminUser(
   if (!userId) return false
   const { data, error } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, email')
     .eq('id', userId)
     .maybeSingle()
 
@@ -34,6 +34,12 @@ export async function isAdminUser(
     // closed: the caller treats this as "not admin" and the authorization
     // branch they wrap this in will reject the request.
     console.error('isAdminUser: profiles lookup failed:', error.message)
+    return false
+  }
+  // Demo picker/driver emails must never receive admin privileges even if
+  // profiles.role was corrupted to 'admin' (legacy promote-on-login bug).
+  const email = (data?.email ?? '').toLowerCase()
+  if (email === 'picker@demo-builder.com' || email === 'driver@demo-builder.com') {
     return false
   }
   return data?.role === 'admin'

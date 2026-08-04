@@ -34,7 +34,13 @@ export default async function PickerLayout({ children }: { children: ReactNode }
     redirect(`${ADMIN_LOGIN_PATH}?error=inactive`)
   }
 
-  if (profile.role === 'driver') {
+  const email = (profile.email || user.email || '').toLowerCase()
+  // Demo picker email always stays on this shell, even if role was corrupted
+  // to admin (that bug granted full admin privileges incorrectly).
+  const isDemoPicker = email === 'picker@demo-builder.com'
+  const isDemoDriver = email === 'driver@demo-builder.com'
+
+  if (isDemoDriver || profile.role === 'driver') {
     redirect('/driver')
   }
 
@@ -42,7 +48,8 @@ export default async function PickerLayout({ children }: { children: ReactNode }
     redirect('/portal')
   }
 
-  if (profile.role !== 'picker') {
+  if (!isDemoPicker && profile.role !== 'picker') {
+    // Real admins/staff who hit /picker by mistake → main ops home.
     redirect('/invoices?view=due')
   }
 

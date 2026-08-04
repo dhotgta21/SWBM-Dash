@@ -145,14 +145,28 @@ async function establishDemoSession(
     }
 
     // --- Sync password + unlock --------------------------------------------
+    // Do NOT write user_metadata here: replacing it with { demo_admin: true }
+    // wiped invited_role and contributed to picker/driver losing their roles.
+    // Password + confirm only.
     const { error: pwdError } = await admin.auth.admin.updateUserById(userId, {
       password,
       email_confirm: true,
-      user_metadata: { demo_admin: true },
     })
     if (pwdError) {
       console.warn('signIn: updateUserById password:', pwdError.message)
     }
+
+    // Pin known demo staff emails to the correct role every sign-in so a
+    // bad row (or stale promote-to-admin code) cannot leave Demo Picker as
+    // role=admin with full privileges.
+    const pinnedRole =
+      email === 'picker@demo-builder.com'
+        ? 'picker'
+        : email === 'driver@demo-builder.com'
+          ? 'driver'
+          : email === 'admin@demo-builder.com'
+            ? 'admin'
+            : null
 
     await admin
       .from('profiles')
@@ -161,6 +175,7 @@ async function establishDemoSession(
         locked_until: null,
         is_active: true,
         email,
+        ...(pinnedRole ? { role: pinnedRole, permissions: null } : {}),
       })
       .eq('id', userId)
 
@@ -515,23 +530,31 @@ export async function signIn(formData: FormData) {
 
   const authUserId = signedInUser.id
 
-  // Ensure a usable operator profile exists (SQL seeds sometimes create Auth
-  // without a profiles row, which used to look like "deactivated").
-  if (!profile || profile.id !== authUserId) {
-    const { data: byId } = await adminClient
+  // Always re-load profile by auth id after session establish. establishDemoSession
+  // may have re-pinned demo picker/driver roles; the pre-auth row can be stale.
+  {
+    const { data: byId, error: byIdError } = await adminClient
       .from('profiles')
       .select('id, is_active, role, locked_until, failed_sign_in_attempts')
       .eq('id', authUserId)
       .maybeSingle()
+    if (byIdError) {
+      console.error('signIn: profile-by-id lookup error', {
+        code: byIdError.code,
+        message: byIdError.message,
+      })
+    }
     if (byId) {
       profile = byId
-    } else {
+    } else if (!profile || profile.id !== authUserId) {
+      // SQL seeds sometimes create Auth without a profiles row.
+      const defaultRole = loginType === 'operator' ? 'admin' : 'client'
       const { error: upsertErr } = await adminClient.from('profiles').upsert(
         {
           id: authUserId,
           email,
           full_name: 'Demo Admin',
-          role: loginType === 'operator' ? 'admin' : 'client',
+          role: defaultRole,
           is_active: true,
           failed_sign_in_attempts: 0,
           locked_until: null,
@@ -545,50 +568,26 @@ export async function signIn(formData: FormData) {
         profile = {
           id: authUserId,
           is_active: true,
-          role: loginType === 'operator' ? 'admin' : 'client',
+          role: defaultRole,
           locked_until: null,
           failed_sign_in_attempts: 0,
         }
       }
     }
   }
-  // Do NOT promote picker/driver → admin on staff login. All operator roles
-  // share ADMIN_LOGIN_PATH; post-login routing uses profile.role
-  // (getPostLoginPath). Overwriting roles broke auto-routing and made demo
-  // picker/driver accounts land on the full dashboard as "admins".
 
-  // The pre-auth lookup keys on profiles.email, which can legitimately
-  // diverge from the Auth email while an email-change confirmation is
-  // pending (updateUserDetails mirrors the requested address into profiles
-  // immediately, but Auth only adopts it once confirmed). In that window the
-  // user still signs in with their old Auth email, so fall back to the
-  // authenticated user's id — otherwise every sign-in would be refused as
-  // "deactivated" until the confirmation link is clicked.
-  //
-  // profiles.email has no unique constraint, so a by-email hit that belongs
-  // to a DIFFERENT user must not drive role/active checks either — resolve
-  // by id in that case too.
-  if (profile && profile.id !== authUserId) {
-    profile = null
-  }
-  if (!profile) {
-    const { data: profileById, error: profileByIdError } = await adminClient
-      .from('profiles')
-      .select('id, is_active, role, locked_until, failed_sign_in_attempts')
-      .eq('id', authUserId)
-      .maybeSingle()
-    if (profileByIdError) {
-      console.error('signIn: profile-by-id lookup error', {
-        code: profileByIdError.code,
-        message: profileByIdError.message,
-      })
-    }
-    profile = profileById
-    if (profile && isLocked(profile.locked_until)) {
-      await supabase.auth.signOut()
-      return { error: 'Invalid email or password.' }
+  // In-memory pin for this request (DB pin already ran in establishDemoSession).
+  if (profile) {
+    if (email === 'picker@demo-builder.com') {
+      profile = { ...profile, role: 'picker' }
+    } else if (email === 'driver@demo-builder.com') {
+      profile = { ...profile, role: 'driver' }
+    } else if (email === 'admin@demo-builder.com') {
+      profile = { ...profile, role: 'admin' }
     }
   }
+
+  // Do NOT promote picker/driver → admin on staff login.
 
   // Verify the user account is active. Client portal users go to
   // /portal (their own dashboard) instead of the operator dashboard.

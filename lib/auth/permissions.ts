@@ -148,6 +148,17 @@ export function resolveStaffPermissions(
     return allTrue
   }
 
+  // Pickers and drivers never use the staff permission matrix. They only
+  // access their own mobile shells (/picker, /driver). Returning all-false
+  // keeps any accidental call to canSeeSection / canSeeMoney closed.
+  if (role === 'picker' || role === 'driver' || role === 'client') {
+    const allFalse = {} as Record<keyof StaffPermissions, boolean>
+    for (const key of Object.keys(STAFF_DEFAULT_PERMISSIONS) as Array<keyof StaffPermissions>) {
+      allFalse[key] = false
+    }
+    return allFalse
+  }
+
   const base: StaffPermissions = { ...STAFF_DEFAULT_PERMISSIONS }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return base

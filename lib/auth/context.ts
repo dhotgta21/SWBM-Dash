@@ -60,7 +60,14 @@ export async function getOperatorContext(): Promise<OperatorContext | null> {
     return null
   }
 
-  const role: AppRole = profile.role as AppRole
+  // Demo staff emails are role-pinned (see signIn). Never treat Demo Picker
+  // as admin even if profiles.role was corrupted to 'admin'.
+  const email = (user.email ?? '').toLowerCase()
+  let role: AppRole = profile.role as AppRole
+  if (email === 'picker@demo-builder.com') role = 'picker'
+  else if (email === 'driver@demo-builder.com') role = 'driver'
+  else if (email === 'admin@demo-builder.com') role = 'admin'
+
   return {
     userId: user.id,
     email: user.email ?? '',

@@ -38,20 +38,19 @@ export default async function DashboardLayout({
     redirect(`${ADMIN_LOGIN_PATH}?error=inactive`)
   }
 
-  // Client portal users and pickers have their own layouts — keep them
-  // out of the operator dashboard. (The reverse — operators hitting
-  // /portal or /picker — is also handled by those layouts; defence in depth.)
-  if (ctx.role === 'client') {
-    redirect('/portal')
+  // Client / picker / driver never use the main operator shell.
+  // Email-pinning in getOperatorContext also covers demo accounts whose
+  // profiles.role was wrongly set to admin.
+  if (ctx.role === 'client' || ctx.isPicker || ctx.isDriver) {
+    if (ctx.role === 'client') redirect('/portal')
+    if (ctx.isPicker || ctx.role === 'picker') redirect('/picker')
+    if (ctx.isDriver || ctx.role === 'driver') redirect('/driver')
   }
 
-  if (ctx.role === 'picker') {
-    redirect('/picker')
-  }
-
-  if (ctx.role === 'driver') {
-    redirect('/driver')
-  }
+  // Belt-and-braces: known demo emails must never see the admin dashboard.
+  const email = (ctx.email || '').toLowerCase()
+  if (email === 'picker@demo-builder.com') redirect('/picker')
+  if (email === 'driver@demo-builder.com') redirect('/driver')
 
   // Show the first-admin recovery prompt to staff users when the system
   // has no admins yet (e.g. the first user was created as staff before the

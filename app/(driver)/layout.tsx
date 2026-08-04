@@ -34,7 +34,11 @@ export default async function DriverLayout({ children }: { children: ReactNode }
     redirect(`${ADMIN_LOGIN_PATH}?error=inactive`)
   }
 
-  if (profile.role === 'picker') {
+  const email = (profile.email || user.email || '').toLowerCase()
+  const isDemoDriver = email === 'driver@demo-builder.com'
+  const isDemoPicker = email === 'picker@demo-builder.com'
+
+  if (isDemoPicker || profile.role === 'picker') {
     redirect('/picker')
   }
 
@@ -42,7 +46,7 @@ export default async function DriverLayout({ children }: { children: ReactNode }
     redirect('/portal')
   }
 
-  if (profile.role !== 'driver') {
+  if (!isDemoDriver && profile.role !== 'driver') {
     redirect('/invoices?view=due')
   }
 
