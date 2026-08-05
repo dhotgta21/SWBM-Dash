@@ -3,6 +3,9 @@
 ## Mode
 Demo fully seeded for sales: products, multi-year invoices, quotes, campaigns, temp products, picker/driver.
 
+## Latest fix (2026-08-05)
+Browser tab favicon was still Star Hawk **SH**. Regenerated `public/favicon.ico` from Demo **DB** `Logo.png`. After deploy, hard-refresh the tab if the old icon is cached.
+
 ## Live credentials (also in local `DEMO_CREDENTIALS.md`, gitignored)
 
 | Role | Email | Password | Where |

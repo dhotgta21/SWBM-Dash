@@ -237,6 +237,7 @@ When demo env vars are **unset**, fallbacks remain **Star Hawk Builders Merchant
 | Landing still construction copy | `NEXT_PUBLIC_DEMO_MODE=true` and rebuild; vertical env |
 | Empty non-construction categories | Run `seed:demo:verticals` |
 | Brand still Star Hawk in chrome | Demo mode env + seed company name; hard refresh |
+| Tab icon still Star Hawk (SH) | Shipped `public/favicon.ico` must match Demo DB mark (regenerate from `Logo.png` if rebranding). Hard-refresh tab (favicon is cached ~7 days). If Settings → Brand uploaded a custom logo, use **Restore default logo** or re-upload Demo mark. Storage `logos/brand/*` overrides `public/`. |
 | Document number collisions later | Seed updates `document_sequences`; re-seed if you wiped partially |
 
 ## 9. Scripts reference

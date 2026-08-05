@@ -29,6 +29,15 @@ Package SWBM as client-ready **Demo Builder Merchant**: branding, multi-trade ve
 3. Category images for new verticals are placeholders (copied tools.webp).
 4. Optional DEMO banner (F-demo-banner) not built.
 
+## Incident: browser tab favicon still Star Hawk (2026-08-05)
+| Item | Detail |
+|------|--------|
+| **Symptom** | Window tab logo still showed Star Hawk "SH" monogram after demo rebrand |
+| **Root cause** | `public/favicon.ico` was left on the old SH asset when PNG/WebP icons were switched to Demo "DB". Layout lists `/favicon.ico` first for SERP/browser tabs. Storage `logos/brand/` had no override. |
+| **Fix** | Regenerated `public/favicon.ico` (16/32/48 PNG embeds) from current `public/Logo.png` Demo Builder mark |
+| **Proof** | Visual read of favicon.ico shows red rounded square + white **DB** (not SH) |
+| **Operator** | Deploy this commit. Hard-refresh or clear site data if the old favicon is cached (Cache-Control max-age 7d on `/favicon.ico`). |
+
 ## Incident: products empty + sign-in CAPTCHA (2026-08-04)
 | Item | Detail |
 |------|--------|
