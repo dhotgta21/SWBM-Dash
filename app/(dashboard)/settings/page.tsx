@@ -42,7 +42,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     }
   }
 
-  // Account (profile / password / 2FA) and Security (action passwords) are
+  // Account (profile / password / 2FA) and Security (re-auth policy note) are
   // self-service for admin and staff. Company / Brand / Team / Integrations
   // stay gated to admins (and company editors, for Company).
   const showAccount = access.isAdmin || access.isStaff
@@ -93,7 +93,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           href="/settings/security"
           icon={ShieldCheck}
           title="Security"
-          description="Set your personal passwords for client account actions and data deletion."
+          description="How protected actions re-check your login password (same as sign-in)."
         />
         {showAdminOnly && !hideIntegrations && (
           <SettingsCategoryCard

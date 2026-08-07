@@ -68,7 +68,7 @@ export function RecentlyDeletedList({
     id: string
   ) {
     if (!password) {
-      setFeedback({ kind: 'error', text: 'Enter the deletion password to restore.' })
+      setFeedback({ kind: 'error', text: 'Enter your login password to restore.' })
       return
     }
     setFeedback(null)
@@ -103,7 +103,7 @@ export function RecentlyDeletedList({
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Deletion password"
+          placeholder="Login password"
           className="flex-1 min-w-0 rounded-md border bg-background px-3 py-2 text-sm"
         />
       </div>

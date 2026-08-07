@@ -8,6 +8,7 @@ import { resolveStaffPermissions } from '@/lib/auth/permissions'
 import { safeActionError } from '@/lib/errors'
 import { isLikelyValidEmail } from '@/lib/utils'
 import { DEFAULT_PAYMENT_TERMS_DAYS } from '@/lib/client-credit'
+import { reauthThenSoftDeleteRpc } from '@/lib/actions/soft-delete-rpc'
 
 export interface ClientFormData {
   first_name: string
@@ -581,19 +582,14 @@ export async function deleteClientRecord(id: string, password: string) {
     'unknown'
   const userAgent = hdrs.get('user-agent')?.slice(0, 500) || null
 
-  const { data: result, error } = await supabase.rpc('soft_delete_client', {
+  const gated = await reauthThenSoftDeleteRpc(supabase, user.id, password, 'soft_delete_client', {
     p_client_id: id,
-    p_password: password,
     p_ip_address: ip === 'unknown' ? null : ip,
     p_user_agent: userAgent,
   })
-
-  if (error) {
-    return { error: safeActionError('clients.deleteClientRecord', error, 'Could not delete the client.') }
-  }
-
-  if (!result?.success) {
-    return { error: result?.message || 'Could not delete the client.' }
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not delete the client.' }
   }
 
   revalidatePath('/clients')

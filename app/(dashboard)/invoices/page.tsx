@@ -498,7 +498,7 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
   if (!ctx) redirect(ADMIN_LOGIN_PATH)
   if (!ctx.permissions.see_invoices) redirect(ADMIN_LOGIN_PATH)
   // The "Recently deleted" tab is admin-only — restoring crosses all three
-  // core tables and requires the deletion password. Bounce non-admins back
+  // core tables and requires login-password re-auth. Bounce non-admins back
   // to the default tab.
   if (view === 'deleted' && !ctx.isAdmin) {
     redirect('/invoices?view=due')
@@ -972,8 +972,8 @@ async function DeletedTabContent() {
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4">
           Restore clients, products, and invoices that were deleted in the last 30 days.
-          Records stay recoverable until they are permanently purged. You will need the
-          deletion password for each restore.
+          Records stay recoverable until they are permanently purged. You will need your
+          login password for each restore.
         </p>
         <RecentlyDeletedList
           clients={clients}

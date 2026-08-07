@@ -7,6 +7,7 @@ import { safeActionError } from '@/lib/errors'
 import { resolveStaffPermissions } from '@/lib/auth/permissions'
 import { getCampaignStatus, isCampaignRunning, type CampaignSaleFields } from '@/lib/products/sale'
 import type { Database } from '@/lib/database.types'
+import { verifyOperatorPassword } from '@/lib/actions/operator-verification'
 
 export interface CampaignFormData {
   name: string
@@ -543,14 +544,11 @@ export async function deleteCampaign(id: string, password: string): Promise<{ er
 
   const queryClient = getCampaignDbClient(supabase, perms.isAdmin)
 
-  // Verify deletion password using the existing DB function.
-  const { data: verified, error: verifyError } = await supabase.rpc('verify_deletion_password', {
-    p_password: password,
-  })
-
-  if (verifyError || !verified) {
-    return { error: 'Incorrect deletion password' }
+  if (!password) {
+    return { error: 'Password is required to delete a campaign.' }
   }
+  const reauth = await verifyOperatorPassword(supabase, user.id, password)
+  if (!reauth.ok) return { error: reauth.error }
 
   const { error } = await queryClient
     .from('campaigns')

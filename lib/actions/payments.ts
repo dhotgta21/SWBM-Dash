@@ -8,6 +8,7 @@ import { resolveStaffPermissions } from '@/lib/auth/permissions'
 import { safeActionError } from '@/lib/errors'
 import { verifyPaymentAction } from './payment-verification'
 import { normalizeSignatureName } from '@/lib/signature'
+import { reauthThenSoftDeleteRpc } from '@/lib/actions/soft-delete-rpc'
 import { getPaymentBlockedInvoices } from '@/lib/actions/picker'
 
 export interface PaymentFormData {
@@ -17,9 +18,12 @@ export interface PaymentFormData {
   method: 'cash' | 'bank_transfer' | 'card' | 'cheque' | 'other' | 'ecod'
   reference?: string
   notes?: string
-  /** Payment action password (Settings → Security → Payments), not the login password. */
+  /** Login password re-auth (same as sign-in). */
   confirm_password?: string
-  /** Operator signature — whitespace is normalised to underscores, case preserved. */
+  /**
+   * Optional client-provided signature. Server prefers profiles.full_name when set.
+   * Kept optional for backward compatibility with older clients.
+   */
   verified_name?: string
 }
 
@@ -85,23 +89,29 @@ export async function createPayment(data: PaymentFormData) {
     return { error: 'Your account is not allowed to record payments. Ask an administrator.' }
   }
 
-  // Operator re-verification is mandatory for every payment. Uses the
-  // dedicated payment password (Settings → Security → Payments), NOT the
-  // login password — same model as client-account and deletion passwords.
+  // Operator re-verification: login password only (same as sign-in).
   if (!data.confirm_password) {
-    return { error: 'Payment password is required to record a payment.' }
-  }
-  const verifiedName = data.verified_name ? normalizeSignatureName(data.verified_name) : ''
-  if (!verifiedName) {
-    return { error: 'Your name (signature) is required to record a payment.' }
+    return { error: 'Password is required to record a payment.' }
   }
 
   const ip = await getClientIp()
   const verifyLimit = await enforcePaymentVerifyLimit(supabase, user.id, ip)
   if (!verifyLimit.ok) return { error: verifyLimit.error }
 
-  const verified = await verifyPaymentAction(supabase, data.confirm_password)
+  const verified = await verifyPaymentAction(supabase, user.id, data.confirm_password)
   if (!verified.ok) return { error: verified.error }
+
+  // Audit stamp: prefer profile name; fall back to optional client value.
+  const { data: nameProfile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .maybeSingle()
+  const verifiedName = nameProfile?.full_name?.trim()
+    ? normalizeSignatureName(nameProfile.full_name)
+    : data.verified_name
+      ? normalizeSignatureName(data.verified_name)
+      : null
 
   const amount = roundMoney(data.amount)
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -227,19 +237,14 @@ export async function deletePayment(paymentId: string, invoiceId: string, passwo
     'unknown'
   const userAgent = hdrs.get('user-agent')?.slice(0, 500) || null
 
-  const { data: result, error } = await supabase.rpc('soft_delete_payment', {
+  const gated = await reauthThenSoftDeleteRpc(supabase, user.id, password, 'soft_delete_payment', {
     p_payment_id: paymentId,
-    p_password: password,
     p_ip_address: ip === 'unknown' ? null : ip,
     p_user_agent: userAgent,
   })
-
-  if (error) {
-    return { error: safeActionError('payments.deletePayment', error, 'Could not delete the payment.') }
-  }
-
-  if (!result?.success) {
-    return { error: result?.message || 'Could not delete the payment.' }
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not delete the payment.' }
   }
 
   revalidatePath(`/invoices/${invoiceId}`)

@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminUser } from '@/lib/supabase/access'
 import { safeActionError } from '@/lib/errors'
+import { reauthThenSoftDeleteRpc } from '@/lib/actions/soft-delete-rpc'
 
 async function getRequestMeta() {
   const hdrs = await headers()
@@ -35,19 +36,16 @@ export async function restoreClientRecord(id: string, password: string) {
   if ('error' in auth) return auth
 
   const meta = await getRequestMeta()
-  // Call via the authenticated user client so the RPC sees auth.uid().
-  // The RPC is SECURITY DEFINER, so it can still update deleted_at.
-  const { data: result, error } = await auth.supabase.rpc('restore_client', {
-    p_client_id: id,
-    p_password: password,
-    ...meta,
-  })
-
-  if (error) {
-    return { error: safeActionError('deleted.restoreClientRecord', error, 'Could not restore the client.') }
-  }
-  if (!result?.success) {
-    return { error: result?.message || 'Could not restore the client.' }
+  const gated = await reauthThenSoftDeleteRpc(
+    auth.supabase,
+    auth.user.id,
+    password,
+    'restore_client',
+    { p_client_id: id, ...meta }
+  )
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not restore the client.' }
   }
 
   revalidatePath('/clients')
@@ -60,17 +58,16 @@ export async function restoreProductRecord(id: string, password: string) {
   if ('error' in auth) return auth
 
   const meta = await getRequestMeta()
-  const { data: result, error } = await auth.supabase.rpc('restore_product', {
-    p_product_id: id,
-    p_password: password,
-    ...meta,
-  })
-
-  if (error) {
-    return { error: safeActionError('deleted.restoreProductRecord', error, 'Could not restore the product.') }
-  }
-  if (!result?.success) {
-    return { error: result?.message || 'Could not restore the product.' }
+  const gated = await reauthThenSoftDeleteRpc(
+    auth.supabase,
+    auth.user.id,
+    password,
+    'restore_product',
+    { p_product_id: id, ...meta }
+  )
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not restore the product.' }
   }
 
   revalidatePath('/admin/products')
@@ -83,17 +80,16 @@ export async function restoreInvoiceRecord(id: string, password: string) {
   if ('error' in auth) return auth
 
   const meta = await getRequestMeta()
-  const { data: result, error } = await auth.supabase.rpc('restore_invoice', {
-    p_invoice_id: id,
-    p_password: password,
-    ...meta,
-  })
-
-  if (error) {
-    return { error: safeActionError('deleted.restoreInvoiceRecord', error, 'Could not restore the invoice.') }
-  }
-  if (!result?.success) {
-    return { error: result?.message || 'Could not restore the invoice.' }
+  const gated = await reauthThenSoftDeleteRpc(
+    auth.supabase,
+    auth.user.id,
+    password,
+    'restore_invoice',
+    { p_invoice_id: id, ...meta }
+  )
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not restore the invoice.' }
   }
 
   revalidatePath('/invoices')

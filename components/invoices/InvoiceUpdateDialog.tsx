@@ -217,10 +217,9 @@ export function InvoiceUpdateDialog({
   }
 
   // "Mark as paid" records a full-balance payment, so it must go through the
-  // same payment-password re-verification (Settings → Security → Payments)
-  // as every other direct payment. Step one opens the confirmation dialog;
-  // the actual write happens in handleVerifiedPaid after the server checks
-  // the payment password + signature.
+  // Login-password re-verification (same as sign-in) as every other direct
+  // payment. Step one opens the confirmation dialog; the actual write happens
+  // in handleVerifiedPaid after the server checks the login password.
   function confirmPaid() {
     if (!invoice || invoice.balance_due <= 0) return
     setUpdateError(null)
@@ -400,7 +399,7 @@ export function InvoiceUpdateDialog({
                     This will record a payment of{' '}
                     <strong>{showMoney ? formatCurrency(invoice.balance_due) : 'the outstanding balance'}</strong>{' '}
                     and mark the invoice as paid. You&apos;ll be asked to confirm with your
-                    payment password and signature.
+                    login password.
                   </p>
                   <div className="flex gap-2">
                     <Button type="button" size="sm" onClick={confirmPaid} disabled={isUpdating}>
@@ -490,13 +489,12 @@ export function InvoiceUpdateDialog({
               </span>
             }
             confirmLabel="Mark as paid"
-            passwordLabel="Payment password"
-            passwordPlaceholder="Enter your payment password"
+            passwordLabel="Password"
+            passwordPlaceholder="Enter your login password"
             banner={
               <>
-                <strong>Protected action:</strong> Enter your payment password and name to record this
-                payment. This is not your login password — set or change it in Settings → Security →
-                Payments.
+                <strong>Protected action:</strong> Enter your login password to record this payment.
+                This is the same password you use to sign in.
               </>
             }
             onConfirm={handleVerifiedPaid}

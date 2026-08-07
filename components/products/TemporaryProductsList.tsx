@@ -371,7 +371,7 @@ export function TemporaryProductsList({
           if (!open) setDeletingId(null)
         }}
         title="Delete temporary product"
-        description="This temporary product will be permanently deleted. Type your deletion password to confirm."
+        description="This temporary product will be permanently deleted. Type your login password to confirm."
         onConfirm={handleConfirmDelete}
       />
     </>

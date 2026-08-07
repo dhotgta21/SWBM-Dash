@@ -906,20 +906,12 @@ export function ClientAccountView({
           )
         }
         confirmLabel={pendingAction.type === 'deposit' ? 'Record Deposit' : 'Record Payment'}
-        prefillName={false}
-        nameLabel="Username"
-        nameHelpText={
-          <>
-            Enter your username — your account name with an underscore wherever you would normally put a space
-            (e.g. <span className="font-mono">Andrew_Smith</span>). It must match your account name.
-          </>
-        }
-        passwordLabel="Client account password"
-        passwordPlaceholder="Enter your client account password"
+        passwordLabel="Password"
+        passwordPlaceholder="Enter your login password"
         banner={
           <>
-            <strong>Protected action:</strong> Enter your username and your client account password to record this
-            transaction on the client account. This is separate from your login password.
+            <strong>Protected action:</strong> Enter your login password to record this transaction on
+            the client account. This is the same password you use to sign in.
           </>
         }
         onConfirm={handleVerified}

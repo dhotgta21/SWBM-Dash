@@ -18,7 +18,9 @@ export interface ClientDepositData {
   method: 'cash' | 'bank_transfer' | 'card' | 'cheque' | 'other' | 'ecod'
   reference?: string
   notes?: string
-  verified_name: string
+  /** Optional; server stamps from profile when possible. */
+  verified_name?: string
+  /** Login password re-auth (same as sign-in). */
   confirm_password: string
 }
 
@@ -31,7 +33,9 @@ export interface ApplyClientAccountData {
   client_id: string
   allocations: ClientAccountAllocation[]
   notes?: string
-  verified_name: string
+  /** Optional; server stamps from profile when possible. */
+  verified_name?: string
+  /** Login password re-auth (same as sign-in). */
   confirm_password: string
 }
 
@@ -218,7 +222,7 @@ export async function depositToClientAccount(data: ClientDepositData) {
     return { error: verifyLimit.error }
   }
 
-  const verified = await verifyClientAccountAction(supabase, user.id, data.verified_name, data.confirm_password)
+  const verified = await verifyClientAccountAction(supabase, user.id, data.confirm_password)
   if (!verified.ok) {
     await auditClientAccountAction(supabase, 'failed_verification', {
       client_id: data.client_id,
@@ -228,6 +232,10 @@ export async function depositToClientAccount(data: ClientDepositData) {
     })
     return { error: verified.error }
   }
+
+  const verifiedName =
+    verified.verifiedName ||
+    (data.verified_name ? normalizeSignatureName(data.verified_name) : undefined)
 
   const amount = roundMoney(data.amount)
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -249,7 +257,7 @@ export async function depositToClientAccount(data: ClientDepositData) {
     p_method: data.method,
     p_reference: data.reference?.trim() || undefined,
     p_notes: data.notes?.trim() || undefined,
-    p_verified_name: data.verified_name ? normalizeSignatureName(data.verified_name) : undefined,
+    p_verified_name: verifiedName,
     p_transaction_date: data.payment_date,
   })
 
@@ -273,7 +281,7 @@ export async function depositToClientAccount(data: ClientDepositData) {
   await auditClientAccountAction(supabase, 'deposit', {
     client_id: data.client_id,
     amount,
-    verified_name: data.verified_name ? normalizeSignatureName(data.verified_name) : undefined,
+    verified_name: verifiedName,
     ip_address: ip,
     user_agent: userAgent,
     metadata: { method: data.method, reference: data.reference, transaction_id: transactionId },
@@ -322,7 +330,7 @@ export async function applyClientAccountBalance(data: ApplyClientAccountData) {
     return { error: verifyLimit.error }
   }
 
-  const verified = await verifyClientAccountAction(supabase, user.id, data.verified_name, data.confirm_password)
+  const verified = await verifyClientAccountAction(supabase, user.id, data.confirm_password)
   if (!verified.ok) {
     await auditClientAccountAction(supabase, 'failed_verification', {
       client_id: data.client_id,
@@ -332,6 +340,10 @@ export async function applyClientAccountBalance(data: ApplyClientAccountData) {
     })
     return { error: verified.error }
   }
+
+  const verifiedName =
+    verified.verifiedName ||
+    (data.verified_name ? normalizeSignatureName(data.verified_name) : undefined)
 
   const allocations = data.allocations
     .map((a) => ({ invoice_id: a.invoice_id, amount: roundMoney(a.amount) }))
@@ -352,7 +364,6 @@ export async function applyClientAccountBalance(data: ApplyClientAccountData) {
   }
 
   const totalApplied = allocations.reduce((sum, a) => sum + a.amount, 0)
-  const verifiedName = data.verified_name ? normalizeSignatureName(data.verified_name) : undefined
 
   const { data: transactionIds, error } = await supabase.rpc('apply_client_account_balance', {
     p_client_id: data.client_id,

@@ -1,4 +1,4 @@
-# Decision Records - Demo Builder Merchant
+﻿# Decision Records - Demo Builder Merchant
 
 - **Status:** ACTIVE
 - **Updated:** 2026-08-04
@@ -14,7 +14,7 @@
 |--------|---------|------|------|-------|
 | A | Switchable content packs (env/settings) in one deploy | Low schema risk; fast; fits sales demo | Soft multi-brand only | 9 |
 | B | Separate deploy + DB per vertical | Clean isolation | Ops heavy; drift | 5 |
-| C | True multi-tenant orgs | Real product multi-merchant | 6–12+ weeks; wrong for demo | 2 |
+| C | True multi-tenant orgs | Real product multi-merchant | 6ÔÇô12+ weeks; wrong for demo | 2 |
 
 - **Chosen:** A
 - **Why best for our case:** Confirmed in understanding; delivers "works for any trade" without RLS rewrite.
@@ -84,10 +84,26 @@
 
 | Option | Summary | Pros | Cons |
 |--------|---------|------|------|
-| A | 30–80 sample SKUs per vertical + category meta + placeholder/real images | Credible browse | Content work |
+| A | 30ÔÇô80 sample SKUs per vertical + category meta + placeholder/real images | Credible browse | Content work |
 | B | Landing-only copy change, empty catalogue | Fast | Weak proof |
 | C | Full industry catalog scrape | Deep | Out of scope / time |
 
 - **Chosen:** A for P1 phase
 - **Why:** Understanding P1; enough for demo walk without multi-week catalog projects.
 - **Implications:** Separate seed step per vertical or pack-driven product seed; construction keeps existing products.
+
+---
+
+## DR-001: Single re-auth factor = login password
+
+**Status:** LOCKED  
+**Context:** Operators faced separate payment / deletion / client-account passwords plus username fields. User wants only login password and settings fields removed.
+
+**Options:**
+1. Drop username only; keep action passwords  
+2. Login password for invoice delete + direct payment only  
+3. Login password for all operator re-auth (payment, delete/restore, client account); remove Security action-password UI  
+
+**Choice:** 3  
+**Why:** Matches "nothing different" and one mental model. `verifyOperatorPassword` already exists. Soft-delete RPCs need a migration to stop checking deletion hashes.  
+**Consequences:** Soft-delete/restore use service_role after login re-auth (migration 163). Login password remains the UX re-auth factor.

@@ -35,6 +35,14 @@ export function DeletionPasswordDialog({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setPassword('')
+      setError(null)
+    }
+    onOpenChange(next)
+  }
+
   function handleSubmit() {
     setError(null)
     startTransition(async () => {
@@ -49,9 +57,9 @@ export function DeletionPasswordDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !isPending && onOpenChange(next)}>
+    <Dialog open={open} onOpenChange={(next) => !isPending && handleOpenChange(next)}>
       <DialogContent>
-        <DialogClose onClick={() => !isPending && onOpenChange(false)} />
+        <DialogClose onClick={() => !isPending && handleOpenChange(false)} />
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -59,20 +67,20 @@ export function DeletionPasswordDialog({
 
         <div className="space-y-3">
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-            <strong>Protected:</strong> enter the deletion password to continue.
+            <strong>Protected:</strong> enter your login password to continue.
             This hides the record; it can be restored from{' '}
             <strong>Recently deleted</strong>.
           </div>
           <div className="space-y-2">
-            <Label htmlFor="deletion-password">Deletion password</Label>
+            <Label htmlFor="deletion-password">Password</Label>
             <Input
               id="deletion-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter deletion password"
+              placeholder="Enter your login password"
               disabled={isPending}
-              autoComplete="off"
+              autoComplete="current-password"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && password && !isPending) {
                   e.preventDefault()
@@ -93,7 +101,7 @@ export function DeletionPasswordDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => !isPending && onOpenChange(false)}
+            onClick={() => !isPending && handleOpenChange(false)}
             disabled={isPending}
             className="w-full sm:w-auto"
           >

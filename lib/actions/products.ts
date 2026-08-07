@@ -8,6 +8,7 @@ import { safeActionError } from '@/lib/errors'
 import { resolveStaffPermissions } from '@/lib/auth/permissions'
 import { slugifyCategory, type VariantOption } from '@/lib/public-products'
 import { getCategoryCodePrefix } from '@/lib/products'
+import { reauthThenSoftDeleteRpc } from '@/lib/actions/soft-delete-rpc'
 
 function revalidateProductPublicPaths(code: string, category: string | null) {
   revalidatePath('/admin/products')
@@ -865,19 +866,14 @@ export async function deleteProductRecord(id: string, password: string) {
     .is('deleted_at', null)
     .maybeSingle()
 
-  const { data: result, error } = await supabase.rpc('soft_delete_product', {
+  const gated = await reauthThenSoftDeleteRpc(supabase, user.id, password, 'soft_delete_product', {
     p_product_id: id,
-    p_password: password,
     p_ip_address: ip === 'unknown' ? null : ip,
     p_user_agent: userAgent,
   })
-
-  if (error) {
-    return { error: safeActionError('products.deleteProductRecord', error, 'Could not delete the product.') }
-  }
-
-  if (!result?.success) {
-    return { error: result?.message || 'Could not delete the product.' }
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not delete the product.' }
   }
 
   if (existing) {

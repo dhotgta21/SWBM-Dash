@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,13 +15,9 @@ import {
 } from '@/components/ui/dialog'
 
 export interface AccountVerificationData {
+  /** Always empty from the dialog; server stamps operator name from profile. */
   verifiedName: string
   password: string
-}
-
-/** Preserve case; collapse whitespace runs into a single underscore. */
-function toUnderscoreName(name: string): string {
-  return name.trim().replace(/\s+/g, '_')
 }
 
 interface AccountVerificationDialogProps {
@@ -30,15 +26,17 @@ interface AccountVerificationDialogProps {
   title: string
   description: React.ReactNode
   confirmLabel?: string
-  /** Value used to pre-fill the name field (only when prefillName is true). */
+  /** @deprecated Name field removed; kept so call sites compile until cleaned. */
   defaultName?: string | null
-  /** When false the name field starts blank so the user must type it. Defaults to true. */
+  /** @deprecated Name field removed. */
   prefillName?: boolean
+  /** @deprecated Name field removed. */
   nameLabel?: string
+  /** @deprecated Name field removed. */
   nameHelpText?: React.ReactNode
   passwordLabel?: string
   passwordPlaceholder?: string
-  /** Amber "protected action" banner. Defaults to the login-password wording. */
+  /** Amber "protected action" banner. Defaults to login-password wording. */
   banner?: React.ReactNode
   onConfirm: (data: AccountVerificationData) => Promise<{ error?: string | null } | void>
 }
@@ -49,18 +47,11 @@ export function AccountVerificationDialog({
   title,
   description,
   confirmLabel = 'Confirm',
-  defaultName,
-  prefillName = true,
-  nameLabel = 'Your name (signature)',
-  nameHelpText,
-  passwordLabel = 'Payment password',
-  passwordPlaceholder = 'Enter your payment password',
+  passwordLabel = 'Password',
+  passwordPlaceholder = 'Enter your login password',
   banner,
   onConfirm,
 }: AccountVerificationDialogProps) {
-  const [verifiedName, setVerifiedName] = useState(
-    prefillName && defaultName ? toUnderscoreName(defaultName) : ''
-  )
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -75,17 +66,10 @@ export function AccountVerificationDialog({
     onOpenChange(next)
   }
 
-  // Keep the pre-filled name in sync if the default changes while open.
-  useEffect(() => {
-    if (open) {
-      setVerifiedName(prefillName && defaultName ? toUnderscoreName(defaultName) : '')
-    }
-  }, [open, defaultName, prefillName])
-
   function handleSubmit() {
     setError(null)
     startTransition(async () => {
-      const result = await onConfirm({ verifiedName: toUnderscoreName(verifiedName), password })
+      const result = await onConfirm({ verifiedName: '', password })
       if (result?.error) {
         setError(result.error)
         return
@@ -94,18 +78,10 @@ export function AccountVerificationDialog({
     })
   }
 
-  const helpText =
-    nameHelpText ?? (
-      <>
-        Use an underscore wherever you would normally put a space. Case is kept exactly as you type it
-        (e.g. <span className="font-mono">Andrew_Smith</span>).
-      </>
-    )
-
   const bannerContent = banner ?? (
     <>
-      <strong>Protected action:</strong> Enter your payment password and name to record this
-      transaction. This is not your login password — manage it in Settings → Security.
+      <strong>Protected action:</strong> Enter your login password to continue.
+      This is the same password you use to sign in.
     </>
   )
 
@@ -127,20 +103,6 @@ export function AccountVerificationDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="verified-name">{nameLabel}</Label>
-            <Input
-              id="verified-name"
-              value={verifiedName}
-              onChange={(e) => setVerifiedName(e.target.value)}
-              placeholder="e.g. Andrew_Smith"
-              disabled={isPending}
-              autoComplete="off"
-              required
-            />
-            <p className="text-xs text-muted-foreground">{helpText}</p>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="account-password">{passwordLabel}</Label>
             <Input
               id="account-password"
@@ -149,10 +111,10 @@ export function AccountVerificationDialog({
               onChange={(e) => setPassword(e.target.value)}
               placeholder={passwordPlaceholder}
               disabled={isPending}
-              autoComplete="off"
+              autoComplete="current-password"
               required
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && password && verifiedName && !isPending) {
+                if (e.key === 'Enter' && password && !isPending) {
                   e.preventDefault()
                   handleSubmit()
                 }
@@ -180,7 +142,7 @@ export function AccountVerificationDialog({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending || !password || !verifiedName}
+            disabled={isPending || !password}
             className="w-full sm:w-auto"
           >
             {isPending ? (

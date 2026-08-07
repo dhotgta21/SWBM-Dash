@@ -28,6 +28,7 @@ import { buildClientSearchFilter, sanitizeLikeTerm } from '@/lib/search'
 import { rateLimit } from '@/lib/rate-limit'
 import { getClientIp } from '@/lib/ip'
 import { loadCompany } from '@/lib/company'
+import { reauthThenSoftDeleteRpc } from '@/lib/actions/soft-delete-rpc'
 import {
   findPublicInvoiceByToken,
   getShareAccessForMode,
@@ -1242,19 +1243,14 @@ export async function deleteInvoice(id: string, password: string) {
   const ip = getClientIp(hdrs)
   const userAgent = hdrs.get('user-agent')?.slice(0, 500) || null
 
-  const { data: result, error } = await supabase.rpc('soft_delete_invoice', {
+  const gated = await reauthThenSoftDeleteRpc(supabase, user.id, password, 'soft_delete_invoice', {
     p_invoice_id: id,
-    p_password: password,
     p_ip_address: ip === 'unknown' ? null : ip,
     p_user_agent: userAgent,
   })
-
-  if (error) {
-    return { error: safeActionError('invoices.deleteInvoice', error, 'Could not delete the document.') }
-  }
-
-  if (!result?.success) {
-    return { error: result?.message || 'Could not delete the document.' }
+  if (!gated.ok) return { error: gated.error }
+  if (!gated.result.success) {
+    return { error: gated.result.message || 'Could not delete the document.' }
   }
 
   revalidatePath('/invoices')

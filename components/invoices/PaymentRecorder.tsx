@@ -350,37 +350,14 @@ export function PaymentRecorder({
         title={dialogTitle}
         description={dialogDescription}
         confirmLabel={mode === 'account' ? 'Pay from account' : 'Record Payment'}
-        prefillName={false}
-        nameLabel={mode === 'account' ? 'Username' : undefined}
-        nameHelpText={
-          mode === 'account' ? (
-            <>
-              Enter your username — your account name with an underscore wherever you would normally put a space
-              (e.g. <span className="font-mono">Andrew_Smith</span>). It must match your account name.
-            </>
-          ) : undefined
-        }
-        passwordLabel={
-          mode === 'account' ? 'Client account password' : 'Payment password'
-        }
-        passwordPlaceholder={
-          mode === 'account'
-            ? 'Enter your client account password'
-            : 'Enter your payment password'
-        }
+        passwordLabel="Password"
+        passwordPlaceholder="Enter your login password"
         banner={
-          mode === 'account' ? (
-            <>
-              <strong>Protected action:</strong> Enter your username and your client account password to pay from this
-              client account. This is separate from your login password and payment password. Manage it in Settings →
-              Security → Client Account.
-            </>
-          ) : (
-            <>
-              <strong>Protected action:</strong> Enter your payment password and name to record this payment. This is
-              not your login password — set or change it in Settings → Security → Payments.
-            </>
-          )
+          <>
+            <strong>Protected action:</strong> Enter your login password to{' '}
+            {mode === 'account' ? 'pay from this client account' : 'record this payment'}. This is the
+            same password you use to sign in.
+          </>
         }
         onConfirm={handleVerified}
       />

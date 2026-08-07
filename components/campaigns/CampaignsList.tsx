@@ -334,7 +334,7 @@ export function CampaignsList({ campaigns, canEdit, canDelete }: CampaignsListPr
           if (!open) setDeletingId(null)
         }}
         title="Delete campaign"
-        description="This campaign will be moved to Recently deleted. Type your deletion password to confirm."
+        description="This campaign will be moved to Recently deleted. Type your login password to confirm."
         onConfirm={handleConfirmDelete}
       />
     </>

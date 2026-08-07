@@ -1764,31 +1764,73 @@ export type Database = {
         Returns: Database['public']['Tables']['invoices']['Row']
       }
       soft_delete_client: {
-        Args: { p_client_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_client_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       soft_delete_product: {
-        Args: { p_product_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_product_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       soft_delete_invoice: {
-        Args: { p_invoice_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_invoice_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       soft_delete_payment: {
-        Args: { p_payment_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_payment_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       restore_client: {
-        Args: { p_client_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_client_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       restore_product: {
-        Args: { p_product_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_product_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       restore_invoice: {
-        Args: { p_invoice_id: string; p_password: string; p_ip_address?: string; p_user_agent?: string }
+        Args: {
+          p_invoice_id: string
+          p_password: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_operator_id?: string
+        }
         Returns: { success: boolean; error_code: string | null; message: string }
       }
       hard_delete_draft_invoice: {
